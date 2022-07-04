@@ -1,10 +1,5 @@
-"""
-    Dummy conftest.py for pybiotk.
+import os
+import pytest
+from collections import namedtuple
 
-    If you don't know what this is for, just leave it empty.
-    Read more about conftest.py under:
-    - https://docs.pytest.org/en/stable/fixture.html
-    - https://docs.pytest.org/en/stable/writing_plugins.html
-"""
-
-# import pytest
+data = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")

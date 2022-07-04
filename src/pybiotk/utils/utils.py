@@ -1,0 +1,202 @@
+# -*- coding: utf-8 -*-
+import os
+import sys
+import logging
+import warnings
+import importlib
+import importlib.resources
+import subprocess
+import pandas as pd
+from functools import wraps
+from io import TextIOWrapper
+from types import ModuleType
+from typing import List, Dict, Sequence, Tuple, Literal, Iterator, Iterable, Optional, Callable, Union, TextIO
+
+logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", datefmt='%Y-%m-%d %A %H:%M:%S', level=logging.INFO)
+
+
+def reverse_seq(seq: str) -> str:
+    seq = seq.upper()
+    complement = {
+        "A": "T", "C": "G", "G": "C", "T": "A",
+        "N": "N", "W": "W", "S": "S", "K": "M",
+        "M": "K", "Y": "R", "R": "Y", "H": "D",
+        "B": "V", "V": "B", "D": "H", "&": "&",
+    }
+    return "".join(reversed([complement[i] for i in seq]))
+
+
+def is_overlap(interval1: Tuple[int, int], interval2: Tuple[int, int]) -> bool:
+    x1, y1 = interval1
+    x2, y2 = interval2
+    if y1 <= x2 or y2 <= x1:
+        return False
+    else:
+        return True
+
+
+def intervals_is_overlap(intervals1: List[Tuple[int, int]], intervals2: List[Tuple[int, int]]) -> bool:
+    if not is_overlap((intervals1[0][0], intervals1[-1][1]), (intervals2[0][0], intervals2[-1][1])):
+        return False
+    for interval1 in intervals1:
+        for interval2 in intervals2:
+            if is_overlap(interval1, interval2):
+                return True
+    return False
+
+
+def cigartuples2blocks(start: int, cigartuples: Sequence[Tuple[int, int]], shift: int = 0) -> List[Tuple[int, int]]:
+    tmp_abs_start = shift + start
+    blocks = []
+    for cigar, length in cigartuples:
+        if cigar in [0, 2]:
+            blocks.append((tmp_abs_start, tmp_abs_start + length))
+            tmp_abs_start += length
+        elif cigar in [3, 6, 10]:
+            tmp_abs_start += length
+    merged_blocks = []
+    tmp_start = None
+    block_num = len(blocks)
+    for i in range(block_num):
+        if tmp_start is None:
+            tmp_start = blocks[i][0]
+        if not ((i < block_num - 1) and (blocks[i + 1][0] <= blocks[i][1])):
+            merged_blocks.append((tmp_start, blocks[i][1]))
+            tmp_start = None
+    return merged_blocks
+
+
+def split_discontinuous(discontinuous_list: Iterable[int]) -> Iterator[List[int]]:
+    continuous_list = []
+    for p in discontinuous_list:
+        if not continuous_list:
+            continuous_list.append(p)
+        elif p - continuous_list[-1] == 1:
+            continuous_list.append(p)
+        else:
+            yield continuous_list
+            continuous_list = [p]
+    if continuous_list:
+        yield continuous_list
+
+
+def read_table(filepath_or_buffer: Union[str, TextIO], header: Optional[int] = 0, sep: Optional[str] = None, **kwargs) -> pd.DataFrame:
+    if isinstance(filepath_or_buffer, TextIOWrapper):
+        filename = filepath_or_buffer.name
+    else:
+        filename = filepath_or_buffer
+    ext = os.path.splitext(filename)[1]
+    try:
+        if ext == "csv":
+            deli = sep if sep else ","
+            df = pd.read_csv(filepath_or_buffer, delimiter=deli, header=header, **kwargs)
+        elif ext == "xlsx":
+            df = pd.read_excel(filepath_or_buffer, header=header, **kwargs)
+        else:
+            deli = sep if sep else "\t"
+            df = pd.read_table(filepath_or_buffer, delimiter=deli, header=header, **kwargs)
+    except pd.errors.EmptyDataError:
+        df = pd.DataFrame()
+    if isinstance(filepath_or_buffer, TextIOWrapper):
+        filepath_or_buffer.close()
+    return df
+
+
+def write_table(out_df: pd.DataFrame, path_or_buf: Union[str, TextIO], index: bool = False, header: bool = True, sep: str = "\t", **kwargs):
+    if isinstance(path_or_buf, TextIOWrapper):
+        filename = path_or_buf.name
+    else:
+        filename = path_or_buf
+    ext = os.path.splitext(filename)[1]
+    if ext == "csv":
+        out_df.to_csv(path_or_buf, index=index, header=header, sep=",", **kwargs)
+    elif ext == "xlsx":
+        out_df.to_excel(path_or_buf, index=index, header=header, **kwargs)
+    else:
+        out_df.to_csv(path_or_buf, index=index, header=header, sep=sep, **kwargs)
+
+    if isinstance(path_or_buf, TextIOWrapper):
+        path_or_buf.close()
+
+
+def blocks_len(blocks: Iterable[Tuple[int, int]]) -> int:
+    return sum(y-x for (x, y) in blocks)
+
+
+def infer_fragment_strand(strand: Literal["+", "-"], rule: str = "1+-,1-+,2++,2--", is_read2: bool = False):
+    fragment_strand = None
+    rules = ["1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"]
+    assert rule in rules
+    if rule == rules[0] or rule == rules[3]:
+        if strand == "-":
+            fragment_strand = "+"
+        elif strand == "+":
+            fragment_strand = "-"
+    else:
+        if strand == "+":
+            fragment_strand = "+"
+        elif strand == "-":
+            fragment_strand = "-"
+
+    if is_read2:
+        if fragment_strand == "+":
+            fragment_strand = "-"
+        else:
+            fragment_strand = "+"
+    return fragment_strand
+
+
+def ignore(func: Callable):
+    @wraps(func)
+    def wrapper(*args, **kargs):
+        try:
+            traceback = func(*args, **kargs)
+        except BrokenPipeError:
+            sys.stdout = None
+            sys.exit(0)
+        except KeyboardInterrupt:
+            sys.stdout = None
+            sys.exit(0)
+        return traceback
+    return wrapper
+
+
+def load_chrom_length_dict(filepath_or_buffer: Union[str, TextIOWrapper]) -> Dict[str, int]:
+    if isinstance(filepath_or_buffer, TextIOWrapper):
+        buffer = filepath_or_buffer
+    else:
+        buffer = open(filepath_or_buffer)
+    chrom_length_dict = {}
+    with buffer as f:
+        for line in f:
+            fileds = line.split()
+            chrom_length_dict[fileds[0]] = int(fileds[1])
+
+    return chrom_length_dict
+
+
+def package_resource(package: Union[str, ModuleType], resource: Union[str, os.PathLike]):
+    with importlib.resources.path(package, resource) as path:
+        pathstr = str(path)
+    return pathstr
+
+
+def default_hg38_chrom_length_dict() -> Dict[str, int]:
+    return load_chrom_length_dict(importlib.resources.open_text("pybiotk.data", "hg38.chrom.sizes"))
+
+
+def default_mm10_chrom_length_dict() -> Dict[str, int]:
+    return load_chrom_length_dict(importlib.resources.open_text("pybiotk.data", "mm10.chrom.sizes"))
+
+
+def bedtools_sort(path: str):
+    logging.info(f"start to sort {path}...")
+    tmp_path = path + ".tmp"
+    os.rename(path, tmp_path)
+    cmd = f"bedtools sort -i {tmp_path} > {path}"
+    try:
+        subprocess.check_call(cmd, shell=True)
+        os.remove(tmp_path)
+    except subprocess.CalledProcessError:
+        os.rename(tmp_path, path)
+        warnings.warn(f"{path} is unsorted, maybe bedtools is not installed.")
