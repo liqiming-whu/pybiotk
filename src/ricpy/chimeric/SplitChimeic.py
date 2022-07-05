@@ -1,13 +1,35 @@
 #!/usr/bin/env python3
+import os
 import argparse
 import time
 import pysam
 from collections import namedtuple
 from typing import Literal, Optional
-from stream import Pipe, mapwith, apply, filter
+from stream import Pipe, filter
 from pybiotk.utils import reverse_seq, infer_fragment_strand, logging
 from pybiotk.io import Bam, FastaFile, OpenFqGzip
 
+
+def load_more_C_file(filepath: str):
+    lc = {}
+    rc = {}
+    lrc = {}
+    
+    subseq = namedtuple("subseq", ["name", "seq"])
+    
+    with open(filepath) as f:
+        for line in f:
+            toks = line.rstrip().split("\t")
+            more_C_type = toks[2]
+            if more_C_type == "LC":
+                lc[toks[1]] = subseq(toks[0], toks[3])
+            elif more_C_type == "RC":
+                rc[toks[1]] = subseq(toks[0], toks[3])
+            else:
+                lrc[toks[1]] = subseq(toks[0], toks[3])
+    
+    more_C = namedtuple("more_C", ["LC", "RC", "LRC"])
+    return more_C(lc, rc, lrc)
 
 
 class ChimericSegment:
@@ -199,13 +221,13 @@ def split_chimeic(bamfile:str,
                   mid_left_fq: str,
                   mid_right_fq: str,
                   mapped_info: str,
-                  ref_fasta:Optional[str] = None,
+                  ref_fasta: Optional[str] = None,
                   more_C_file: Optional[str] = None,
                   rule: str = "+-,-+"):
     logging.info("start to split chimeric reads...")
     start = time.perf_counter()
     ref_fa = FastaFile(ref_fasta) if ref_fasta is not None else None
-    more_C = more_C_file if more_C_file is not None else None
+    more_C = load_more_C_file(more_C_file) if more_C_file is not None else None
     mapped_reads = {}
     mapped_reads3 = {}
     out_ref = open(out_fa, "w")
@@ -265,3 +287,30 @@ def split_chimeic(bamfile:str,
     end = time.perf_counter()
     logging.info(f"{mapped_reads_num} mapped reads in total {total_reads_num} reads, {mapped_reads_num*100/total_reads_num:.2f}%")
     logging.info(f"task finished in {end-start:.2f}s.")
+
+
+def run():
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("input", type=str, help="input bam.")
+    parser.add_argument("-o", dest="outdir", type=str, default=os.getcwd(), help="outdir")
+    parser.add_argument("-r", dest="ref", type=str, default=None, help="refseq")
+    parser.add_argument("--more_c", dest="more_c", type=str, default=None, help="more_c file")
+    parser.add_argument("--rule", dest="rule", type=str, default="+-,-+",
+                        choices=["1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"], help="rule")
+    
+    args = parser.parse_args()
+    split_chimeic(args.input,
+                  os.path.join(args.outdir, "mapped_ref.fa"),
+                  os.path.join(args.outdir, "other.fq.gz"),
+                  os.path.join(args.outdir, "unmap.fq.gz"),
+                  os.path.join(args.outdir, "left.fq.gz"),
+                  os.path.join(args.outdir, "right.fq.gz"),
+                  os.path.join(args.outdir, "mapped_info.tsv"),                  
+                  args.more_c,
+                  args.rule)
+
+
+if __name__ == "__main__":
+    run()

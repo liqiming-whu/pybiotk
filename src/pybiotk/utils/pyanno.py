@@ -68,10 +68,10 @@ def annobam(filename: str,
         fragment_strand = infer_fragment_strand(strand, rule, read.is_read2)
         genes = grangetree.find(read.reference_name, start, end, fragment_strand)
         if not genes:
-            file_obj.write(f"{read.query_name}\t{read.reference_name}\t{start}\t{end}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\n")
+            file_obj.write(f"{read.query_name}\t{read.reference_name}\t{start}\t{end}\t{blocks}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\n")
         else:
             annoset = AnnoSet(gene.annotation(blocks, tss_region, downstream) for gene in genes)
-            file_obj.write(f"{read.query_name}\t{read.reference_name}\t{start}\t{end}\t{fragment_strand}\t{annoset}\n")
+            file_obj.write(f"{read.query_name}\t{read.reference_name}\t{start}\t{end}\t{blocks}\t{fragment_strand}\t{annoset}\n")
 
     if bamtype is BamType.PE and anno_fragments:
         with BamPE(filename) as bam:
@@ -142,11 +142,12 @@ def main(
     filetype = os.path.splitext(filename)[1]
     grangetree = load_grangetree(gtf_file, level, tss_region, downstream, strand)
     with open(outfilename, "w", encoding="utf-8") as annofile:
-        annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\ttype\n")
         if filetype == ".bam":
+            annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\ttype\n")
             logging.info("start annotating, use bam mode ...")
             annobam(filename, annofile, grangetree, annofragments, tss_region, downstream, rule, ordered_by_name)
         elif filetype.startswith(".bed"):
+            annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\ttype\n")
             logging.info("start annotating, use bed mode ...")
             annobed(filename, annofile, grangetree, tss_region, downstream)
         else:
