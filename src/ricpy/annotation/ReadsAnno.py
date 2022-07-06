@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import os
+from re import A
 import sys
 import time
 import argparse
 from typing import Literal, Tuple, TextIO, Optional
-from pybiotk.utils import logging, infer_fragment_strand, intervals_is_overlap, reverse_seq
+from pybiotk.utils import logging, infer_fragment_strand, intervals_is_overlap, reverse_seq, blocks_len
 from pybiotk.io import BamType, Bam, BamPE, GenomeFile, check_bam_type
-from pybiotk.annodb import AnnoSet, Gene
+from pybiotk.annodb import AnnoSet
 from pybiotk.intervals import GRangeTree, merge_intervals
 from pybiotk.utils.pyanno import load_grangetree
-
 
 
 def annobam(filename: str,
@@ -19,13 +19,17 @@ def annobam(filename: str,
             tss_region: Tuple[int, int] = (-1000, 1000),
             downstream: int = 3000,
             rule: str = "++,--",
+            min_len: int = 0,
             ordered_by_name: bool = False,
             genomefile: Optional[str] = None,
             referencefile: Optional[str] = None,
             check_up_and_down: Optional[int] = 1000,
             filter_log: str = os.devnull,
-            mapped_sequence: Optional[str] = None
+            mapped_sequence: Optional[str] = None,
+            unmapped_sequence: Optional[str] = None
             ):
+    if unmapped_sequence is not None:
+        unmapped = open(unmapped_sequence, "w")
     bamtype = check_bam_type(filename)
     filter_mode = False if not (genomefile is not None and referencefile is not None) else True
     
@@ -58,8 +62,8 @@ def annobam(filename: str,
                 ref_sequence = reference.fetch(name)
                 anno_start = min(annoset.start)
                 anno_end = max(annoset.end)
-                blocks = [(anno_start, anno_end)]
-                gene_sequence = genome.fetch_blocks(chrom, blocks, fragment_strand)
+                gene_blocks = [(anno_start, anno_end)]
+                gene_sequence = genome.fetch_blocks(chrom, gene_blocks, fragment_strand)
                 if gene_sequence.find(reverse_seq(ref_sequence)) > -1:
                     filter_log_obj.write(f"{name} has reversed seqence of reference.\n")
                     file_obj.write(f"{name}\t{chrom}\t{start}\t{end}\t{blocks}\t{fragment_strand}\t{annoset}\n")
@@ -103,6 +107,9 @@ def annobam(filename: str,
                     blocks2 = read2.get_blocks()
                     if read1.reference_name == read2.reference_name and strand1 == strand2 and intervals_is_overlap(blocks1, blocks2):
                         merge_blocks = merge_intervals(blocks1, blocks2)
+                        if min_len and blocks_len(merge_blocks) < min_len:
+                            logging.info(f"{read1.query_name} < {min_len}nt, considered an unmapped read pair.")
+                            continue
                         anno_read(merge_blocks, strand1, read1)
                     else:
                         anno_read(blocks1, strand1, read1)
@@ -118,8 +125,19 @@ def annobam(filename: str,
     else:
         with Bam(filename) as bam:
             i = 0
-            for read in bam.iter_mapped():
+            for read in bam.iter(secondary=False, supplementary=False):
+                if read.is_qcfail:
+                    continue
+                if read.is_unmapped :
+                    if unmapped_sequence is not None:
+                        unmapped.write(f">{read.query_name}\n{read.get_forward_sequence()}\n")
+                    continue
                 blocks = read.get_blocks()
+                if min_len and blocks_len(blocks) < min_len:
+                    logging.info(f"{read.query_name} < {min_len}nt, considered an unmapped read.")
+                    if unmapped_sequence is not None:
+                        unmapped.write(f">{read.query_name}\n{read.get_forward_sequence()}\n")
+                    continue
                 strand = '-' if read.is_reverse else '+'
                 anno_read(blocks, strand, read)
                 i += 1
@@ -128,7 +146,9 @@ def annobam(filename: str,
         filter_log_obj.close()
     if mapped_sequence is not None:
         mapped.close()
-            
+    if unmapped_sequence is not None:
+        unmapped.close()
+
 
 def main(
     filename: str,
@@ -140,19 +160,24 @@ def main(
     strand: bool = True,
     rule: str = "1+-,1-+,2++,2--",
     annofragments: bool = False,
+    min_len: int = 0,
     ordered_by_name: bool = False,
     genomefile: Optional[str] = None,
     referencefile: Optional[str] = None,
     check_up_and_down: Optional[int] = 1000,
     filter_log: str = os.devnull,
-    mapped_sequence: Optional[str] = None
+    mapped_sequence: Optional[str] = None,
+    unmapped_sequence: Optional[str] = None,
 ):
     start = time.perf_counter()
     grangetree = load_grangetree(gtf_file, level, tss_region, downstream, strand)
     with open(outfilename, "w", encoding="utf-8") as annofile:
         annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\ttype\n")
         logging.info("start annotating, use bam mode ...")
-        annobam(filename, annofile, grangetree, annofragments, tss_region, downstream, rule, ordered_by_name, genomefile, referencefile, check_up_and_down, filter_log, mapped_sequence)
+        annobam(filename, annofile, grangetree, annofragments,
+                tss_region, downstream, rule, min_len,
+                ordered_by_name, genomefile, referencefile,
+                check_up_and_down, filter_log, mapped_sequence, unmapped_sequence)
     end = time.perf_counter()
     logging.info(f"task completed in {end-start:.2f}s, annofile saved in {outfilename}")
     
@@ -177,6 +202,8 @@ def run():
                         help="how read(s) were stranded during sequencing. only for bam.")
     parser.add_argument("-p", "--pair", dest="pair", action="store_true",
                         help="annotate fragments instead of reads.")
+    parser.add_argument("--min_len", dest="len", type=int, default=0,
+                        help="length < len is considered an unmapped read.")
     parser.add_argument("--ordered_by_name", dest="ordered_by_name", action="store_true",
                         help="if input bam is ordered by name, only for pair-end bam.")
     parser.add_argument("--filter_mode", dest="filter_mode", action="store_true", help="enable filter mode, --genome and --refernce needed.")
@@ -185,6 +212,7 @@ def run():
     parser.add_argument("--reference", dest="reference", type=str, default=None, help="refernce sequence")
     parser.add_argument("--check_up_and_down", dest="check_up_and_down", type=int, default=None, help="check_upstream and downstream")
     parser.add_argument("--mapped_sequence", dest="mapped_sequence", type=str, default=None, help="mapped sequence, --genome needed")
+    parser.add_argument("--unmapped_sequence", dest="unmapped_sequence", type=str, default=None, help="unmapped sequence. not support --pair mode")
 
     args = parser.parse_args()
     assert len(args.tss_region) == 2, "tss_region must be a tuple of 2 elements."
@@ -197,7 +225,14 @@ def run():
         if args.genome is None:
             args = parser.parse_args(['-h'])
     
-    main(args.input, args.output, args.gtf, args.level, args.tss_region, args.downstream, args.strand, args.rule, args.pair, args.ordered_by_name, args.genome, args.reference, args.check_up_and_down, args.mapped_sequence)
+    if args.unmapped_sequence is not None:
+        if args.pair is not None:
+            args = parser.parse_args(['-h'])
+    
+    main(args.input, args.output, args.gtf, args.level, args.tss_region,
+         args.downstream, args.strand, args.rule, args.pair, args.len,
+         args.ordered_by_name, args.genome, args.reference, args.check_up_and_down,
+         args.mapped_sequence, args.unmapped_sequence)
 
 
 if __name__ == "__main__":
