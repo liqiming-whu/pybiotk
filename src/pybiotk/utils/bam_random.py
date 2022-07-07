@@ -4,7 +4,7 @@ import argparse
 import pysam
 import numpy as np
 from typing import Optional
-from pybiotk.utils import logging
+from pybiotk.utils import logging, ignore
 from pybiotk.io import count_bam_size
 
 
@@ -36,6 +36,7 @@ def main(input: str = "-", output: str = "-", bam: bool = False, bamsize: Option
                 outf.write(segment)
 
 
+@ignore
 def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -53,3 +54,7 @@ def run():
     except ValueError:
         logging.error("An error occurs, input BAM file must have a header, use '-h' option when using samtools view.")
         raise
+
+
+if __name__ == "__main__":
+    run()
