@@ -217,7 +217,7 @@ def run():
     args = parser.parse_args()
     assert len(args.tss_region) == 2, "tss_region must be a tuple of 2 elements."
     
-    if args.filter_mode is not None:
+    if args.filter_mode:
         if not (args.genome is not None and args.reference is not None):
             args = parser.parse_args(['-h'])
     
