@@ -23,14 +23,20 @@ class BamType(Enum):
 
 def check_bam_type(filename: str) -> str:
     logging.info(f"checking bam type: {filename} ...")
-    with pysam.AlignmentFile(filename, "rb") as bam:
+    with pysam.AlignmentFile(filename) as bam:
         read = next(bam)
         if read.is_read1 or read.is_read2:
             bamtype = BamType.PE
         else:
             bamtype = BamType.SE
         sys.stderr.write(f"bamtype is {bamtype.value}.\n")
-        return bamtype
+    return bamtype
+
+
+def count_bam_size(filename: str) -> int:
+    with pysam.AlignmentFile(filename) as bam:
+        count = bam.count()
+    return count
 
 
 class BamTypeError(RuntimeError):
