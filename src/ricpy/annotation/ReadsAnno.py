@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-from re import A
 import sys
 import time
 import argparse
