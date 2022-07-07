@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 import argparse
 import pysam
@@ -49,6 +50,8 @@ def run():
     args = parser.parse_args()
     if args.filename is None:
         args = parser.parse_args(['-h'])
+    if not os.path.exists(args.filename):
+        raise OSError(f"No such file or directory: {args.filename}")
     try:
         main(args.filename, args.file, args.bam, args.bamsize, args.count)
     except ValueError:
