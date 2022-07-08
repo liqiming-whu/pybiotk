@@ -24,7 +24,7 @@ if __name__ == "__main__":
               use_scm_version={"version_scheme": "no-guess-dev"},
               ext_modules=cythonize(ext_modules, build_dir="build"),
               scripts=glob("rscripts/*.R") + glob("scripts/*sh"),)
-    except:  # noqa
+    except:
         print(
             "\n\nAn error occurred while building the project, "
             "please ensure you have the most updated version of setuptools, "

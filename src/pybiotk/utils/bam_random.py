@@ -42,7 +42,7 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", "--input", dest="filename", type=str, default=(None if sys.stdin.isatty() else "-"), help="the input BAM file, must with header [stdin]")
+    parser.add_argument(dest="filename", nargs='?', type=str, default=(None if sys.stdin.isatty() else "-"), help="the input BAM file, must with header [stdin]")
     parser.add_argument("-o", "--output", dest="file", type=str, default="-", help="Write output to FILE [stdout]")
     parser.add_argument("-b", "--bam", dest="bam", action="store_true", help="Output BAM")
     parser.add_argument("--bamsize", dest="bamsize", type=int, default=None, help="bamsize. If unknown, it will take some time and memory to calculate")
@@ -50,7 +50,7 @@ def run():
     args = parser.parse_args()
     if args.filename is None:
         args = parser.parse_args(['-h'])
-    if not os.path.exists(args.filename):
+    if not args.filename == "-" and not os.path.exists(args.filename):
         raise OSError(f"No such file or directory: {args.filename}")
     try:
         main(args.filename, args.file, args.bam, args.bamsize, args.count)
