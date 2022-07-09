@@ -61,7 +61,10 @@ def gene_expression(gene: Dict[str, List[MergedTranscript]],
                     loci: Literal["body", "tss", "tes"] = "body",
                     method: Literal['coverage', 'reads'] = 'coverage',
                     distance: int = 3000, njobs=20):
-    logging.info(f"start to calculate gene {method} in {loci} +- {distance}...")
+    if loci == "body":
+        logging.info(f"start to calculate gene {method} in {loci} ...")
+    else:
+        logging.info(f"start to calculate gene {method} in {loci} +- {distance}...")
     start = time.perf_counter()
     with ProcessPoolExecutor(max_workers=njobs) as pool:
         bw_rev = bw_rev if bw_rev is not None else bw_fwd
