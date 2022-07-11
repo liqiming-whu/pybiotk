@@ -159,6 +159,7 @@ def run_readthrough(filtered_high_expressed_gene: Dict[str, List[MergedTranscrip
     mkdir(outdir)
     cd(outdir)
     logging.info("Start readthrough task ...")
+
     start = time.perf_counter()
     if os.path.exists("readthrough_coverage.xls"):
         logging.info("using exists file: readthrough_coverage.xls")
@@ -175,16 +176,16 @@ def run_readthrough(filtered_high_expressed_gene: Dict[str, List[MergedTranscrip
     end = time.perf_counter()
     logging.info(f"readthrough task compelted, use {end-start} s.")
 
-    logging.info("Start readthrough interpolation coverage task ...")
-    start = time.perf_counter()
-    if os.path.exists("readthrough_interpolation_coverage.xls"):
-        logging.info("using exists file: readthrough_interpolation_coverage.xls")
-    else:
-        readthrough_interpolation_coverage(filtered_high_expressed_gene, "readthrough_interpolation_coverage.xls", bw_fwd, bw_rev,
-                                           downStream=downStream, shift=downStart)
-    plot_readthrough_stats("readthrough_interpolation_coverage.xls", "readthrough_interpolation_coverage.pdf")
-    end = time.perf_counter()
-    logging.info(f"readthrough interpolation coverage task compelted, use {end-start} s.")
+    # logging.info("Start readthrough interpolation coverage task ...")
+    # start = time.perf_counter()
+    # if os.path.exists("readthrough_interpolation_coverage.xls"):
+    #     logging.info("using exists file: readthrough_interpolation_coverage.xls")
+    # else:
+    #     readthrough_interpolation_coverage(filtered_high_expressed_gene, "readthrough_interpolation_coverage.xls", bw_fwd, bw_rev,
+    #                                        downStream=downStream, shift=downStart)
+    # plot_readthrough_stats("readthrough_interpolation_coverage.xls", "readthrough_interpolation_coverage.pdf")
+    # end = time.perf_counter()
+    # logging.info(f"readthrough interpolation coverage task compelted, use {end-start} s.")
 
 
 def main():
