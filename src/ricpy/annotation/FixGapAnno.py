@@ -38,7 +38,7 @@ def merge_blocks(blocks1: List[Tuple[int, int]], blocks2: List[Tuple[int, int]])
 
 
 class ReadAnno:
-    def __init__(self, annofile):
+    def __init__(self, annofile: str):
         self.anno = pd.read_table(annofile, header=0, index_col=0)
         self.one_side_rna_anno = None
         self.two_rna_anno = None
@@ -126,9 +126,9 @@ class ReadAnno:
                                 sys.stderr.write(f"{read_name}(Intergenic) has reference in blocks downStream 1k.\n")
                                 continue
                         else:
-                            start = min(list(map(int, geneStart)))
-                            end = max(list(map(int, geneEnd)))
-                            gene_sequence = genome.fetch_blocks(read_L_chrom, [(start, end)], read_L_strand)
+                            gene_start = min(list(map(int, geneStart)))
+                            gene_end = max(list(map(int, geneEnd)))
+                            gene_sequence = genome.fetch_blocks(read_L_chrom, [(gene_start, gene_end)], read_L_strand)
                             if gene_sequence.find(reverse_seq(ref_sequence)) > -1:
                                 sys.stderr.write(f"{read_name} has reversed sequence of reference in gene body.\n")
                             else:
@@ -136,8 +136,8 @@ class ReadAnno:
                                     sys.stderr.write(f"{read_name} has ref_sequence in gene body.\n")
                                     continue
                                 if check_up_and_down is not None:
-                                    up_blocks = [(start-check_up_and_down, start)]
-                                    down_blocks = [(end, end+ check_up_and_down)]
+                                    up_blocks = [(gene_start-check_up_and_down, gene_start)]
+                                    down_blocks = [(gene_end, gene_end+ check_up_and_down)]
                                     if read_L_strand == "-":
                                         up_blocks, down_blocks = down_blocks, up_blocks
                                     up_sequence = genome.fetch_blocks(read_L_chrom, up_blocks, read_L_strand)
