@@ -34,16 +34,17 @@ pybiotk
 =======
 
 
-# pybiotk: A python toolkit for bioinformatics analysis
+pybiotk: A python toolkit for bioinformatics analysis
 
 
-## Install
+Install
+====
 
-    python setup.py install
+python setup.py install
 
-## Modules
+Modules
+====
 
-```
 console_scripts =
     gtf2bed = pybiotk.convert.gtf2bed:run
     bed2bedgraph = pybiotk.convert.bed2bedgraph:run
@@ -64,11 +65,12 @@ console_scripts =
     rna_fragment_size = pybiotk.utils.fragment_size:run
     merge_subseq = pybiotk.utils.merge_subseq:run
     subseq_analysis = pybiotk.utils.subseq_analysis:run
-```
 
-## Usage
 
-```
+Usage
+====
+
+
 usage: pyanno [-h] -i INPUT -o OUTPUT -g GTF [-l {transcript,gene}] [--tss_region TSS_REGION [TSS_REGION ...]] [--downstream DOWNSTREAM] [-s]
               [--rule {1+-,1-+,2++,2--,1++,1--,2+-,2-+,+-,-+,++,--}] [-p] [--ordered_by_name]
 
@@ -90,7 +92,7 @@ optional arguments:
                         how read(s) were stranded during sequencing. only for bam. (default: 1+-,1-+,2++,2--)
   -p, --pair            annotate fragments instead of reads. (default: False)
   --ordered_by_name     if input bam is ordered by name, only for pair-end bam. (default: False)
-```
+
 
 .. _pyscaffold-notes:
 
