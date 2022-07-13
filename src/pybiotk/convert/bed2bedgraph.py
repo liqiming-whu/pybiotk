@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import os
+import sys
 import argparse
 import pandas as pd
 from collections import defaultdict
 from itertools import groupby
-from pybiotk.utils import split_discontinuous
+from pybiotk.utils import split_discontinuous, ignore
 
 
 def main(bed_list, header):
@@ -27,12 +28,10 @@ def main(bed_list, header):
         for value, group in groupby(values_items, lambda x: x[1]):
             pos = [i[0] for i in group]
             for pos_list in split_discontinuous(pos):
-                try:
-                    print(f"{chrom}\t{pos_list[0]}\t{pos_list[-1]}\t{value}")
-                except BrokenPipeError:
-                    return
+                sys.stdout.write(f"{chrom}\t{pos_list[0]}\t{pos_list[-1]}\t{value}\n")
 
 
+@ignore
 def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
