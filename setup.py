@@ -20,8 +20,7 @@ ext_modules = [
 if __name__ == "__main__":
     try:
         setup(name="pybiotk",
-              version="1.0.2",
-              use_scm_version={"version_scheme": "no-guess-dev"},
+              use_scm_version={"version_scheme": "no-guess-dev", "local_scheme": "no-local-version"},
               ext_modules=cythonize(ext_modules, build_dir="build"),
               scripts=glob("rscripts/*.R") + glob("scripts/*sh"),)
     except:
