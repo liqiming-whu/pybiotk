@@ -2,6 +2,7 @@
 
 ## Install
 
+    pip install pybiotk
     python setup.py install
 
 ## Modules
