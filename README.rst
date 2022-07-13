@@ -45,28 +45,25 @@ python setup.py install
 Modules
 ====
 
-::
-
-    console_scripts =
-        gtf2bed = pybiotk.convert.gtf2bed:run
-        bed2bedgraph = pybiotk.convert.bed2bedgraph:run
-        fq2fasta = pybiotk.convert.fq2fasta:run
-        bam2fastx = pybiotk.convert.bam2fastx:run
-        bampe_order_by_name = pybiotk.convert.bampe_order_by_name:run
-        bam_random = pybiotk.utils.bam_random:run
-        gtf_filter = pybiotk.utils.gtf_filter:run
-        fasta_filter = pybiotk.utils.fasta_filter:run
-        fastq_uniq = pybiotk.utils.fastq_uniq:run
-        seq_random = pybiotk.utils.seq_random:run
-        merge_row = pybiotk.utils.merge_row:run
-        read_tables = pybiotk.utils.read_tables:run
-        rmats_filter = pybiotk.utils.rmats_filter:run
-        count_normalize = pybiotk.utils.normalize:run
-        reference_count = pybiotk.utils.reference_count:run
-        pyanno = pybiotk.utils.pyanno:run
-        rna_fragment_size = pybiotk.utils.fragment_size:run
-        merge_subseq = pybiotk.utils.merge_subseq:run
-        subseq_analysis = pybiotk.utils.subseq_analysis:run
+gtf2bed = pybiotk.convert.gtf2bed:run
+bed2bedgraph = pybiotk.convert.bed2bedgraph:run
+fq2fasta = pybiotk.convert.fq2fasta:run
+bam2fastx = pybiotk.convert.bam2fastx:run
+bampe_order_by_name = pybiotk.convert.bampe_order_by_name:run
+bam_random = pybiotk.utils.bam_random:run
+gtf_filter = pybiotk.utils.gtf_filter:run
+fasta_filter = pybiotk.utils.fasta_filter:run
+fastq_uniq = pybiotk.utils.fastq_uniq:run
+seq_random = pybiotk.utils.seq_random:run
+merge_row = pybiotk.utils.merge_row:run
+read_tables = pybiotk.utils.read_tables:run
+rmats_filter = pybiotk.utils.rmats_filter:run
+count_normalize = pybiotk.utils.normalize:run
+reference_count = pybiotk.utils.reference_count:run
+pyanno = pybiotk.utils.pyanno:run
+rna_fragment_size = pybiotk.utils.fragment_size:run
+merge_subseq = pybiotk.utils.merge_subseq:run
+subseq_analysis = pybiotk.utils.subseq_analysis:run
 
 
 Usage
