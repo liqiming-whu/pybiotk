@@ -2,8 +2,35 @@
 
 ## Install
 
-    pip install pybiotk
-    python setup.py install
+> **SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.**
+
+### use PyPi(official)
+
+```
+pip install pybiotk
+```
+
+**An older version may be installed**
+
+### use build frontend([build: A simple, correct PEP 517 build frontend.](https://pypi.org/project/build/))
+
+```
+git clone https://gitee.com/liqiming_whu/pybiotk.git
+cd pybiotk
+pip install build
+python -m build
+pip install dist/*tar.gz
+```
+
+### use setup.py sdist
+
+```
+git clone https://gitee.com/liqiming_whu/pybiotk.git
+cd pybiotk
+pip install cython
+python setup.py sdist
+pip install dist/*tar.gz
+```
 
 ## Modules
 
