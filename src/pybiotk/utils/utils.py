@@ -127,7 +127,7 @@ def infer_fragment_strand(strand: Literal["+", "-"], rule: str = "1+-,1-+,2++,2-
     fragment_strand = None
     rules = ["1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"]
     assert rule in rules
-    if rule == rules[0] or rule == rules[3]:
+    if rule == rules[0] or rule == rules[2]:
         if strand == "-":
             fragment_strand = "+"
         elif strand == "+":
