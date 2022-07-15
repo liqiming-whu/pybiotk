@@ -85,7 +85,7 @@ class Transcript(GFeature):
         if self.strand == '+':
             region = tuple(i+self.start for i in region)
         else:
-            region = tuple(i+self.end for i in region)
+            region = tuple(reversed(tuple(self.end-i for i in region)))
         return region
 
     def downstream(self, down: int = 5000) -> Tuple[int, int]:
