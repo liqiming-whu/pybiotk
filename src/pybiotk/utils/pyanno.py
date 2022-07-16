@@ -161,7 +161,7 @@ def run():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", "--input", dest="input", type=str, required=True,
-                        help="input file, bam or bed. The file type will bed inferred from the filename suffix ['*.bam', '*.bed'].")
+                        help="input file, bam or bed. The file type will be inferred from the filename suffix ['*.bam', '*.bed'].")
     parser.add_argument("-o", "--output", dest="output", type=str, required=True, help="output file name.")
     parser.add_argument("-g", "--gtf", dest='gtf', required=True,
                         help="gtf file download from Genecode, or a sorted gtf file.")

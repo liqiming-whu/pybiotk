@@ -66,7 +66,7 @@ usage: pyanno [-h] -i INPUT -o OUTPUT -g GTF [-l {transcript,gene}] [--tss_regio
 optional arguments:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
-                        input file, bam or bed. The file type will bed inferred from the filename suffix ['*.bam', '*.bed']. (default: None)
+                        input file, bam or bed. The file type will be inferred from the filename suffix ['*.bam', '*.bed']. (default: None)
   -o OUTPUT, --output OUTPUT
                         output file name. (default: None)
   -g GTF, --gtf GTF     gtf file download from Genecode, or a sorted gtf file. (default: None)
