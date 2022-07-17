@@ -79,7 +79,7 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
     geom_text_repel(inherit.aes=F, data=need_rank,
         aes(x=rank, y=log2FoldChange, label=gene_id), color=need_rank$color, segment.color="grey", size=2, direction='both') +
     scale_y_continuous(breaks=c(-6, -3, -1, 0, 1, 3, 6)) +
-    theme_bw(base_size=12, base_family = "Times") +
+    theme_bw(base_size=12, base_family = "Arial") +
     theme(legend.position="right",
           panel.grid = element_blank(),
           legend.title = element_blank(),
@@ -104,7 +104,7 @@ plot <- ggplot(data=data,
     geom_text_repel(inherit.aes=F, data=need_label,
         aes(x=log2FoldChange, y=log10(reads), label=gene_id), color=need_label$color, segment.color="grey", size=2, direction='both') +
     scale_x_continuous(breaks=c(-6, -3, -1, 0, 3, 1, 6)) +
-    theme_bw(base_size=12, base_family = "Times") +
+    theme_bw(base_size=12, base_family = "Arial") +
     theme(legend.position="right",
           panel.grid=element_blank(),
           legend.title = element_blank(),
@@ -164,7 +164,7 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
     geom_text_repel(inherit.aes=F, data=need_rank,
         aes(x=rank, y=log2FoldChange, label=gene_id), color=need_rank$color, segment.color="grey", size=2, direction='both') +
     scale_y_continuous(breaks=c(-6, -3, -1, 0, 1, 3, 6)) +
-    theme_bw(base_size=12, base_family = "Times") +
+    theme_bw(base_size=12, base_family = "Arial") +
     theme(legend.position="right",
           panel.grid = element_blank(),
           legend.title = element_blank(),
@@ -187,7 +187,7 @@ plot <- ggplot(data=data,
     geom_hline(yintercept=-log10(p_value), lty=2, col="grey", lwd=0.6) +
     geom_text_repel(inherit.aes=F, data=need_label,
         aes(x=log2FoldChange, y=-log10(pvalue), label=gene_id), color=need_label$color, segment.color="grey", size=2, direction='both') +
-    theme_bw(base_size=12, base_family = "Times") +
+    theme_bw(base_size=12, base_family = "Arial") +
     theme(legend.position="right",
          panel.grid=element_blank(),
          legend.title = element_blank(),
