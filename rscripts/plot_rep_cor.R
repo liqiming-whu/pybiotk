@@ -75,7 +75,7 @@ log10_x <- log10(data$x)[!is.infinite(log10(data$x))]
 
 p <- ggplot(data) +
     geom_point(aes(x=log10(x), y=log10(y)), color="blue") +
-    geom_text(aes(x=min(log10_x) + 0.05*(max(log10_x) - min(log10_x)), y=max(log10(y))), label=label, size = 4) +
+    geom_text(aes(x=min(log10_x) + 0.05*(max(log10_x) - min(log10_x)), y=max(log10(y))), label=label, size = 4, check_overlap=T) +
     labs(x=paste0(samples_name[1]," log10(FPKM)"), y=paste0(samples_name[2], " log10(FPKM)")) +
     theme_bw(base_size = 12) +
     theme(panel.grid=element_blank(), legend.position="none")

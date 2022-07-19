@@ -1,3 +1,4 @@
+# cython: language_level=3
 """
 Kanwei Li, 2009
 Inspired by previous ClusterTree

@@ -1,3 +1,4 @@
+# cython: language_level=3
 """
 Data structure for performing intersect queries on a set of intervals which
 preserves all information about the intervals (unlike bitset projection methods).

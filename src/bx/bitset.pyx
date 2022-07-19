@@ -1,3 +1,4 @@
+# cython: language_level=3
 """
 Compact mutable sequences of bits (vectors of 0s and 1s) supporting various
 boolean operations, and a "binned" variation which stores long runs of 
