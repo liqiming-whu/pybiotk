@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import re
 import sys
-import argparse
-import pandas as pd
-from typing import Optional, Sequence, TextIO, Union
 from collections import namedtuple
-from stream import cat, head
+from typing import Optional, Sequence, TextIO, Union
+
+import pandas as pd
+
 from pybiotk.utils import write_table, ignore
+from stream import cat, head
 
 
 def parse_cutadapt(filename: str):

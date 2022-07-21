@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
-import argparse
-import pandas as pd
 from typing import Sequence, Literal
+
+import pandas as pd
+
 from pybiotk.utils import write_table, ignore
 
 

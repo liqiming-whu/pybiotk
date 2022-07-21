@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+
 from typing import List, Iterable, Tuple, Iterator
+
 from pybiotk.bx.bitset import BinnedBitSet, MAX
 
 
@@ -26,7 +28,7 @@ class MergedIntervals:
             if start == self.bitset.size:
                 break
             end = self.bitset.next_clear(start)
-            yield (start, end)
+            yield start, end
 
     def clear(self):
         del self.bitset

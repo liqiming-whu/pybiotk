@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
-from io import TextIOWrapper
 from dataclasses import dataclass, field
+from io import TextIOWrapper
 from typing import List, Sequence, Tuple, Literal, Iterable, Iterator, Optional, Union, TextIO
-from stream.pipe import Pipe, sort, drop_while, filter, kgroupby, groupby, apply, window
-from pybiotk.io.bed import Bed6, Bed12, Intron, GeneInfo, TransInfo
+
 from pybiotk.annodb import Transcript
+from pybiotk.io.bed import Bed6, Bed12, Intron, GeneInfo, TransInfo
+from stream.pipe import Pipe, sort, drop_while, filter, kgroupby, groupby, apply, window
 
 
 @dataclass
@@ -30,7 +31,7 @@ class GTF:
         return "\t".join(str(s) for s in list(self.__dict__.values())[:9])
 
     @staticmethod
-    def parse_attributes(term: str, attributes: str) -> str:
+    def parse_attributes(term: str, attributes: str) -> Optional[str]:
         parse_attr = re.compile('{term} "([^"]+)"'.format(term=term))
         patterns = parse_attr.findall(attributes)
 
@@ -95,7 +96,7 @@ def to_Bed12(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") -
         gtfs: Iterator[GTF] = group | sort(key=lambda x: x.start)
 
         cds_exons: Sequence[GTF] = []
-        bed: Bed12 = None
+        bed: Optional[Bed12] = None
         for gtf in gtfs:
             if gtf.feature in {'CDS', 'stop_codon'}:
                 cds_exons.append(gtf)
@@ -129,7 +130,7 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
         gtfs: Iterator[GTF] = group | sort(key=lambda x: x.start)
 
         cds_exons: Sequence[GTF] = []
-        transcript: Transcript = None
+        transcript: Optional[Transcript] = None
         for gtf in gtfs:
             if gtf.feature in {'CDS', 'stop_codon'}:
                 cds_exons.append(gtf)
@@ -188,7 +189,7 @@ class GtfFile:
             self.gtf_list = None
             self.ptr = 0
 
-    def to_list(self) -> List[GTF]:
+    def to_list(self) -> Optional[List[GTF]]:
         if self.gtf_list is None:
             _ = list(self)
         return self.gtf_list

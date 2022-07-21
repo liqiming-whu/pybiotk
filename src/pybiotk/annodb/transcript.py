@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+
 import warnings
 from typing import List, Tuple, Literal, Iterable, Sequence, Optional, TYPE_CHECKING
-from stream import flatten, window, skip_while, to_list
+
 from pybiotk.annodb import GFeature, GenomicAnnotation
+from stream import flatten, window, skip_while, to_list
 
 if TYPE_CHECKING:
     from pybiotk.io import TransInfo, Bed12, GTF

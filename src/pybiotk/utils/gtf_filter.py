@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import sys
 import argparse
+import sys
 from typing import Sequence, Optional, TextIO
-from stream import write
+
 from pybiotk.io import GtfFile
 from pybiotk.utils import ignore
+from stream import write
 
 
 def main(istream: TextIO,

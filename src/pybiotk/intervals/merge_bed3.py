@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from typing import List, Dict, Iterable, Iterator
+
 from pybiotk.bx.bitset import BinnedBitSet, MAX
 
 
-def binned_bitsets_from_list(list: Iterable[List]) -> Dict:
+def binned_bitsets_from_list(lst: Iterable[List]) -> Dict:
     """Read a list into a dictionary of bitsets"""
     last_chrom = None
     last_bitset = None
     bitsets = dict()
-    for bed in list:
+    for bed in lst:
         chrom = bed[0]
         if chrom != last_chrom:
             if chrom not in bitsets:
@@ -21,7 +22,7 @@ def binned_bitsets_from_list(list: Iterable[List]) -> Dict:
 
 
 def unionBed3(lst: Iterable[List]) -> Iterator[List]:
-    '''Take the union of 3 column bed files. return a new list'''
+    """Take the union of 3 column bed files. return a new list"""
     bitsets = binned_bitsets_from_list(lst)
     for chrom in bitsets:
         bits = bitsets[chrom]
@@ -32,11 +33,11 @@ def unionBed3(lst: Iterable[List]) -> Iterator[List]:
                 break
             end = bits.next_clear(start)
             yield [chrom, start, end]
-    bitsets = dict()
+    del bitsets
 
 
 def intersectBed3(lst1, lst2) -> Iterator[List]:
-    '''Take the intersection of two bed files (3 column bed files)'''
+    """Take the intersection of two bed files (3 column bed files)"""
     bits1 = binned_bitsets_from_list(lst1)
     bits2 = binned_bitsets_from_list(lst2)
 
@@ -61,7 +62,7 @@ def intersectBed3(lst1, lst2) -> Iterator[List]:
 
 
 def subtractBed3(lst1, lst2) -> Iterator[List]:
-    '''subtrack lst2 from lst1'''
+    """subtract lst2 from lst1"""
     bitsets1 = binned_bitsets_from_list(lst1)
     bitsets2 = binned_bitsets_from_list(lst2)
 

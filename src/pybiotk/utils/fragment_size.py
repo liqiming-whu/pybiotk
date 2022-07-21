@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
 import time
-import argparse
 from collections import Counter
+
+from pybiotk.intervals import merge_intervals
 from pybiotk.io import Bam, BamPE, BamType, check_bam_type
 from pybiotk.utils import logging, blocks_len, intervals_is_overlap, ignore
-from pybiotk.intervals import merge_intervals
 
 
 def main(filename: str, output: str, ordered_by_name: bool = False):

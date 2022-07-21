@@ -1,2 +1,2 @@
-from .stream import *
 from .pipe import *
+from .stream import *

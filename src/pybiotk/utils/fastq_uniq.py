@@ -2,6 +2,7 @@
 import argparse
 import time
 from typing import Sequence
+
 from pybiotk.io import FastqFile, FastqPair, OpenFqGzip
 from pybiotk.utils import logging
 

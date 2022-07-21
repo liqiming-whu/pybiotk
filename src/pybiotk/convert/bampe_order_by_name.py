@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+
 from pybiotk.io import BamPE, BamType, BamTypeError, check_bam_type
 from pybiotk.utils import logging
 

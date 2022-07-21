@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-import time
 import argparse
-import pysam
+import time
 from typing import Literal, Union, TextIO, Optional
+
+import pysam
+
 from pybiotk.io import OpenFqGzip, Bam, BamPE, BamType, check_bam_type
 from pybiotk.utils import logging
 
 
 def write_recode(fileobj: Union[TextIO, OpenFqGzip], record: pysam.libcfaidx.FastxRecord, outformat: Literal['fastq', 'fasta']):
     if outformat == 'fastq':
-        fileobj.write_fastx_recode(record)
+        fileobj.write_fastx_record(record)
     else:
         fileobj.write(f">{record.name}\n{record.sequence}\n")
 
@@ -27,7 +29,7 @@ def main(filename: str, prefix: str, bamtype: Optional[BamType] = None, outforma
             out = OpenFqGzip(prefix + ".fastq.gz")
         with Bam(filename) as bam:
             logging.info(f"writing reads to {out.name} ...")
-            for record in bam.to_fastx_recorde():
+            for record in bam.to_fastx_record():
                 write_recode(out, record, outformat)
         out.close()
     elif bamtype is BamType.PE:
@@ -45,14 +47,14 @@ def main(filename: str, prefix: str, bamtype: Optional[BamType] = None, outforma
         with BamPE(filename) as bampe:
             bampe.ordered_by_name = ordered_by_name
             logging.info(f"writing property paired reads to {out_r1.name} {out_r2.name} ...")
-            for record1, record2 in bampe.to_fastx_recorde_pair():
+            for record1, record2 in bampe.to_fastx_record_pair():
                 write_recode(out_r1, record1, outformat)
                 write_recode(out_r2, record2, outformat)
             logging.info(f"writing unpaired reads to {unpaired_r1.name} ...")
-            for record in bampe.to_fastx_recorde_unpaired(terminal="read1"):
+            for record in bampe.to_fastx_record_unpaired(terminal="read1"):
                 write_recode(unpaired_r1, record, outformat)
             logging.info(f"writing unpaired reads to {unpaired_r2.name} ...")
-            for record in bampe.to_fastx_recorde_unpaired(terminal="read2"):
+            for record in bampe.to_fastx_record_unpaired(terminal="read2"):
                 write_recode(unpaired_r2, record, outformat)
         out_r1.close()
         out_r2.close()

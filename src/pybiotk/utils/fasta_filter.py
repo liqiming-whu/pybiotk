@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-import time
 import argparse
+import time
 from typing import Sequence
+
 from pybiotk.io import FastaFile
 from pybiotk.utils import logging, ignore
 

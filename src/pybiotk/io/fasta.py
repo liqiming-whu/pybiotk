@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
+import itertools
+import random
 import re
 import sys
-import random
-import itertools
-import pysam
 from typing import Dict, List, Sequence, Iterable, Iterator, Tuple, Literal, Callable, Optional
-from pybiotk.utils import reverse_seq
+
+import pysam
+
 from pybiotk.intervals import GRange
+from pybiotk.utils import reverse_seq
 
 
 class FastaFile(pysam.FastaFile):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.reference_dict: Dict[str, str] = None
+    def __init__(self, filename: str, **kwargs):
+        super().__init__(filename, **kwargs)
+        self.reference_dict: Optional[Dict[str, str]] = None
 
     def __iter__(self) -> Iterator:
         for reference in self.references:
@@ -37,6 +39,7 @@ class FastaFile(pysam.FastaFile):
 
     def load_into_dict(self) -> Dict[str, str]:
         self.reference_dict = dict((reference, seq) for reference, seq in self)
+        return self.reference_dict
 
     def fetchs(self, reference: str, start: int, end: int, strand: Literal["+", "-"] = "+"):
         sequence = self.fetch(reference, int(start), int(end))
@@ -57,8 +60,8 @@ class FastaFile(pysam.FastaFile):
 
 
 class GenomeFile(FastaFile):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
+    def __init__(self, filename: str, **kwargs):
+        super().__init__(filename, **kwargs)
         self.custom_chroms: List[str] = self.chroms_norm()
 
     get_chrom_length: Callable[[str], int] = FastaFile.get_reference_length
@@ -80,7 +83,7 @@ class GenomeFile(FastaFile):
     def chroms_norm(self) -> List[str]:
         chroms = []
         for chrom in self.chroms:
-            if chrom.startswith("chr") or re.match("[0-9].*", chrom):
+            if chrom.startswith("chr") or re.match(r"\d.*", chrom):
                 chroms.append(chrom)
         return chroms
 
@@ -98,7 +101,7 @@ class GenomeFile(FastaFile):
         else:
             seq = self.fetch_blocks(chrom, [(start, end)], strand).upper()
         gRange = GRange(chrom, start, end, strand)
-        return (gRange, seq)
+        return gRange, seq
 
     def stdout(self, chromList: Optional[Sequence[str]] = None, wrap: bool = True):
         if not chromList:

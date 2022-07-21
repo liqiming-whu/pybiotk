@@ -1,5 +1,6 @@
 import argparse
 from collections import defaultdict
+
 from pybiotk.io import Bam, BamPE, BamType, check_bam_type
 
 

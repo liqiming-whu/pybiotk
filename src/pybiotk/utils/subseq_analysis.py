@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import os
 import argparse
-import pysam
+import os
 from collections import defaultdict
+
+import pysam
 
 
 def main(originfa, path, outdir, more_x="C"):

@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import gzip
-import pysam
 from typing import Iterator, Tuple, Optional
+
+import pysam
 
 
 class FastqFile(pysam.FastxFile):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.ptr: int = None
+    def __init__(self, filename: str, **kwargs):
+        super().__init__(filename, **kwargs)
+        self.ptr: Optional[int] = None
 
     def to_fasta(self) -> Iterator[str]:
         for entry in self:
@@ -33,7 +34,7 @@ class FastqPair:
         self.filename2 = read2
         self.read1 = FastqFile(read1)
         self.read2 = FastqFile(read2)
-        self.ptr: int = None
+        self.ptr: Optional[int] = None
 
     def __iter__(self) -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
         for entry1, entry2 in zip(self.read1, self.read2):
@@ -81,7 +82,7 @@ class OpenFqGzip:
         else:
             self.fq.write(f"@{name} {comment}\n{sequence}\n+\n{quality}\n".encode("utf-8"))
 
-    def write_fastx_recode(self, fq: pysam.libcfaidx.FastxRecord):
+    def write_fastx_record(self, fq: pysam.libcfaidx.FastxRecord):
         self.write_entry(fq.name, fq.comment, fq.sequence, fq.quality)
 
     def write(self, string: str):

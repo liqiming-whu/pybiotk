@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from io import TextIOWrapper
+
 from dataclasses import dataclass, field
+from io import TextIOWrapper
 from typing import List, Tuple, Literal, Iterable, Union, Optional, TextIO, TYPE_CHECKING
 
 if TYPE_CHECKING:

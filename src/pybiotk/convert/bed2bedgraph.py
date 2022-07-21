@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
-import argparse
-import pandas as pd
 from collections import defaultdict
 from itertools import groupby
+
+import pandas as pd
+
 from pybiotk.utils import split_discontinuous, ignore
 
 
@@ -25,8 +27,8 @@ def main(bed_list, header):
             for pos in range(start, end):
                 values[int(pos)] += 1
         values_items = sorted(values.items(), key=lambda x: x[0])
-        for value, group in groupby(values_items, lambda x: x[1]):
-            pos = [i[0] for i in group]
+        for value, g in groupby(values_items, lambda x: x[1]):
+            pos = [i[0] for i in g]
             for pos_list in split_discontinuous(pos):
                 sys.stdout.write(f"{chrom}\t{pos_list[0]}\t{pos_list[-1]}\t{value}\n")
 

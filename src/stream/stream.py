@@ -1,10 +1,11 @@
 from __future__ import annotations
-import sys
+
+import itertools
 import shlex
 import subprocess
-import itertools
-from enum import Enum
+import sys
 from collections import deque
+from enum import Enum
 from typing import (
     Set,
     List,

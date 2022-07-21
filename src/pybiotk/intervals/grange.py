@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any, List, Dict, Literal, Tuple, Union, Optional
+
 from pybiotk.bx.intersection import IntervalTree
-from pybiotk.utils import is_overlap
+
 from pybiotk.intervals.merge_intervals import MergedIntervals
+from pybiotk.utils import is_overlap
 
 
 @dataclass
@@ -70,10 +73,10 @@ class GRangeTree:
             key = (chrom, strand)
         else:
             key = chrom
-        overlaped = []
+        overlapped = []
         if key in self._trees.keys():
-            overlaped = self._trees[key].find(int(start), int(end))
-        return overlaped
+            overlapped = self._trees[key].find(int(start), int(end))
+        return overlapped
 
     def iter_chrom(self, chrom: str, strand: Optional[Literal['+', '-']] = None):
         if self.strand:
@@ -91,11 +94,11 @@ class GRangeTree:
 class MergedGRange:
     def __init__(self, strand: bool = False):
         self.strand: bool = strand
-        self._dict: Dict[Union[str, Tuple[str, ...]], MergedIntervals] = {}
+        self._trees: Dict[Union[str, Tuple[str, ...]], MergedIntervals] = {}
 
     def __iter__(self):
-        for key in self._dict:
-            merge_intervals = self._dict[key]
+        for key in self._trees:
+            merge_intervals = self._trees[key]
             if self.strand:
                 chrom, strand = key
             else:
@@ -107,14 +110,14 @@ class MergedGRange:
     def _add_record(self, key: Union[str, Tuple[str, ...]], start: int, end: int):
         if key not in self._trees.keys():
             self._trees[key] = MergedIntervals()
-        self._trees[key].add_interval(int(start), int(end))
+        self._trees[key].add_interval((int(start), int(end)))
 
-    def add(self, obj: Any, chrom: str, start: int, end: int, strand: Optional[Literal['+', '-']] = None):
+    def add(self, chrom: str, start: int, end: int, strand: Optional[Literal['+', '-']] = None):
         if self.strand:
             key = (chrom, strand)
         else:
             key = chrom
-        self._add_record(key, start, end, obj)
+        self._add_record(key, start, end)
 
     def add_range(self, record: GRange):
         if self.strand:
@@ -123,16 +126,16 @@ class MergedGRange:
             key = record.chrom
         start = record.start
         end = record.end
-        self._add_record(key, start, end, record)
+        self._add_record(key, start, end)
 
     def intersect(self, other: MergedGRange):
         assert self.strand == other.strand
-        for key in self._dict:
-            if key in other._dict:
-                self._dict[key].intersect(other._dict[key])
+        for key in self._trees:
+            if key in other._trees:
+                self._trees[key].intersect(other._trees[key])
 
     def subtract(self, other: MergedGRange):
         assert self.strand == other.strand
-        for key in self._dict:
-            if key in other._dict:
-                self._dict[key].subtract(other._dict[key])
+        for key in self._trees:
+            if key in other._trees:
+                self._trees[key].subtract(other._trees[key])

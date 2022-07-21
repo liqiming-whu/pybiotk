@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
-import argparse
-import pysam
-import numpy as np
 from typing import Optional
-from pybiotk.utils import logging, ignore
+
+import numpy as np
+import pysam
+
 from pybiotk.io import count_bam_size
+from pybiotk.utils import logging, ignore
 
 
 def main(input: str = "-", output: str = "-", bam: bool = False, bamsize: Optional[int] = None, count: int = 10000):

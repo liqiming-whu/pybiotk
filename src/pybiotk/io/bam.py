@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
-import pysam
 import time
-from enum import Enum
 from collections import deque, defaultdict
+from enum import Enum
 from typing import (
     AbstractSet,
     Set,
@@ -12,7 +11,11 @@ from typing import (
     Tuple,
     Optional,
     Iterator,
+    Union
 )
+
+import pysam
+
 from pybiotk.utils import logging
 
 
@@ -21,7 +24,7 @@ class BamType(Enum):
     PE = "PE"
 
 
-def check_bam_type(filename: str) -> str:
+def check_bam_type(filename: str) -> BamType:
     logging.info(f"checking bam type: {filename} ...")
     with pysam.AlignmentFile(filename) as bam:
         read = next(bam)
@@ -44,7 +47,6 @@ class BamTypeError(RuntimeError):
 
 
 class Bam(pysam.AlignmentFile):
-
     def iter(self, flags: Optional[AbstractSet[int]] = None,
              remove_flags: Optional[AbstractSet[int]] = None,
              secondary=False, supplementary=False) -> Iterator[pysam.AlignedSegment]:
@@ -96,7 +98,7 @@ class Bam(pysam.AlignmentFile):
                 yield read
 
     @staticmethod
-    def read_to_fastx_recode(read) -> pysam.libcfaidx.FastxRecord:
+    def read_to_fastx_record(read) -> pysam.libcfaidx.FastxRecord:
         return pysam.libcfaidx.FastxRecord(
                 name=read.query_name,
                 comment="",
@@ -104,9 +106,9 @@ class Bam(pysam.AlignmentFile):
                 quality=pysam.qualities_to_qualitystring(read.get_forward_qualities())
                 )
 
-    def to_fastx_recorde(self) -> Iterator[pysam.libcfaidx.FastxRecord]:
+    def to_fastx_record(self) -> Iterator[pysam.libcfaidx.FastxRecord]:
         for read in self.iter_mapped():
-            yield self.read_to_fastx_recode(read)
+            yield self.read_to_fastx_record(read)
 
     def to_bam(self, filename: str, flags: Optional[AbstractSet[int]] = None,
                remove_flags: Optional[AbstractSet[int]] = None, header=True,
@@ -118,8 +120,8 @@ class Bam(pysam.AlignmentFile):
 
 
 class BamPE(Bam):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
+    def __init__(self, filename: Union[str, bytes, int], **kwargs):
+        super().__init__(filename, **kwargs)
         self.ordered_by_name = False
         self.query_names: Set[str] = set()
         self.read1_set: DefaultDict[str, pysam.AlignedSegment] = defaultdict(type(None))
@@ -137,7 +139,7 @@ class BamPE(Bam):
         start = time.perf_counter()
         for read in self.iter_mapped():
             self.ptr += 1
-            if(self.ptr % 10000 == 0):
+            if self.ptr % 10000 == 0:
                 sys.stderr.write(f"processed {self.ptr} reads.\n")
             self.query_names.add(read.query_name)
             if read.is_read1:
@@ -254,10 +256,10 @@ class BamPE(Bam):
                 for read in self.iter_unpaired(terminal="read2"):
                     bam.write(read)
 
-    def to_fastx_recorde_pair(self) -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
+    def to_fastx_record_pair(self) -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
         for read1, read2 in self.iter_pair(properly_paired=True):
-            yield self.read_to_fastx_recode(read1), self.read_to_fastx_recode(read2)
+            yield self.read_to_fastx_record(read1), self.read_to_fastx_record(read2)
 
-    def to_fastx_recorde_unpaired(self, terminal: Literal["read1", "read2"] = "read1") -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
+    def to_fastx_record_unpaired(self, terminal: Literal["read1", "read2"] = "read1") -> Iterator[pysam.libcfaidx.FastxRecord]:
         for read in self.iter_unpaired(terminal):
-            yield self.read_to_fastx_recode(read)
+            yield self.read_to_fastx_record(read)

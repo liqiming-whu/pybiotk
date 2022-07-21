@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import sys
-import pyBigWig
-import numpy as np
-from typing import Dict, List, Literal
 from abc import ABC, abstractmethod
+from typing import Dict, List, Literal
+
+import numpy as np
+import pyBigWig
 from numpy.lib.stride_tricks import sliding_window_view
 
 
@@ -197,13 +198,13 @@ class Openbw(TrackFile):
         return self.scale_region_values_np_values(a, length, nbins)
 
     @staticmethod
-    def coverage_sliding_windw_np_values(a: np.ndarray, nbins: int) -> np.ndarray:
+    def coverage_sliding_window_np_values(a: np.ndarray, nbins: int) -> np.ndarray:
         a2 = sliding_window_view(a, nbins)
         return (a2 > 0).sum(axis=1) / nbins
 
-    def coverage_sliding_windw(self, chrom: str, start: int, end: int, nbins: int):
+    def coverage_sliding_window(self, chrom: str, start: int, end: int, nbins: int):
         a = self.values(chrom, start, end)
-        return self.coverage_sliding_windw_np_values(a, nbins)
+        return self.coverage_sliding_window_np_values(a, nbins)
 
     def close(self):
         self.bw.close()

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Module enabling a sh like infix syntax (using pipes).
 """
-import os
-import sys
+import builtins
+import functools
 import gzip
+import itertools
+import os
 import shlex
 import subprocess
-import functools
-import itertools
-import builtins
-from io import TextIOWrapper
+import sys
 from collections import deque
+from io import TextIOWrapper
 from typing import (
     Set,
     List,
@@ -29,7 +29,6 @@ from typing import (
     TextIO,
     overload
 )
-
 
 __all__ = [
     "cat",
@@ -132,7 +131,6 @@ def stdin() -> Iterator[str]:
 
 
 def cmdin(cmd: str, shell: bool = False) -> Iterator[str]:
-    cmd2 = None
     if shell:
         cmd2 = cmd
     else:
@@ -160,19 +158,19 @@ def cd(path):
 
 @Pipe
 def head(iterable: Iterable[_T], n: int = 10) -> Iterator[_T]:
-    "Yield n of elements in the given iterable."
+    """Yield n of elements in the given iterable."""
     return itertools.islice(iterable, n)
 
 
 @Pipe
 def tail(iterable: Iterable[_T], n: int = 10) -> Deque:
-    "Yield n of elements in the given iterable."
+    """Yield n of elements in the given iterable."""
     return deque(iterable, maxlen=n)
 
 
 @Pipe
 def skip(iterable: Iterable[_T], n: int) -> Iterator[_T]:
-    "Skip n elements in the given iterable, then yield others."
+    """Skip n elements in the given iterable, then yield others."""
     return itertools.islice(iterable, n, None)
 
 
@@ -309,8 +307,8 @@ def transform(iterable: Iterable[_T], func: Callable[[Iterable[_T]], Iterable[_S
 
 @Pipe
 def apply(iterable: Iterable[_T], func: Callable[[_T], Any]) -> Iterator[_T]:
-    def inner(iterable: Iterable[_T]) -> Iterable[_T]:
-        for i in iterable:
+    def inner(_iterable: Iterable[_T]):
+        for i in _iterable:
             try:
                 func(i)
                 yield i
@@ -330,7 +328,7 @@ def for_each(iterable: Iterable[_T], func: Callable[[_T], Any]):
 
 
 @Pipe
-def flatten(iterable: Iterable[_T], ignore_types: Tuple[_T, ...] = (str, bytes)) -> Iterator[_S]:
+def flatten(iterable: Iterable[_T], ignore_types=(str, bytes)) -> Iterator[_S]:
     for x in iterable:
         if isinstance(x, Iterable) and not isinstance(x, ignore_types):
             yield from x | flatten
@@ -375,14 +373,14 @@ def groupby2(iterable: Iterable[_T], func: Callable[[_T, _T], bool], compare: Li
     compare: where the behind element compare to in one group
 
     Example:
-    >>> [1, 1, 2, 2, 3, 3, 4, 5, 4, 6, 7, 8] | groupby2(lambda x,y: y-x<2, compare='end') | stdout
-    >>> (1, 1, 2, 2, 3, 3, 4, 5, 4)
-    >>> (6, 7, 8)
-    >>> [1, 1, 2, 2, 3, 3, 4, 5, 4, 6, 7, 8] | groupby2(lambda x,y: y-x<2) | stdout
-    >>> (1, 1, 2, 2)
-    >>> (3, 3, 4)
-    >>> (5, 4, 6)
-    >>> (7, 8)
+    [1, 1, 2, 2, 3, 3, 4, 5, 4, 6, 7, 8] | groupby2(lambda x, y: y-x<2, compare='end') | stdout
+    (1, 1, 2, 2, 3, 3, 4, 5, 4)
+    (6, 7, 8)
+    [1, 1, 2, 2, 3, 3, 4, 5, 4, 6, 7, 8] | groupby2(lambda x, y: y-x<2) | stdout
+    (1, 1, 2, 2)
+    (3, 3, 4)
+    (5, 4, 6)
+    (7, 8)
     """
     assert func is not None
     iterable = iter(iterable)

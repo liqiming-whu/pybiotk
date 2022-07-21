@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-import sys
 import argparse
+import sys
+
 import pandas as pd
+
 from pybiotk.utils import read_table, write_table, ignore
 
 

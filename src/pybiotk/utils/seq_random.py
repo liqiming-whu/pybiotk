@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
 import time
-import argparse
+
 from pybiotk.io import GenomeFile
 from pybiotk.utils import logging, ignore
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+
 from pybiotk.io import FastqFile
 from pybiotk.utils import ignore
 from stream import stdout

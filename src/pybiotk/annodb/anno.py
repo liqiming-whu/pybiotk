@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Sequence, Iterable, AbstractSet, Optional
+from typing import List, Tuple, Set, Iterable, AbstractSet, Optional
+
 from pybiotk.utils import blocks_len, intervals_is_overlap
 
 
@@ -12,7 +13,7 @@ class GenomicAnnotation:
     start: Optional[int] = field(default=None)
     end: Optional[int] = field(default=None)
     type: Optional[str] = field(default=None)
-    detail: AbstractSet[str] = field(default_factory=set)
+    detail: Set[str] = field(default_factory=set)
 
     def update(self, anno: str):
         self.detail.add(anno)
@@ -36,12 +37,12 @@ class GenomicAnnotation:
 @dataclass
 class AnnoSet:
     annoset: Iterable[GenomicAnnotation] = field(default_factory=list, repr=False)
-    id: Sequence[str] = field(init=False, default_factory=list)
-    name: Optional[str] = field(init=False, default_factory=list)
-    start: Optional[int] = field(init=False, default_factory=list)
-    end: Optional[int] = field(init=False, default_factory=list)
-    type: Optional[str] = field(init=False, default_factory=list)
-    anno: Optional[str] = field(init=False, default_factory=list)
+    id: List[str] = field(init=False, default_factory=list)
+    name: List[str] = field(init=False, default_factory=list)
+    start: List[int] = field(init=False, default_factory=list)
+    end: List[int] = field(init=False, default_factory=list)
+    type: List[str] = field(init=False, default_factory=list)
+    anno: List[str] = field(init=False, default_factory=list)
 
     def __post_init__(self):
         for anno in self.annoset:
@@ -55,17 +56,17 @@ class AnnoSet:
     def primary_anno(
         self,
         priority: Tuple[str, ...] = ("Promoter", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Downstream", "Intergenic")
-    ) -> GenomicAnnotation:
+    ) -> str:
         return GenomicAnnotation.select_anno(set(self.anno), priority)
 
     def __str__(self) -> str:
-        id = ",".join(self.id)
-        name = ",".join(set(self.name))
-        type = ",".join(set(self.type))
-        start = ",".join(str(i) for i in set(self.start))
-        end = ",".join(str(i) for i in set(self.end))
-        anno = self.primary_anno()
-        return f"{anno}\t{start}\t{end}\t{name}\t{id}\t{type}"
+        _id = ",".join(self.id)
+        _name = ",".join(set(self.name))
+        _type = ",".join(set(self.type))
+        _start = ",".join(str(i) for i in set(self.start))
+        _end = ",".join(str(i) for i in set(self.end))
+        _anno = self.primary_anno()
+        return f"{_anno}\t{_start}\t{_end}\t{_name}\t{_id}\t{_type}"
 
 
 class GFeature(ABC):
@@ -108,7 +109,7 @@ class GFeature(ABC):
     def utr3_len(self) -> int:
         return blocks_len(self.utr3_exons())
 
-    def anno(self, blocks: Sequence[Tuple[int, int]], region: Tuple[int, int] = (-1000, 1000), down: int = 3000) -> List[str]:
+    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-1000, 1000), down: int = 3000) -> Set[str]:
         anno = []
         tss = intervals_is_overlap(blocks, [self.tss_region(region=region)])
         introns = self.introns()
@@ -145,4 +146,4 @@ class GFeature(ABC):
             anno.append("Downstream")
         if not anno:
             anno.append("Intergenic")
-        return anno
+        return set(anno)

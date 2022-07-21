@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import os
+
 import itertools
+import os
 from collections import deque
 from functools import partial
 from typing import List, Dict, Tuple, Literal, Iterable, Iterator, Sequence, Optional, TYPE_CHECKING
-from stream import window, to_list, filter, transform, mapwith, apply, uniq, flatten
-from pybiotk.io.bed import Bed6
+
 from pybiotk.intervals import merge_intervals
+from pybiotk.io.bed import Bed6
 from pybiotk.utils import bedtools_sort
+from stream import window, to_list, filter, transform, mapwith, apply, uniq, flatten
 
 if TYPE_CHECKING:
     from pybiotk.io import GtfFile
@@ -58,7 +60,7 @@ class MergedTranscript:
     __str__ = __repr__
 
     @classmethod
-    def init_by_transcipts(cls, transcripts: Iterable[Transcript]):
+    def init_by_transcripts(cls, transcripts: Iterable[Transcript]):
         min_start = float("inf")
         max_end = 0
         min_cds_start = float("inf")
@@ -135,7 +137,7 @@ class MergedTranscript:
         return self.end - self.start
 
 
-def group_overlap_transcipts(iterable: Iterable[Transcript]) -> Iterator[Tuple[Transcript, ...]]:
+def group_overlap_transcripts(iterable: Iterable[Transcript]) -> Iterator[Tuple[Transcript, ...]]:
     a = deque(itertools.islice(iterable, 1))
     max_end = 0
     for i in iterable:
@@ -182,7 +184,7 @@ def merge_transcripts(gtf: GtfFile, strand: Optional[Literal["+", "-"]] = "+",
     merged_transcripts = gtf.to_transcript() | filter(lambda x: not x.gene_name.startswith(
         escape_gene_name_startswith)) | filter(lambda x: x.gene_type not in escape) | filter(
             lambda x: x.strand == strand if strand else True) | transform(
-                group_overlap_transcipts) | mapwith(MergedTranscript.init_by_transcipts) | window | filter(
+                group_overlap_transcripts) | mapwith(MergedTranscript.init_by_transcripts) | window | filter(
                     lambda x: x[0].chrom == x[-1].chrom) | apply(add_before_and_after) | flatten | uniq(
                         lambda x: x.gene_name) | apply(add_chrom_ends_before_and_after_partial)
     return merged_transcripts

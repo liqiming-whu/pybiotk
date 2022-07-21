@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
 import time
-import argparse
 from typing import Literal, Tuple, TextIO
-from stream import groupby
-from pybiotk.utils import logging, infer_fragment_strand, intervals_is_overlap
-from pybiotk.io import (
-    GtfFile, Openbed, BamType, Bam, BamPE, check_bam_type
-    )
+
 from pybiotk.annodb import AnnoSet, Gene
 from pybiotk.intervals import GRangeTree, merge_intervals
+from pybiotk.io import (
+    GtfFile, Openbed, BamType, Bam, BamPE, check_bam_type
+)
+from pybiotk.utils import logging, infer_fragment_strand, intervals_is_overlap
+from stream import groupby
 
 
 def load_grangetree(
