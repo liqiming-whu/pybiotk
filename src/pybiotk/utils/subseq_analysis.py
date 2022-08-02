@@ -63,7 +63,6 @@ def main(originfa, path, outdir, more_x="C"):
     rna_fetch = pysam.FastaFile(originfa)
     with open(path) as reads, open(os.path.join(outdir, "isoform_info.tsv"), "w") as isof:
         for line in reads:
-            info = ""
             fileds = line.split()
             pir1 = fileds[0]
             pir2 = fileds[1]

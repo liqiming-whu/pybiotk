@@ -12,8 +12,8 @@ from pybiotk.utils import reverse_seq
 
 
 class FastaFile(pysam.FastaFile):
-    def __init__(self, filename: str, **kwargs):
-        super().__init__(filename, **kwargs)
+    def __init__(self, /, *args, **kwargs):
+        super().__init__()
         self.reference_dict: Optional[Dict[str, str]] = None
 
     def __iter__(self) -> Iterator:
@@ -60,8 +60,8 @@ class FastaFile(pysam.FastaFile):
 
 
 class GenomeFile(FastaFile):
-    def __init__(self, filename: str, **kwargs):
-        super().__init__(filename, **kwargs)
+    def __init__(self, /, *args, **kwargs):
+        super().__init__()
         self.custom_chroms: List[str] = self.chroms_norm()
 
     get_chrom_length: Callable[[str], int] = FastaFile.get_reference_length

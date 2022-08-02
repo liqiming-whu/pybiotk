@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import List, Tuple, Literal, Iterable, Sequence, Optional, TYPE_CHECKING
+from typing import List, Tuple, Literal, Iterable, Optional, TYPE_CHECKING
 
 from pybiotk.annodb import GFeature, GenomicAnnotation
 from stream import flatten, window, skip_while, to_list
@@ -26,7 +26,7 @@ class Transcript(GFeature):
         strand: Optional[Literal['+', '-']] = None,
         cds_start: Optional[int] = None,
         cds_end: Optional[int] = None,
-        exons: Iterable[Tuple[int, int]] = []
+        exons: Iterable[Tuple[int, int]] = ()
     ):
         self.transcript_id = transcript_id
         self.transcript_name = transcript_name
@@ -40,7 +40,7 @@ class Transcript(GFeature):
         self.strand = strand
         self.cds_start = int(cds_start) if cds_start is not None else cds_start
         self.cds_end = int(cds_end) if cds_end is not None else cds_end
-        self._exons = exons
+        self._exons = list(exons)
         self._introns = None
         self._cds_exons = None
         self._utr5_exons = None
@@ -83,7 +83,7 @@ class Transcript(GFeature):
                 self._introns = [self.start, *(self.exons() | flatten), self.end] | window(2, 2) | skip_while(lambda x: x[0] == x[1]) | to_list
         return self._introns
 
-    def tss_region(self, region: Tuple[int, int] = (-1000, 1000)) -> Tuple[int, int]:
+    def tss_region(self, region: Tuple[int, int] = (-1000, 1000)) -> Tuple[int, ...]:
         if self.strand == '+':
             region = tuple(i+self.start for i in region)
         else:
@@ -109,10 +109,10 @@ class Transcript(GFeature):
                     utr3_exons.append(exon)
                 elif self.cds_start <= exon[0] and exon[1] <= self.cds_end:
                     cds_exons.append(exon)
-                elif exon[0] < self.cds_start < exon[1] and exon[1] <= self.cds_end:
+                elif exon[0] < self.cds_start < exon[1] <= self.cds_end:
                     utr5_exons.append((exon[0], self.cds_start))
                     cds_exons.append((self.cds_start, exon[1]))
-                elif self.cds_start <= exon[0] and exon[0] < self.cds_end < exon[1]:
+                elif self.cds_start <= exon[0] < self.cds_end < exon[1]:
                     cds_exons.append((exon[0], self.cds_end))
                     utr3_exons.append((self.cds_end, exon[1]))
                 elif exon[0] < self.cds_start and self.cds_end < exon[1]:
@@ -148,5 +148,5 @@ class Transcript(GFeature):
             self._classify_exons()
         return self._utr3_exons
 
-    def annotation(self, blocks: Sequence[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000) -> GenomicAnnotation:
+    def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000) -> GenomicAnnotation:
         return GenomicAnnotation(self.transcript_id, self.gene_name, self.start, self.end, self.transcript_type, self.anno(blocks, tss_region, downstream))

@@ -58,7 +58,7 @@ class Norm:
         return self.tpm_norm
 
 
-def read_data(path: str, cols: Sequence[int] = [0, 5, 6]) -> pd.DataFrame:
+def read_data(path: str, cols: Sequence[int] = (0, 5, 6)) -> pd.DataFrame:
     df = pd.read_table(path, comment="#")
     df = df.iloc[:, cols]
 

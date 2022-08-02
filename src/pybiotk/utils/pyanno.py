@@ -63,16 +63,16 @@ def annobam(filename: str,
             ):
     bamtype = check_bam_type(filename)
 
-    def anno_read(blocks, strand, read):
-        start = int(blocks[0][0])
-        end = int(blocks[-1][1])
-        fragment_strand = infer_fragment_strand(strand, rule, read.is_read2)
-        genes = grangetree.find(read.reference_name, start, end, fragment_strand)
+    def anno_read(_blocks, _strand, _read):
+        start = int(_blocks[0][0])
+        end = int(_blocks[-1][1])
+        fragment_strand = infer_fragment_strand(_strand, rule, _read.is_read2)
+        genes = grangetree.find(_read.reference_name, start, end, fragment_strand)
         if not genes:
-            file_obj.write(f"{read.query_name}\t{read.reference_name}\t{start}\t{end}\t{blocks}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\n")
+            file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\n")
         else:
-            annoset = AnnoSet(gene.annotation(blocks, tss_region, downstream) for gene in genes)
-            file_obj.write(f"{read.query_name}\t{read.reference_name}\t{start}\t{end}\t{blocks}\t{fragment_strand}\t{annoset}\n")
+            annoset = AnnoSet(gene.annotation(_blocks, tss_region, downstream) for gene in genes)
+            file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\t{annoset}\n")
 
     if bamtype is BamType.PE and anno_fragments:
         with BamPE(filename) as bam:
@@ -84,7 +84,7 @@ def annobam(filename: str,
                     blocks1 = read1.get_blocks()
                     blocks2 = read2.get_blocks()
                     if read1.reference_name == read2.reference_name and strand1 == strand2 and intervals_is_overlap(blocks1, blocks2):
-                        merge_blocks = merge_intervals(blocks1, blocks2)
+                        merge_blocks = merge_intervals(blocks1 + blocks2)
                         anno_read(merge_blocks, strand1, read1)
                     else:
                         anno_read(blocks1, strand1, read1)
@@ -95,7 +95,7 @@ def annobam(filename: str,
                     anno_read(blocks, strand, read1)
                 if read2 is not None and read1 is None:
                     blocks = read2.get_blocks()
-                    strand = '-' if read1.is_reverse else '+'
+                    strand = '-' if read2.is_reverse else '+'
                     anno_read(blocks, strand, read2)
     else:
         with Bam(filename) as bam:

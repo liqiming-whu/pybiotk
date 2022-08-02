@@ -126,8 +126,12 @@ class GFeature(ABC):
             cds_exons = self.cds_exons()
             if cds_exons:
                 cds_exons = intervals_is_overlap(blocks, cds_exons)
+            exons = False
         else:
             exons = intervals_is_overlap(blocks, self.exons())
+            utr5_exons = False
+            utr3_exons = False
+            cds_exons = False
 
         if tss:
             anno.append("Promoter")

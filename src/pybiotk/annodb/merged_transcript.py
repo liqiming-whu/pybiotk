@@ -32,7 +32,7 @@ class MergedTranscript:
         strand: Optional[Literal['+', '-']] = None,
         cds_start: Optional[int] = None,
         cds_end: Optional[int] = None,
-        exons: Iterable[Tuple[int, int]] = [],
+        exons: Iterable[Tuple[int, int]] = (),
         count: int = 0,
         before: Optional[int] = None,
         after: Optional[int] = None,
@@ -119,7 +119,7 @@ class MergedTranscript:
                    cds_start, cds_end, exons, count)
 
     def to_bed6(self) -> Bed6:
-        return Bed6(self.chrom, self.start, self.end, self.gene_name, self.count, self.strand)
+        return Bed6(self.chrom, self.start, self.end, self.gene_name, str(self.count), self.strand)
 
     def upStream(self):
         if self.strand == '-':
@@ -175,7 +175,7 @@ def add_chrom_ends_before_and_after(x: MergedTranscript, chrom_length_dict: Opti
 
 
 def merge_transcripts(gtf: GtfFile, strand: Optional[Literal["+", "-"]] = "+",
-                      escape_gene_types: Sequence[str] = [],
+                      escape_gene_types: Sequence[str] = (),
                       escape_gene_name_startswith: Tuple[str] = (),
                       chrom_length_dict: Optional[Dict[str, int]] = None
                       ) -> List[MergedTranscript]:
@@ -192,7 +192,7 @@ def merge_transcripts(gtf: GtfFile, strand: Optional[Literal["+", "-"]] = "+",
 
 def merge_transcripts_groupby_strand(
     gtf: GtfFile,
-    escape_gene_types: Sequence[str] = [],
+    escape_gene_types: Sequence[str] = (),
     escape_gene_name_startswith: Tuple[str] = (),
     chrom_length_dict: Optional[Dict[str, int]] = None,
     savebed: Optional[str] = None,

@@ -10,8 +10,7 @@ from typing import (
     Literal,
     Tuple,
     Optional,
-    Iterator,
-    Union
+    Iterator
 )
 
 import pysam
@@ -120,8 +119,8 @@ class Bam(pysam.AlignmentFile):
 
 
 class BamPE(Bam):
-    def __init__(self, filename: Union[str, bytes, int], **kwargs):
-        super().__init__(filename, **kwargs)
+    def __init__(self, /, *args, **kwargs):
+        super().__init__()
         self.ordered_by_name = False
         self.query_names: Set[str] = set()
         self.read1_set: DefaultDict[str, pysam.AlignedSegment] = defaultdict(type(None))

@@ -27,14 +27,14 @@ def main(filename: str, output: str, ordered_by_name: bool = False):
         logging.info("PairEnd mode ...")
         with BamPE(filename) as bampe:
             bampe.ordered_by_name = ordered_by_name
-            for read1, read2 in bam.iter_pair(properly_paired=False):
+            for read1, read2 in bampe.iter_pair(properly_paired=False):
                 if read1 is not None and read2 is not None:
                     if read1.reference_name == read2.reference_name:
                         read1_blocks = read1.get_blocks()
                         read2_blocks = read2.get_blocks()
                         if not intervals_is_overlap(read1_blocks, read2_blocks):
                             logging.warning(f"{read1.query_name} read1 and read2 not overlap, use read1_len + read2_len")
-                        merge_blocks = merge_intervals(read1_blocks, read2_blocks)
+                        merge_blocks = merge_intervals(read1_blocks+read2_blocks)
                         fragment_len = blocks_len(merge_blocks)
                         length.append(fragment_len)
                         sys.stdout.write(f"{read1.query_name}\t{read1.reference_name}\t{merge_blocks}\t{fragment_len}")

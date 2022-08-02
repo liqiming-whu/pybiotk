@@ -103,7 +103,7 @@ def main(filepath_or_buffer: Union[str, TextIO],
     group = group if group is not None else [parse_sample_name(i).group for i in sample_names]
     replicates = replicates if replicates is not None else [parse_sample_name(i).replicate for i in sample_names]
     assert len(sample_names) == len(cutadapt)
-    data = {}
+    data = dict()
     data["samples"] = sample_names
     data["group"] = group
     data["replicates"] = replicates

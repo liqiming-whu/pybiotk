@@ -3,6 +3,7 @@ import argparse
 from typing import Literal
 
 import pysam
+
 from pybiotk.io import OpenFqGzip
 from pybiotk.utils import reverse_seq
 
@@ -17,7 +18,7 @@ def reverse_fastx(filename: str, output: str, outformat: Literal['fastq', 'fasta
         name = entry.name
         sequence = reverse_seq(entry.sequence)
         comment = entry.comment
-        quality = entry.quality if entry.quality is None else "".join(reversed(entry.quality))
+        quality = entry.quality if entry.quality is None else "".join(reversed(str(entry.quality)))
         if outformat == "fastq":
             ostream.write_entry(name, sequence, comment, quality)
         else:

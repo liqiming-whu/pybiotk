@@ -11,26 +11,26 @@ from pybiotk.io import count_bam_size
 from pybiotk.utils import logging, ignore
 
 
-def main(input: str = "-", output: str = "-", bam: bool = False, bamsize: Optional[int] = None, count: int = 10000):
+def main(filename: str = "-", output: str = "-", bam: bool = False, bamsize: Optional[int] = None, count: int = 10000):
     mode = "wb" if bam else "w"
     alignment = []
     header = None
     if bamsize is None:
         logging.info("bamsize is unknown, it will take some time and memory to calculate ...")
-        if input == "-":
-            with pysam.AlignmentFile(input) as alignmentfile:
+        if filename == "-":
+            with pysam.AlignmentFile(filename) as alignmentfile:
                 header = alignmentfile.header
                 alignment = list(alignmentfile)
                 bamsize = len(alignment)
         else:
-            bamsize = count_bam_size(input)
+            bamsize = count_bam_size(filename)
     
     index_arr = np.arange(bamsize)
     np.random.shuffle(index_arr)
     select = set(index_arr[:count])
     
     if not alignment:
-        alignment = pysam.AlignmentFile(input)
+        alignment = pysam.AlignmentFile(filename)
         header = alignment.header
         
     with pysam.AlignmentFile(output, mode, header=header) as outf:

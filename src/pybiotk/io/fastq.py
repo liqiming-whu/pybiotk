@@ -6,8 +6,8 @@ import pysam
 
 
 class FastqFile(pysam.FastxFile):
-    def __init__(self, filename: str, **kwargs):
-        super().__init__(filename, **kwargs)
+    def __init__(self, /,*args, **kwargs):
+        super().__init__()
         self.ptr: Optional[int] = None
 
     def to_fasta(self) -> Iterator[str]:

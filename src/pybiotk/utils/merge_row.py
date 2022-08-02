@@ -11,7 +11,7 @@ import pandas as pd
 from pybiotk.utils import read_table, write_table, ignore
 
 
-def df_merge_row(df, by=None, columns=None, method="distinct", sep=",", count=False):
+def df_merge_row(df, by=None, columns=None, method=("distinct",), sep=",", count=False):
     if not columns:
         return df.drop_duplicates(subset=by, keep='first')
 
@@ -55,10 +55,10 @@ def df_merge_row(df, by=None, columns=None, method="distinct", sep=",", count=Fa
     return merge_df
 
 
-def main(input, output, header, noheader, by, columns=None, method="distinct", sep=None, delim=",", count=False):
+def main(filename, output, header, noheader, by, columns=None, method="distinct", sep=None, delim=",", count=False):
     if noheader or header < 0:
         header = None
-    df = read_table(input, header=header, sep=sep)
+    df = read_table(filename, header=header, sep=sep)
     out_header = True if header is not None else False
     if df.empty:
         write_table(df, output, header=out_header)
@@ -78,7 +78,7 @@ def main(input, output, header, noheader, by, columns=None, method="distinct", s
             output_name = [df.columns[int(i)] for i in sorted(by + columns)]
             if count:
                 output_name.append("count")
-        except Exception:
+        except RuntimeError:
             column_name = None
             output_name = by_name
     else:

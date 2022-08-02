@@ -1,20 +1,26 @@
 """
 Joins two paired-end reads on the overlapping ends. need fastq-join 1.3.1.
 """
-#!/usr/bin/env python3
-import os
 import argparse
+# !/usr/bin/env python3
+import os
 import subprocess
+import sys
 from typing import Literal
+
 from pybiotk.io import FastqPair, OpenFqGzip
 from pybiotk.utils import logging, reverse_seq
 from pybiotk.utils.reverse_fastx import reverse_fastx
+from stream import mkdir
 
 
 def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1, 
                save_as: Literal["read1", "read2"] = "read1", collapse: bool = False):
     fq1_uncom = fq1 + ".uncom.fq"
     fq2_uncom = fq2 + ".uncom.fq"
+    outdir = os.path.dirname(outprefix)
+    if outdir:
+        mkdir(outdir)
     logging.info("start decompressing fastq ...")
     try:
         subprocess.check_call(f"pigz -p {threads} -d -c {fq1} > {fq1_uncom}", shell=True)
@@ -27,10 +33,11 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
     un1_uncom = outprefix + ".unmerge_R1.fq"
     un2_uncom = outprefix + ".unmerge_R2.fq"
     join_uncom = outprefix + ".merge.fq"
-    
+
     logging.info("start join fastq ...")
     try:
-        subprocess.check_call(f"fastq-join {fq1_uncom} {fq2_uncom} -o {un1_uncom} -o {un2_uncom} -o {join_uncom}")
+        subprocess.check_call(f"fastq-join {fq1_uncom} {fq2_uncom} -o {un1_uncom} -o {un2_uncom} -o {join_uncom}",
+                              shell=True, stdout=sys.stderr, stderr=sys.stderr)
     except subprocess.CalledProcessError:
         logging.error(f"fastq-join is not installed.")
         raise
@@ -41,14 +48,15 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
     
     logging.info("start compressing fastq ...")
     try:
-        subprocess.check_call(f"pigz -p {threads} {un1_uncom}", shell=True)
-        subprocess.check_call(f"pigz -p {threads} {un2_uncom}", shell=True)
-        subprocess.check_call(f"pigz -p {threads} {join_uncom}", shell=True)
+        subprocess.check_call(f"pigz -f -p {threads} {un1_uncom}", shell=True)
+        subprocess.check_call(f"pigz -f -p {threads} {un2_uncom}", shell=True)
+        subprocess.check_call(f"pigz -f -p {threads} {join_uncom}", shell=True)
     except subprocess.CalledProcessError:
         logging.warning(f"pigz is not installed, use gzip instead.")
-        subprocess.check_call(f"gzip {un1_uncom}", shell=True)
-        subprocess.check_call(f"gzip {un2_uncom}", shell=True)
-        subprocess.check_call(f"gzip {join_uncom}", shell=True)
+        subprocess.check_call(f"gzip -f {un1_uncom}", shell=True)
+        subprocess.check_call(f"gzip -f {un2_uncom}", shell=True)
+        subprocess.check_call(f"gzip -f {join_uncom}", shell=True)
+    logging.info("compressing completed.")
     
     un1 = un1_uncom + ".gz"
     un2 = un2_uncom + ".gz"
@@ -104,7 +112,7 @@ def run():
     parser.add_argument("--collapse", dest="collapse", action="store_true", help="collapse merged and unmerged fastq.")
     
     args = parser.parse_args()
-    fastq_join(args.fq1, args.fq2, args.outputprefix, args.threads, args.save_as, args.collapse)
+    fastq_join(args.fq1, args.fq2, args.outprefix, args.threads, args.save_as, args.collapse)
 
 
 if __name__ == "__main__":

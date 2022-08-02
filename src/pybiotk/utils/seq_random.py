@@ -25,7 +25,7 @@ def parse_args():
 def main():
     parser = parse_args()
     if len(sys.argv[1:]) < 1:
-        args = parser.parse_args(["--help"])
+        parser.parse_args(["--help"])
     args = parser.parse_args()
     faindex = args.genome + ".fai"
     regenerate = False

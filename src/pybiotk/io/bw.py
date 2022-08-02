@@ -122,14 +122,14 @@ class Openbwn(TrackFile):
         return self.scale_region_values_np_values(a, length, nbins)
 
     @staticmethod
-    def coverage_sliding_windw_np_values(a: np.ndarray, nbins: int) -> np.ndarray:
+    def coverage_sliding_window_np_values(a: np.ndarray, nbins: int) -> np.ndarray:
         a2 = sliding_window_view(a, (a.shape[0], nbins))
         a3 = (a2 > 0).sum(axis=3) / nbins
         return a3.squeeze(axis=0).transpose()
 
-    def coverage_sliding_windw(self, chrom: str, start: int, end: int, nbins: int):
+    def coverage_sliding_window(self, chrom: str, start: int, end: int, nbins: int):
         a = self.values(chrom, start, end)
-        return self.coverage_sliding_windw_np_values(a, nbins)
+        return self.coverage_sliding_window_np_values(a, nbins)
 
     def close(self):
         [x.close() for x in self.bws]
