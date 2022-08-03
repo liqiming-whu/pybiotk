@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import gzip
-from typing import Iterator, Tuple, Optional
+from typing import Iterator, Tuple, Optional, Literal
 
 import pysam
 
@@ -14,13 +14,19 @@ class FastqFile(pysam.FastxFile):
         for entry in self:
             yield f">{entry.name}\n{entry.sequence}"
 
-    def uniq(self) -> Iterator[pysam.libcfaidx.FastxRecord]:
+    def uniq(self, by: Literal["id", "name", "seq"] = "seq") -> Iterator[pysam.libcfaidx.FastxRecord]:
         self.ptr = 0
-        sequence_set = set()
+        unique = set()
         for entry in self:
             self.ptr += 1
-            if entry.sequence not in sequence_set:
-                sequence_set.add(entry.sequence)
+            if by == "seq":
+                key = entry.sequence
+            elif by == "id":
+                key = entry.name
+            else:
+                key = entry.name + entry.comment
+            if key not in unique:
+                unique.add(key)
                 yield entry
 
     def iter_len(self) -> Iterator[int]:
@@ -40,16 +46,21 @@ class FastqPair:
         for entry1, entry2 in zip(self.read1, self.read2):
             yield entry1, entry2
 
-    def uniq(self) -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
+    def uniq(self, by: Literal["id", "name", "seq"] = "seq") -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
         self.ptr = 0
         unique = set()
         for entry1, entry2 in zip(self.read1, self.read2):
             if not entry1.name == entry2.name:
                 raise RuntimeError(f"{entry1.name} != {entry2.name}")
             self.ptr += 1
-            whole_reads = entry1.sequence + entry2.sequence
-            if whole_reads not in unique:
-                unique.add(whole_reads)
+            if by == "seq":
+                key = entry1.sequence + entry2.sequence
+            elif by == "id":
+                key = entry1.name + entry2.name
+            else:
+                key = entry1.name + entry1.comment + entry2.name + entry2.comment
+            if key not in unique:
+                unique.add(key)
                 yield entry1, entry2
 
     def close(self):
