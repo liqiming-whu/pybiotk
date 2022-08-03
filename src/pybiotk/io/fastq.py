@@ -94,7 +94,7 @@ class OpenFqGzip:
             self.fq.write(f"@{name} {comment}\n{sequence}\n+\n{quality}\n".encode("utf-8"))
 
     def write_fastx_record(self, fq: pysam.libcfaidx.FastxRecord):
-        self.write_entry(fq.name, fq.comment, fq.sequence, fq.quality)
+        self.write_entry(fq.name, fq.sequence, fq.comment, fq.quality)
 
     def write(self, string: str):
         self.fq.write(string)
