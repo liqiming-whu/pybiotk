@@ -3,6 +3,7 @@ import gzip
 from typing import Iterator, Tuple, Optional, Literal
 
 import pysam
+import numpy as np
 
 
 class FastqFile(pysam.FastxFile):
@@ -20,11 +21,11 @@ class FastqFile(pysam.FastxFile):
         for entry in self:
             self.ptr += 1
             if by == "seq":
-                key = entry.sequence
+                key = np.int64(hash(entry.sequence))
             elif by == "id":
-                key = entry.name
+                key = np.int64(hash(entry.name))
             else:
-                key = entry.name + entry.comment
+                key = np.int64(hash(entry.name + entry.comment))
             if key not in unique:
                 unique.add(key)
                 yield entry
@@ -54,11 +55,11 @@ class FastqPair:
                 raise RuntimeError(f"{entry1.name} != {entry2.name}")
             self.ptr += 1
             if by == "seq":
-                key = entry1.sequence + entry2.sequence
+                key = np.int64(hash(entry1.sequence + entry2.sequence))
             elif by == "id":
-                key = entry1.name + entry2.name
+                key = np.int64(hash(entry1.name + entry2.name))
             else:
-                key = entry1.name + entry1.comment + entry2.name + entry2.comment
+                key = np.int64(hash(entry1.name + entry1.comment + entry2.name + entry2.comment))
             if key not in unique:
                 unique.add(key)
                 yield entry1, entry2
