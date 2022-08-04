@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import gzip
+import sys
 from typing import Iterator, Tuple, Optional, Literal
 
-import pysam
 import numpy as np
+import pysam
 
 
 class FastqFile(pysam.FastxFile):
@@ -83,16 +84,25 @@ class OpenFqGzip:
         self.encoding = encoding
         self.errors = errors
         self.newline = newline
-        self.fq = gzip.open(filename, mode, compresslevel, encoding, errors, newline)
+        if filename == "-":
+            self.fq = sys.stdout
+        else:
+            self.fq = gzip.open(filename, mode, compresslevel, encoding, errors, newline)
         self.name = self.filename
 
+    def _write(self, record: str):
+        if self.filename == "-":
+            self.fq.write(record)
+        else:
+            self.fq.write(record.encode("utf-8"))
+    
     def write_entry(self, name: str, sequence: str, comment: Optional[str] = None, quality: Optional[str] = None):
         if quality is None:
             quality = "F"*len(sequence)
         if comment is None:
-            self.fq.write(f"@{name}\n{sequence}\n+\n{quality}\n".encode("utf-8"))
+            self._write(f"@{name}\n{sequence}\n+\n{quality}\n")
         else:
-            self.fq.write(f"@{name} {comment}\n{sequence}\n+\n{quality}\n".encode("utf-8"))
+            self._write(f"@{name} {comment}\n{sequence}\n+\n{quality}\n")
 
     def write_fastx_record(self, fq: pysam.libcfaidx.FastxRecord):
         self.write_entry(fq.name, fq.sequence, fq.comment, fq.quality)

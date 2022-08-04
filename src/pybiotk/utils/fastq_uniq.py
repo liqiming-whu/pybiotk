@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+import sys
 import time
-from typing import Sequence, Literal
+from typing import Sequence, Literal, Union
 
 from pybiotk.io import FastqFile, FastqPair, OpenFqGzip
 from pybiotk.utils import logging
@@ -45,10 +46,17 @@ def pair_end(input_r1: str, input_r2: str, output_r1: str, output_r2: str, min_l
                   f"output read pairs: {output_reads}\nduplicate ratio: {duplicate_ratio:.2f}%"))
 
 
-def main(input_files: Sequence[str], output_files: Sequence[str], min_len: int = 15, by: Literal["seq", "id", "name"] = "seq"):
+def main(input_files: Union[Sequence[str], str] = "-", output_files: Union[Sequence[str], str] = "-", min_len: int = 15, by: Literal["seq", "id", "name"] = "seq"):
+    if isinstance(input_files, str):
+        input_files = [input_files]
+    if isinstance(output_files, str):
+        output_files = [output_files]
+
+    assert len(input_files) == len(output_files)
     input_str = " ".join(input_files)
     output_str = " ".join(output_files)
-    assert len(input_files) == len(output_files)
+    if input_str == "-":
+        input_str = "stdin"
     logging.info(f"Processing {input_str} ...")
 
     start = time.perf_counter()
@@ -57,19 +65,30 @@ def main(input_files: Sequence[str], output_files: Sequence[str], min_len: int =
     else:
         pair_end(*input_files[:2], *output_files[:2], min_len=min_len, by=by)
     end = time.perf_counter()
-    logging.info(f"task finished in {end-start:.2f}s, output saved in {output_str}.")
+    if output_str == "-":
+        logging.info(f"task finished in {end-start:.2f}s")
+    else:
+        logging.info(f"task finished in {end-start:.2f}s, output saved in {output_str}.")
 
 
 def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", dest="input", type=str, nargs="+", required=True, help="input *.fastq.gz files.")
-    parser.add_argument("-o", dest="output", type=str, nargs="+", required=True, help="output *.fastq.gz files.")
-    parser.add_argument("-m", dest="min_len", type=int, default=15, help="min length.")
-    parser.add_argument("-by", dest="by", type=str, default="seq", choices=["seq", "id", "name"], help="by seq, id or full name.")
+    parser.add_argument(dest="input", type=str, nargs="*", default=(None if sys.stdin.isatty() else "-"), help="input fastq files. [stdin]")
+    parser.add_argument("-o", "--output", dest="output", type=str, nargs="+", default="-", help="output fastq files. [stdout]")
+    parser.add_argument("-m", "--min-len", dest="min_len", type=int, default=15, help="min length.")
+    parser.add_argument("-i", "--by-id", dest="id", action="store_true", help="by id instead of seq.")
+    parser.add_argument("-n", "--by-name", dest="name", action="store_true", help="by full name instead of just id.")
     args = parser.parse_args()
-    main(args.input, args.output, args.min_len, args.by)
+    if not args.input:
+        parser.parse_args(['-h'])
+    by = "seq"
+    if args.id:
+        by = "id"
+    if args.name:
+        by = "name"
+    main(args.input, args.output, args.min_len, by)
 
 
 if __name__ == "__main__":

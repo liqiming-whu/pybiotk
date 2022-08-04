@@ -104,15 +104,14 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-1", dest="fq1", type=str, required=True, help="R1 fastq.")
-    parser.add_argument("-2", dest="fq2", type=str, required=True, help="R2 fastq.")
+    parser.add_argument(dest="input", type=str, nargs=2, help="R1 and R2 fastq.")
     parser.add_argument("-o", dest="outprefix", type=str, default="fastq", help="output file prefix.")
     parser.add_argument("-p", dest="threads", type=int, default=1, help="use pgzip")
     parser.add_argument("--save_as", dest="save_as", default="read1", choices=["read1", "read2"], help="save as read1 or read2.")
     parser.add_argument("--collapse", dest="collapse", action="store_true", help="collapse merged and unmerged fastq.")
     
     args = parser.parse_args()
-    fastq_join(args.fq1, args.fq2, args.outprefix, args.threads, args.save_as, args.collapse)
+    fastq_join(args.input[0], args.input[1], args.outprefix, args.threads, args.save_as, args.collapse)
 
 
 if __name__ == "__main__":
