@@ -83,8 +83,8 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
     theme(legend.position="right",
           panel.grid = element_blank(),
           legend.title = element_blank(),
-          legend.text= element_text(face="bold", color="black", family="Times", size=8),
-          plot.title = element_text(hjust=0.5, face="bold", color="black", family="Times", size=font_size),
+          legend.text= element_text(face="bold", color="black", size=8),
+          plot.title = element_text(hjust=0.5, face="bold", color="black", size=font_size),
           axis.text.x = element_text(face="bold", color="black", size=font_size),
           axis.text.y = element_text(face="bold",  color="black", size=font_size),
           axis.title.x = element_text(face="bold", color="black", size=font_size),
@@ -108,8 +108,8 @@ plot <- ggplot(data=data,
     theme(legend.position="right",
           panel.grid=element_blank(),
           legend.title = element_blank(),
-          legend.text= element_text(face="bold", color="black", family="Times", size=8),
-          plot.title = element_text(hjust=0.5, face="bold", color="black", family="Times", size=font_size),
+          legend.text= element_text(face="bold", color="black", size=8),
+          plot.title = element_text(hjust=0.5, face="bold", color="black", size=font_size),
           axis.text.x = element_text(face="bold", color="black", size=font_size),
           axis.text.y = element_text(face="bold",  color="black", size=font_size),
           axis.title.x = element_text(face="bold", color="black", size=font_size),
@@ -168,8 +168,8 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
     theme(legend.position="right",
           panel.grid = element_blank(),
           legend.title = element_blank(),
-          legend.text = element_text(face="bold", color="black", family="Times", size=8),
-          plot.title = element_text(hjust=0.5, face="bold", color="black", family="Times", size=font_size),
+          legend.text = element_text(face="bold", color="black", size=8),
+          plot.title = element_text(hjust=0.5, face="bold", color="black", size=font_size),
           axis.text.x = element_text(face="bold", color="black", size=font_size),
           axis.text.y = element_text(face="bold",  color="black", size=font_size),
           axis.title.x = element_text(face="bold", color="black", size=font_size),
@@ -180,10 +180,10 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
 plot <- ggplot(data=data, 
                aes(x=log2FoldChange, y=-log10(pvalue), 
                    color=threshold, fill=threshold)) +
-    scale_color_manual(values=c("blue", "grey", "red")) +
+    scale_color_manual(values=c("down"="blue", "not"="grey", "up"="red")) +
     # geom_point(alpha=0.4, size=0.2) +
-    geom_jitter(alpha=0.4, size=0.2, width=0.05, height=0.05) +
-    geom_vline(xintercept=c(-log2fc, log2fc), lty=1, col="grey", lwd=0.6) +
+    geom_jitter(size=1, width=0.05, height=0.05) +
+    geom_vline(xintercept=c(-log2fc, log2fc), lty=2, col="grey", lwd=0.6) +
     geom_hline(yintercept=-log10(p_value), lty=2, col="grey", lwd=0.6) +
     geom_text_repel(inherit.aes=F, data=need_label,
         aes(x=log2FoldChange, y=-log10(pvalue), label=gene_id), color=need_label$color, segment.color="grey", size=2, direction='both') +
@@ -191,8 +191,8 @@ plot <- ggplot(data=data,
     theme(legend.position="right",
          panel.grid=element_blank(),
          legend.title = element_blank(),
-         legend.text= element_text(face="bold", color="black", family="Times", size=8),
-         plot.title = element_text(hjust=0.5, face="bold", color="black", family="Times", size=font_size),
+         legend.text= element_text(face="bold", color="black", size=8),
+         plot.title = element_text(hjust=0.5, face="bold", color="black", size=font_size),
          axis.text.x = element_text(face="bold", color="black", size=font_size),
          axis.text.y = element_text(face="bold",  color="black", size=font_size),
          axis.title.x = element_text(face="bold", color="black", size=font_size),
