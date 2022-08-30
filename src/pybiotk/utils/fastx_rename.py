@@ -2,8 +2,8 @@
 import argparse
 import sys
 import time
-
 from typing import Literal
+
 from pybiotk.io import FastxFile, OpenFqGzip
 from pybiotk.utils import logging, ignore
 
@@ -26,7 +26,7 @@ def fastx_rename(input_fq: str, output: str, outfmt: Literal["fastq", "fasta"] =
         fqi.ptr = None
     end = time.perf_counter()
     logging.info(f"Processed {input_reads} reads in {end - start:.2f} seconds.")
-    
+
 
 @ignore
 def run():
@@ -45,5 +45,4 @@ def run():
 if __name__ == "__main__":
     run()
 
-    
-    
+
