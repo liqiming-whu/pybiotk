@@ -1,8 +1,8 @@
+# !/usr/bin/env python3
 """
 Joins two paired-end reads on the overlapping ends. need fastq-join 1.3.1.
 """
 import argparse
-# !/usr/bin/env python3
 import os
 import subprocess
 import sys
@@ -107,7 +107,7 @@ def run():
     parser.add_argument(dest="input", type=str, nargs=2, help="R1 and R2 fastq.")
     parser.add_argument("-o", dest="outprefix", type=str, default="fastq", help="output file prefix.")
     parser.add_argument("-p", dest="threads", type=int, default=1, help="use pgzip")
-    parser.add_argument("--save_as", dest="save_as", default="read1", choices=["read1", "read2"], help="save as read1 or read2.")
+    parser.add_argument("--save_as", dest="save_as", default="read1", choices=("read1", "read2"), help="save as read1 or read2.")
     parser.add_argument("--collapse", dest="collapse", action="store_true", help="collapse merged and unmerged fastq.")
     
     args = parser.parse_args()

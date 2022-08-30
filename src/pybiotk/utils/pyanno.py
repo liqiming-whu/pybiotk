@@ -166,14 +166,14 @@ def run():
     parser.add_argument("-o", "--output", dest="output", type=str, required=True, help="output file name.")
     parser.add_argument("-g", "--gtf", dest='gtf', required=True,
                         help="gtf file download from Genecode, or a sorted gtf file.")
-    parser.add_argument("-l", "--level", dest="level", type=str, default="transcript", choices=["transcript", "gene"],
+    parser.add_argument("-l", "--level", dest="level", type=str, default="transcript", choices=("transcript", "gene"),
                         help="annotation level, transcript or gene.")
     parser.add_argument("--tss_region", dest="tss_region", type=int, nargs="+", default=[-1000, 1000],
                         help="choose region from tss.")
     parser.add_argument("--downstream", dest="downstream", type=int, default=3000, help="downstream length from tes.")
     parser.add_argument("-s", "--strand", dest="strand", action="store_true", help="require same strandedness.")
     parser.add_argument("--rule", dest="rule", type=str, default="1+-,1-+,2++,2--",
-                        choices=["1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"],
+                        choices=("1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"),
                         help="how read(s) were stranded during sequencing. only for bam.")
     parser.add_argument("-p", "--pair", dest="pair", action="store_true",
                         help="annotate fragments instead of reads.")

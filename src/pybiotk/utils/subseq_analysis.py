@@ -108,7 +108,7 @@ def run():
     parser.add_argument("-f", dest="originfa", type=str, required=True, help="origin fasta.")
     parser.add_argument("-o", dest="outdir", type=str, required=True, help="output dir.")
     parser.add_argument("-r", dest="reads_overlap", type=str, required=True, help="overlaped reads file, create by bowtie and shell scripts.")
-    parser.add_argument("--more_x", dest="more_x", type=str, default="C", choices=["A", "T", "G", "C"], help="more_x analysis.")
+    parser.add_argument("--more_x", dest="more_x", type=str, default="C", choices=("A", "T", "G", "C"), help="more_x analysis.")
     args = parser.parse_args()
     main(args.originfa, args.reads_overlap, args.outdir, args.reads_overlap)
 

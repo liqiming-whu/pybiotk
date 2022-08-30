@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import gzip
 import sys
-from typing import Iterator, Tuple, Optional, Literal
+from collections import defaultdict
+from typing import Iterator, Literal, Optional, Tuple
 
 import numpy as np
 import pysam
 
 
-class FastqFile(pysam.FastxFile):
+class FastxFile(pysam.FastxFile):
     def __init__(self, /,*args, **kwargs):
         super().__init__()
         self.ptr: Optional[int] = None
@@ -31,9 +32,26 @@ class FastqFile(pysam.FastxFile):
                 unique.add(key)
                 yield entry
 
+    def rename(self) -> Iterator[pysam.libcfaidx.FastxRecord]:
+        self.ptr = 0
+        name_dict = defaultdict(int)
+        for entry in self:
+            self.ptr += 1
+            key = np.int64(hash(entry.name))
+            count = name_dict[key]
+            count += 1
+            if count > 1:
+                entry.name += f"_{count}"
+            name_dict[key] = count
+            yield entry
+            
+
     def iter_len(self) -> Iterator[int]:
         for entry in self:
             yield len(entry.sequence)
+
+
+class FastqFile(FastxFile):...
 
 
 class FastqPair:

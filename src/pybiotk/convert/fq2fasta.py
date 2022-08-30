@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import sys
 
 from pybiotk.io import FastqFile
 from pybiotk.utils import ignore
@@ -17,9 +18,10 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("input", type=str, nargs="+",
-                        help="Input fastq files.")
+    parser.add_argument(dest="input", type=str, nargs="*", default=(None if sys.stdin.isatty() else "-"), help="input fastq files. [stdin]")
     args = parser.parse_args()
+    if not args.input:
+        parser.parse_args(['-h'])
     main(args.input)
 
 
