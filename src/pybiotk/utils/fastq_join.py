@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 """
-Joins two paired-end reads on the overlapping ends. need fastq-join 1.3.1.
+Joins two paired-end reads on the overlapping ends. need fastq-join v1.3.1.
 """
 import argparse
 import os
@@ -26,7 +26,7 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
         subprocess.check_call(f"pigz -p {threads} -d -c {fq1} > {fq1_uncom}", shell=True)
         subprocess.check_call(f"pigz -p {threads} -d -c {fq2} > {fq2_uncom}", shell=True)
     except subprocess.CalledProcessError:
-        logging.warning(f"pigz is not installed, use gzip instead.")
+        logging.warning(f"An error occurred while executing pigz, use gzip instead.")
         subprocess.check_call(f"gzip -d -c {fq1} > {fq1_uncom}", shell=True)
         subprocess.check_call(f"gzip -d -c {fq2} > {fq2_uncom}", shell=True)
     
@@ -39,7 +39,7 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
         subprocess.check_call(f"fastq-join {fq1_uncom} {fq2_uncom} -o {un1_uncom} -o {un2_uncom} -o {join_uncom}",
                               shell=True, stdout=sys.stderr, stderr=sys.stderr)
     except subprocess.CalledProcessError:
-        logging.error(f"fastq-join is not installed.")
+        logging.error(f"An error occurred while executing fastq-join, fastq-join v1.3.1 may not be installed.")
         raise
     if os.path.exists(join_uncom):
         logging.info("join completed, remove decompressed fastq")
@@ -52,7 +52,7 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
         subprocess.check_call(f"pigz -f -p {threads} {un2_uncom}", shell=True)
         subprocess.check_call(f"pigz -f -p {threads} {join_uncom}", shell=True)
     except subprocess.CalledProcessError:
-        logging.warning(f"pigz is not installed, use gzip instead.")
+        logging.warning(f"An error occurred while executing pigz, use gzip instead.")
         subprocess.check_call(f"gzip -f {un1_uncom}", shell=True)
         subprocess.check_call(f"gzip -f {un2_uncom}", shell=True)
         subprocess.check_call(f"gzip -f {join_uncom}", shell=True)
@@ -70,6 +70,7 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
         os.rename(rev_join, join)
     
     if collapse:
+        logging.info("start collapsing merged and unmerged fastq ...")
         un_collapse = outprefix + ".unmerge.fq.gz"
         with OpenFqGzip(un_collapse) as fq, FastqPair(un1, un2) as fp:
             for entry1, entry2 in fp:
@@ -93,7 +94,7 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
         merge_collapse = outprefix + ".collapse.fq.gz"
         subprocess.check_call(f"cat {join} {un_collapse} > {merge_collapse}", shell=True)
         if os.path.exists(merge_collapse):
-            logging.info(f"collapse completed, remove temp fastq files")
+            logging.info(f"collapsing completed, remove temp fastq files.")
             os.remove(un1)
             os.remove(un2)
             os.remove(join)
@@ -105,10 +106,10 @@ def run():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(dest="input", type=str, nargs=2, help="R1 and R2 fastq.")
-    parser.add_argument("-o", dest="outprefix", type=str, default="fastq", help="output file prefix.")
+    parser.add_argument("-o", dest="outprefix", type=str, default="fastq", help="output file prefix. output files will be outprefix.unmerge_R1.fq.gz, outprefix.unmerge_R2.fq.gz, outprefix.merge.fq.gz.")
     parser.add_argument("-p", dest="threads", type=int, default=1, help="use pgzip")
     parser.add_argument("--save_as", dest="save_as", default="read1", choices=("read1", "read2"), help="save as read1 or read2.")
-    parser.add_argument("--collapse", dest="collapse", action="store_true", help="collapse merged and unmerged fastq.")
+    parser.add_argument("--collapse", dest="collapse", action="store_true", help="collapse merged and unmerged fastq. output file will be outprefix.collapse.fq.gz.")
     
     args = parser.parse_args()
     fastq_join(args.input[0], args.input[1], args.outprefix, args.threads, args.save_as, args.collapse)

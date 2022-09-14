@@ -9,7 +9,7 @@ import pysam
 
 
 class FastxFile(pysam.FastxFile):
-    def __init__(self, /,*args, **kwargs):
+    def __init__(self, /, *args, **kwargs):
         super().__init__()
         self.ptr: Optional[int] = None
 
