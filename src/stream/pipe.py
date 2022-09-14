@@ -110,7 +110,7 @@ class Pipe(Generic[_T]):
 def cat(file: str) -> Iterator[str]:
     with open(file) as f:
         for line in f:
-            line = line.strip()
+            line = line.rstrip("\n")
             if line:
                 yield line
 
@@ -118,14 +118,14 @@ def cat(file: str) -> Iterator[str]:
 def zcat(file: str) -> Iterator[str]:
     with gzip.open(file, "rb") as f:
         for line in f:
-            line = line.decode().strip()
+            line = line.decode().rstrip("\n")
             if line:
                 yield line
 
 
 def stdin() -> Iterator[str]:
     for line in sys.stdin:
-        line = line.strip()
+        line = line.rstrip("\n")
         if line:
             yield line
 
@@ -139,7 +139,7 @@ def cmdin(cmd: str, shell: bool = False) -> Iterator[str]:
         if proc.stdout is None:
             raise RuntimeError(proc.stderr)
         for line in proc.stdout:
-            line = line.strip()
+            line = line.rstrip("\n")
             if line:
                 yield line
 

@@ -49,14 +49,14 @@ class _stream_of:
         with subprocess.Popen(cmd2, stdout=subprocess.PIPE, encoding='utf8', shell=shell) as proc:
             assert proc.stdout is not None
             for line in proc.stdout:
-                line = line.strip()
+                line = line.rstrip("\n")
                 if line:
                     yield line
 
     @staticmethod
     def std_in() -> Iterator[str]:
         for line in sys.stdin:
-            line = line.strip()
+            line = line.rstrip("\n")
             if line:
                 yield line
 
@@ -64,7 +64,7 @@ class _stream_of:
     def file_in(file: str) -> Iterator[str]:
         with open(file) as f:
             for line in f:
-                line = line.strip()
+                line = line.rstrip("\n")
                 if line:
                     yield line
 
