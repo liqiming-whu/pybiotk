@@ -200,4 +200,4 @@ def bedtools_sort(path: str):
         os.remove(tmp_path)
     except subprocess.CalledProcessError:
         os.rename(tmp_path, path)
-        warnings.warn(f"{path} is unsorted, maybe bedtools is not installed.")
+        warnings.warn(f"An error occurred while executing bedtools, bedtools may not be installed. {path} is unsorted")
