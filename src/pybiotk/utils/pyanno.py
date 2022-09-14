@@ -144,11 +144,11 @@ def main(
     grangetree = load_grangetree(gtf_file, level, tss_region, downstream, strand)
     with open(outfilename, "w", encoding="utf-8") as annofile:
         if filetype == ".bam":
-            annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\ttype\n")
+            annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bam mode ...")
             annobam(filename, annofile, grangetree, annofragments, tss_region, downstream, rule, ordered_by_name)
         elif filetype.startswith(".bed"):
-            annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\ttype\n")
+            annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bed mode ...")
             annobed(filename, annofile, grangetree, tss_region, downstream)
         else:
