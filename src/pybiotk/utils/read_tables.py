@@ -17,22 +17,23 @@ def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclud
         df = read_table(table, header=header, dtype=str, comment="#")
         if namefile is not None:
             names = set(j for i in namefile for j in i.split())
-            if exclude:
-                if contains:
-                    df = df.loc[~df.iloc[:, column].str.contains("|".join(names))]
-                else:
-                    if delimiter is not None:
-                        df = df.loc[~df.iloc[:, column].str.split(delimiter).apply(lambda x: any(set(x) & names))]
+            if names:
+                if exclude:
+                    if contains:
+                        df = df.loc[~df.iloc[:, column].str.contains("|".join(names))]
                     else:
-                        df = df.loc[~df.iloc[:, column].isin(names)]
-            else:
-                if contains:
-                    df = df.loc[df.iloc[:, column].str.contains("|".join(names))]
+                        if delimiter is not None:
+                            df = df.loc[~df.iloc[:, column].str.split(delimiter).apply(lambda x: any(set(x) & names))]
+                        else:
+                            df = df.loc[~df.iloc[:, column].isin(names)]
                 else:
-                    if delimiter is not None:
-                        df = df.loc[df.iloc[:, column].str.split(delimiter).apply(lambda x: any(set(x) & names))]
+                    if contains:
+                        df = df.loc[df.iloc[:, column].str.contains("|".join(names))]
                     else:
-                        df = df.loc[df.iloc[:, column].isin(names)]
+                        if delimiter is not None:
+                            df = df.loc[df.iloc[:, column].str.split(delimiter).apply(lambda x: any(set(x) & names))]
+                        else:
+                            df = df.loc[df.iloc[:, column].isin(names)]
         df_list.append(df)
     if len(df_list) == 1:
         out_df = df_list[0]
