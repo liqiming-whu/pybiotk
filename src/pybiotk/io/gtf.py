@@ -5,6 +5,7 @@ from io import TextIOWrapper
 from typing import List, Sequence, Tuple, Literal, Iterable, Iterator, Optional, Union, TextIO
 
 from pybiotk.annodb import Transcript
+from pybiotk.utils import logging
 from pybiotk.io.bed import Bed6, Bed12, Intron, GeneInfo, TransInfo
 from stream.pipe import Pipe, sort, drop_while, filter, kgroupby, groupby, apply, window
 
@@ -40,23 +41,23 @@ class GTF:
         else:
             return None
 
-    def gene_type(self):
-        return self.parse_attributes("gene_type", self.attributes)
+    def gene_type(self, key="gene_type"):
+        return self.parse_attributes(key, self.attributes)
 
-    def gene_id(self):
-        return self.parse_attributes("gene_id", self.attributes)
+    def gene_id(self, key="gene_id"):
+        return self.parse_attributes(key, self.attributes)
 
-    def gene_name(self):
-        return self.parse_attributes("gene_name", self.attributes)
+    def gene_name(self, key="gene_name"):
+        return self.parse_attributes(key, self.attributes)
 
-    def transcript_type(self):
-        return self.parse_attributes("transcript_type", self.attributes)
+    def transcript_type(self, key="transcript_type"):
+        return self.parse_attributes(key, self.attributes)
 
-    def transcript_id(self):
-        return self.parse_attributes("transcript_id", self.attributes)
+    def transcript_id(self, key="transcript_id"):
+        return self.parse_attributes(key, self.attributes)
 
-    def transcript_name(self):
-        return self.parse_attributes("transcript_name", self.attributes)
+    def transcript_name(self, key="transcript_name"):
+        return self.parse_attributes(key, self.attributes)
 
     def get_attribute(self, attribute):
         return self.parse_attributes(attribute, self.attributes)
@@ -97,7 +98,9 @@ def to_Bed12(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") -
 
         cds_exons: Sequence[GTF] = []
         bed: Optional[Bed12] = None
+        last_gtf = None
         for gtf in gtfs:
+            last_gtf = gtf
             if gtf.feature in {'CDS', 'stop_codon'}:
                 cds_exons.append(gtf)
             elif gtf.feature == "exon":
@@ -105,6 +108,9 @@ def to_Bed12(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") -
                     bed = Bed12.init_by_gtf(gtf, gtf.get_attribute(name))
                 else:
                     bed.update(gtf)
+        if bed is None:
+            logging.warning(f"No exon found for transcript: {last_gtf.get_attribute(name)}")
+            continue
         if cds_exons:
             bed.thickStart = cds_exons[0].start - 1
             bed.thickEnd = cds_exons[-1].end
@@ -139,6 +145,9 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
                     transcript = Transcript.init_by_gtf(gtf)
                 else:
                     transcript.update(gtf)
+        if transcript is None:
+            logging.warning(f"No exon found for transcript: {gtf.get_attribute('transcript_id')}")
+            continue
         if cds_exons:
             cds_start = cds_exons[0].start - 1
             cds_end = cds_exons[-1].end

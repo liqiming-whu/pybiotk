@@ -20,9 +20,14 @@ class TransInfo:
     strand: Literal['+', '-'] = field(default="+")
 
     @classmethod
-    def init_by_gtf(cls, gtf: GTF, attr: Optional[str] = None):
-        return cls(attr, gtf.transcript_name(), gtf.transcript_type(),
-                   gtf.gene_id(), gtf.gene_name(), gtf.gene_type(), gtf.strand)
+    def init_by_gtf(cls, gtf: GTF, attr: Optional[str] = None,
+                    gene_id_key: str = "gene_id",
+                    gene_name_key: str = "gene_name",
+                    gene_type_key: str = "gene_type",
+                    transcript_name_key: str = "transcript_name",
+                    transcript_type_key: str = "transcript_type"):
+        return cls(attr, gtf.transcript_name(transcript_name_key), gtf.transcript_type(transcript_type_key),
+                   gtf.gene_id(gene_id_key), gtf.gene_name(gene_name_key), gtf.gene_type(gene_type_key), gtf.strand)
 
     def __str__(self):
         return "\t".join(str(s) for s in list(self.__dict__.values()))
@@ -36,8 +41,8 @@ class GeneInfo:
     strand: Literal['+', '-'] = field(default='+')
 
     @classmethod
-    def init_by_gtf(cls, gtf: GTF, attr: str):
-        return cls(attr, gtf.gene_name(), gtf.gene_type(), gtf.strand)
+    def init_by_gtf(cls, gtf: GTF, attr: str, gene_name_key: str = "gene_name", gene_type_key: str = "gene_type"):
+        return cls(attr, gtf.gene_name(gene_name_key), gtf.gene_type(gene_type_key), gtf.strand)
 
     def __str__(self):
         return "\t".join(str(s) for s in list(self.__dict__.values()))
