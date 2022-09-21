@@ -3,11 +3,11 @@
 A simple tool for joining and filtering tables
 """
 import argparse
+import csv
 import sys
 
 import pandas as pd
-
-from pybiotk.utils import read_table, write_table, ignore
+from pybiotk.utils import ignore, read_table, write_table
 
 
 def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclude=False, contains=False):
@@ -39,7 +39,7 @@ def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclud
         out_df = df_list[0]
     else:
         out_df = pd.concat(df_list)
-    write_table(out_df, outfile, header=not noheader)
+    write_table(out_df, outfile, header=not noheader, quoting=csv.QUOTE_NONE)
 
 
 @ignore
