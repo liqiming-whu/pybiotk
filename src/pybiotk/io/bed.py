@@ -15,8 +15,8 @@ class TransInfo:
     transcript_name: str = field(default=None)
     transcript_type: str = field(default=None)
     gene_id: str = field(default=None)
-    gene_type: str = field(default=None)
     gene_name: str = field(default=None)
+    gene_type: str = field(default=None)
     strand: Literal['+', '-'] = field(default="+")
 
     @classmethod
