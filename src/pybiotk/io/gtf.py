@@ -62,7 +62,10 @@ class GTF:
                 return attr
 
     def transcript_id(self):
-        return self.parse_attributes("transcript_id", self.attributes)
+        attr = self.parse_attributes("transcript_id", self.attributes)
+        if attr is None:
+            attr = self.gene_id()
+        return attr
 
     def transcript_name(self):
         attr = self.parse_attributes("transcript_name", self.attributes)
@@ -153,46 +156,42 @@ def to_Intron(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") 
 @Pipe
 def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
     for group in iterable:
-        gtfs: Iterator[GTF] = group | sort(key=lambda x: x.start)
-
-        cds_exons: Sequence[GTF] = []
-        trans_gtf: Sequence[GTF] = []
         gene_gtf: Sequence[GTF] = []
-        transcript: Optional[Transcript] = None
-        for gtf in gtfs:
-            if gtf.feature in {'CDS', 'stop_codon'}:
-                cds_exons.append(gtf)
-            elif gtf.feature == "transcript":
-                trans_gtf.append(gtf)
-            elif gtf.feature == "gene":
+        exons_gtf: Sequence[GTF] = []
+        for gtf in group:
+            if gtf.feature == "gene":
                 gene_gtf.append(gtf)
-            elif gtf.feature == "exon":
-                if transcript is None:
-                    transcript = Transcript.init_by_gtf(gtf)
-                else:
-                    transcript.update(gtf)
-        if transcript is None:
-            logging.warning(f"No exon found for transcript: {gtf.get_attribute('transcript_id')}")
-            if trans_gtf:
-                transcript = Transcript.init_by_gtf(trans_gtf[0])
             else:
-                continue
-        if cds_exons:
-            cds_start = cds_exons[0].start - 1
-            cds_end = cds_exons[-1].end
-            transcript.cds_start = cds_start
-            transcript.cds_end = cds_end
-        else:
-            transcript.cds_start = transcript.cds_end = None
-        
-        if trans_gtf:
-            if transcript.transcript_type is None:
-                transcript.transcript_type = trans_gtf[0].transcript_type()
-        if gene_gtf:
-            if transcript.gene_type is None:
-                transcript.gene_type = gene_gtf[0].gene_type()
+                exons_gtf.append(gtf)
 
-        yield transcript
+        for group in exons_gtf | groupby(key=lambda x: x.transcript_id()):
+            gtfs: Iterator[GTF] = group | sort(key=lambda x: x.start)
+            cds_exons: Sequence[GTF] = []
+            transcript: Optional[Transcript] = None
+            for gtf in gtfs:
+                if gtf.feature in {'CDS', 'stop_codon'}:
+                    cds_exons.append(gtf)
+                elif gtf.feature == "exon":
+                    if transcript is None:
+                        transcript = Transcript.init_by_gtf(gtf)
+                    else:
+                        transcript.update(gtf)
+            if transcript is None:
+                logging.warning(f"No exon found for transcript: {gtf.get_attribute('transcript_id')}")
+                continue
+            if cds_exons:
+                cds_start = cds_exons[0].start - 1
+                cds_end = cds_exons[-1].end
+                transcript.cds_start = cds_start
+                transcript.cds_end = cds_end
+            else:
+                transcript.cds_start = transcript.cds_end = None
+    
+            if gene_gtf:
+                if transcript.gene_type is None:
+                    transcript.gene_type = gene_gtf[0].gene_type()
+
+            yield transcript
 
 
 class GtfFile:
@@ -440,5 +439,5 @@ class GtfFile:
                                transcript_names=transcript_names,
                                gene_ids=gene_ids,
                                gene_names=gene_names
-                               ) | groupby(lambda x: x.transcript_id()) | to_Transcript
+                               ) | groupby(lambda x: x.gene_id()) | to_Transcript
         return transcript
