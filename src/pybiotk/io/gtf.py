@@ -147,10 +147,16 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
         gtfs: Iterator[GTF] = group | sort(key=lambda x: x.start)
 
         cds_exons: Sequence[GTF] = []
+        trans_gtf: Sequence[GTF] = []
+        gene_gtf: Sequence[GTF] = []
         transcript: Optional[Transcript] = None
         for gtf in gtfs:
             if gtf.feature in {'CDS', 'stop_codon'}:
                 cds_exons.append(gtf)
+            elif gtf.feature == "transcript":
+                trans_gtf.append(gtf)
+            elif gtf.feature == "gene":
+                gene_gtf.append(gtf)
             elif gtf.feature == "exon":
                 if transcript is None:
                     transcript = Transcript.init_by_gtf(gtf)
@@ -158,7 +164,10 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
                     transcript.update(gtf)
         if transcript is None:
             logging.warning(f"No exon found for transcript: {gtf.get_attribute('transcript_id')}")
-            continue
+            if trans_gtf:
+                transcript = Transcript.init_by_gtf(trans_gtf[0])
+            else:
+                continue
         if cds_exons:
             cds_start = cds_exons[0].start - 1
             cds_end = cds_exons[-1].end
@@ -166,6 +175,13 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
             transcript.cds_end = cds_end
         else:
             transcript.cds_start = transcript.cds_end = None
+        
+        if trans_gtf:
+            if transcript.transcript_type is None:
+                transcript.transcript_type = trans_gtf[0].transcript_type()
+        if gene_gtf:
+            if transcript.gene_type is None:
+                transcript.gene_type = gene_gtf[0].gene_type()
 
         yield transcript
 
@@ -408,7 +424,7 @@ class GtfFile:
                       gene_ids: Optional[Sequence[str]] = None,
                       gene_names: Optional[Sequence[str]] = None,
                       ) -> Iterator[Transcript]:
-        transcript = self.iter(features=["CDS", 'stop_codon', 'exon'],
+        transcript = self.iter(features=["gene", "transcript", "CDS", 'stop_codon', 'exon'],
                                gene_types=gene_types,
                                transcript_types=transcript_types,
                                transcript_ids=transcript_ids,
