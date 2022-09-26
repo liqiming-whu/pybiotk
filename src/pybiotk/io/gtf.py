@@ -71,7 +71,16 @@ class GTF:
         return attr
 
     def get_attribute(self, attribute):
-        return self.parse_attributes(attribute, self.attributes)
+        if attribute == "gene_type":
+            return self.gene_type()
+        elif attribute == "gene_name":
+            return self.gene_name()
+        elif attribute == "transcript_type":
+            return self.transcript_type()
+        elif attribute == "transcript_name":
+            return self.transcript_name()
+        else:
+            return self.parse_attributes(attribute, self.attributes)
 
 
 @Pipe
