@@ -20,8 +20,8 @@ class TransInfo:
     strand: Literal['+', '-'] = field(default="+")
 
     @classmethod
-    def init_by_gtf(cls, gtf: GTF, attr: Optional[str] = None):
-        return cls(attr, gtf.transcript_name(), gtf.transcript_type(),
+    def init_by_gtf(cls, gtf: GTF):
+        return cls(gtf.transcript_id(), gtf.transcript_name(), gtf.transcript_type(),
                    gtf.gene_id(), gtf.gene_name(), gtf.gene_type(), gtf.strand)
 
     def __str__(self):
@@ -36,8 +36,8 @@ class GeneInfo:
     strand: Literal['+', '-'] = field(default='+')
 
     @classmethod
-    def init_by_gtf(cls, gtf: GTF, attr: str):
-        return cls(attr, gtf.gene_name(), gtf.gene_type(), gtf.strand)
+    def init_by_gtf(cls, gtf: GTF):
+        return cls(gtf.gene_id(), gtf.gene_name(), gtf.gene_type(), gtf.strand)
 
     def __str__(self):
         return "\t".join(str(s) for s in list(self.__dict__.values()))

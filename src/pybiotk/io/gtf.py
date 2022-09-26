@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from inspect import Attribute
 import re
 from dataclasses import dataclass, field
 from io import TextIOWrapper
@@ -78,6 +77,8 @@ class GTF:
             return self.gene_type()
         elif attribute == "gene_name":
             return self.gene_name()
+        elif attribute == "transcript_id":
+            return self.transcript_id()
         elif attribute == "transcript_type":
             return self.transcript_type()
         elif attribute == "transcript_name":
@@ -100,25 +101,35 @@ def to_Bed6(iterable: Iterable[Tuple[str, Tuple[GTF, ...]]]) -> Iterator[Bed6]:
 
 
 @Pipe
-def to_GeneInfo(iterable: Iterable[Tuple[str, Tuple[GTF, ...]]]) -> Iterator[GeneInfo]:
-    for (k, gtfs) in iterable:
+def to_GeneInfo(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[GeneInfo]:
+    for gtfs in iterable:
         for gtf in gtfs:
-            yield GeneInfo.init_by_gtf(gtf, k)
+            yield GeneInfo.init_by_gtf(gtf)
 
 
 @Pipe
-def to_TransInfo(iterable: Iterable[Tuple[str, Tuple[GTF, ...]]]) -> Iterator[TransInfo]:
-    for (k, gtfs) in iterable:
-        for gtf in gtfs:
-            yield TransInfo.init_by_gtf(gtf, k)
+def to_TransInfo(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[TransInfo]:
+    for group in iterable:
+        for gtfs in group:
+            gene_gtf: Sequence[GTF] = []
+            trans_gtf: Sequence[GTF] = []
+            for gtf in gtfs:
+                if gtf.feature == "gene":
+                    gene_gtf.append(gtf)
+                else:
+                    trans_gtf.append(gtf)
+            for gtf in trans_gtf:
+                trans_info = TransInfo.init_by_gtf(gtf)
+                if gene_gtf :
+                    if trans_info.gene_type is None:
+                        trans_info.gene_type = gene_gtf[0].gene_type()
+                yield trans_info
 
 
 @Pipe
 def to_Bed12(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") -> Iterator[Bed12]:
-
     for group in iterable:
         gtfs: Iterator[GTF] = group | sort(key=lambda x: x.start)
-
         cds_exons: Sequence[GTF] = []
         bed: Optional[Bed12] = None
         last_gtf = None
@@ -139,7 +150,6 @@ def to_Bed12(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") -
             bed.thickEnd = cds_exons[-1].end
         else:
             bed.thickStart = bed.thickEnd = bed.end
-
         yield bed
 
 
@@ -378,14 +388,15 @@ class GtfFile:
                       gene_ids: Optional[Sequence[str]] = None,
                       gene_names: Optional[Sequence[str]] = None,
                       ) -> Iterator[TransInfo]:
-        trans_info = self.iter_transcript(
+        trans_info = self.iter(
+            features=["gene", "transcript"],
             gene_types=gene_types,
             transcript_types=transcript_types,
             transcript_ids=transcript_ids,
             transcript_names=transcript_names,
             gene_ids=gene_ids,
             gene_names=gene_names
-            ) | kgroupby(lambda x: x.transcript_id()) | to_TransInfo
+            ) | groupby(lambda x: x.gene_id()) | to_TransInfo
         return trans_info
 
     def to_bed12(self, name: Literal["gene_id", "gene_name", "transcript_id", "transcript_name"] = "transcript_id",
@@ -432,7 +443,7 @@ class GtfFile:
                       gene_ids: Optional[Sequence[str]] = None,
                       gene_names: Optional[Sequence[str]] = None,
                       ) -> Iterator[Transcript]:
-        transcript = self.iter(features=["gene", "transcript", "CDS", 'stop_codon', 'exon'],
+        transcript = self.iter(features=["gene", "CDS", 'stop_codon', 'exon'],
                                gene_types=gene_types,
                                transcript_types=transcript_types,
                                transcript_ids=transcript_ids,
