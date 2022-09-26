@@ -110,20 +110,19 @@ def to_GeneInfo(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[GeneInfo]:
 @Pipe
 def to_TransInfo(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[TransInfo]:
     for group in iterable:
-        for gtfs in group:
-            gene_gtf: Sequence[GTF] = []
-            trans_gtf: Sequence[GTF] = []
-            for gtf in gtfs:
-                if gtf.feature == "gene":
-                    gene_gtf.append(gtf)
-                else:
-                    trans_gtf.append(gtf)
-            for gtf in trans_gtf:
-                trans_info = TransInfo.init_by_gtf(gtf)
-                if gene_gtf :
-                    if trans_info.gene_type is None:
-                        trans_info.gene_type = gene_gtf[0].gene_type()
-                yield trans_info
+        gene_gtf: Sequence[GTF] = []
+        trans_gtf: Sequence[GTF] = []
+        for gtf in group:
+            if gtf.feature == "gene":
+                gene_gtf.append(gtf)
+            else:
+                trans_gtf.append(gtf)
+        for gtf in trans_gtf:
+            trans_info = TransInfo.init_by_gtf(gtf)
+            if gene_gtf :
+                if trans_info.gene_type is None:
+                    trans_info.gene_type = gene_gtf[0].gene_type()
+            yield trans_info
 
 
 @Pipe
@@ -377,7 +376,7 @@ class GtfFile:
             transcript_names=transcript_names,
             gene_ids=gene_ids,
             gene_names=gene_names
-            ) | kgroupby(lambda x: x.gene_id()) | to_GeneInfo
+            ) | groupby(lambda x: x.gene_id()) | to_GeneInfo
         return gene_info
 
     def to_trans_info(self,
