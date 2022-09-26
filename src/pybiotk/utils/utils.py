@@ -46,7 +46,7 @@ def intervals_is_overlap(intervals1: List[Tuple[int, int]], intervals2: List[Tup
     return False
 
 
-def cigartuples2blocks(start: int, cigartuples: Sequence[Tuple[int, int]], shift: int = 0) -> List[Tuple[int, int]]:
+def cigar_tuples2blocks(start: int, cigartuples: Sequence[Tuple[int, int]], shift: int = 0) -> List[Tuple[int, int]]:
     tmp_abs_start = shift + start
     blocks = []
     for cigar, length in cigartuples:
@@ -65,6 +65,42 @@ def cigartuples2blocks(start: int, cigartuples: Sequence[Tuple[int, int]], shift
             merged_blocks.append((tmp_start, blocks[i][1]))
             tmp_start = None
     return merged_blocks
+
+
+def merge_blocks(blocks1: List[Tuple[int,int]], blocks2: List[Tuple[int,int]]) -> Tuple[bool, List[Tuple[int,int]]]:
+    if not intervals_is_overlap(blocks1, blocks2):
+        return False, sorted(blocks1 + blocks2, key=lambda x: x[0])
+    block1_num = len(blocks1)
+    block2_num = len(blocks2)
+    js1_li = list()
+    js2_li = list()
+    if block1_num > 1:
+        js1_li = [(blocks1[i][1], blocks1[i + 1][0]) for i in range(len(blocks1) - 1)]
+    if block2_num > 1:
+        js2_li = [(blocks2[i][1], blocks2[i + 1][0]) for i in range(len(blocks2) - 1)]
+    for js1_s, js1_e in js1_li:
+        for js2_s, js2_e in js2_li:
+            if (js1_s == js2_s) and (js1_e == js2_e):
+                continue
+            if not ((js1_s >= js1_e) or (js2_s >= js2_e)):
+                conflict = True
+                return conflict, None
+    conflict = False
+    js_li = sorted(set(js1_li + js2_li))
+    start = min([x[0] for x in blocks1 + blocks2])
+    end = max([x[1] for x in blocks1 + blocks2])
+    if js_li:
+        new_blocks = list()
+        for i in range(len(js_li)):
+            if i == 0:
+                new_blocks.append((start, js_li[i][0]))
+            else:
+                new_blocks.append((js_li[i - 1][1], js_li[i][0]))
+            if i == (len(js_li) - 1):
+                new_blocks.append((js_li[i][1], end))
+        return conflict, new_blocks
+    else:
+        return conflict, [(start, end)]
 
 
 def split_discontinuous(discontinuous_list: Iterable[int]) -> Iterator[List[int]]:

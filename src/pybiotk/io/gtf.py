@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from inspect import Attribute
 import re
 from dataclasses import dataclass, field
 from io import TextIOWrapper
@@ -33,31 +34,41 @@ class GTF:
 
     @staticmethod
     def parse_attributes(term: str, attributes: str) -> Optional[str]:
-        parse_attr = re.compile('{term} "([^"]+)"'.format(term=term))
+        parse_attr = re.compile(f'{term} "([^"]+)"')
         patterns = parse_attr.findall(attributes)
 
         if patterns:
             return patterns[0]
-        else:
-            return None
 
-    def gene_type(self, key="gene_type"):
-        return self.parse_attributes(key, self.attributes)
+    def gene_type(self):
+        for term in ['gene_type', 'gene_biotype']:
+            attr = self.parse_attributes(term, self.attributes)
+            if attr is not None:
+                return attr
 
-    def gene_id(self, key="gene_id"):
-        return self.parse_attributes(key, self.attributes)
+    def gene_id(self):
+        return self.parse_attributes("gene_id", self.attributes)
 
-    def gene_name(self, key="gene_name"):
-        return self.parse_attributes(key, self.attributes)
+    def gene_name(self):
+        for term in ["gene_name", "gene"]:
+            attr = self.parse_attributes(term, self.attributes)
+            if attr is not None:
+                return attr
 
-    def transcript_type(self, key="transcript_type"):
-        return self.parse_attributes(key, self.attributes)
+    def transcript_type(self):
+        for term in ["transcript_type", "transcript_biotype"]:
+            attr = self.parse_attributes(term, self.attributes)
+            if attr is not None:
+                return attr
 
-    def transcript_id(self, key="transcript_id"):
-        return self.parse_attributes(key, self.attributes)
+    def transcript_id(self):
+        return self.parse_attributes("transcript_id", self.attributes)
 
-    def transcript_name(self, key="transcript_name"):
-        return self.parse_attributes(key, self.attributes)
+    def transcript_name(self):
+        attr = self.parse_attributes("transcript_name", self.attributes)
+        if attr is None:
+            attr = self.gene_name()
+        return attr
 
     def get_attribute(self, attribute):
         return self.parse_attributes(attribute, self.attributes)
