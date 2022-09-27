@@ -48,8 +48,13 @@ class BamTypeError(RuntimeError):
 class Bam(pysam.AlignmentFile):
     def iter(self, flags: Optional[AbstractSet[int]] = None,
              remove_flags: Optional[AbstractSet[int]] = None,
-             secondary=False, supplementary=False) -> Iterator[pysam.AlignedSegment]:
+             secondary=False,
+             supplementary=False,
+             onlymapped=False) -> Iterator[pysam.AlignedSegment]:
         for read in self:
+            if onlymapped:
+                if read.is_unmapped:
+                    continue
             if not secondary:
                 if read.is_secondary:
                     continue
@@ -136,7 +141,7 @@ class BamPE(Bam):
         self.ptr = 0
         logging.warning("saving bam to dict, make sure you have enough memory...")
         start = time.perf_counter()
-        for read in self.iter_mapped():
+        for read in self.iter(secondary=False, supplementary=False):
             self.ptr += 1
             if self.ptr % 10000 == 0:
                 sys.stderr.write(f"processed {self.ptr} reads.\n")
@@ -150,11 +155,11 @@ class BamPE(Bam):
         end = time.perf_counter()
         logging.info(f"{len(self.query_names)} reads have been saved in {end-start:.2f}s.")
 
-    def iter_pair(self, properly_paired=False) -> Iterator[Tuple[pysam.AlignedSegment, ...]]:
+    def iter_pair(self, properly_paired=False, onlymapped=True, secondary=False, supplementary=False) -> Iterator[Tuple[pysam.AlignedSegment, ...]]:
         if self.ordered_by_name:
             logging.info(f"{self.filename} is ordered by queryname, use io iter mode ...")
             d = deque(maxlen=2)
-            for read in self.iter_mapped():
+            for read in self.iter(secondary=secondary, supplementary=supplementary, onlymapped=onlymapped):
                 d.append(read)
                 if len(d) == 2:
                     if d[0].query_name == d[1].query_name:
