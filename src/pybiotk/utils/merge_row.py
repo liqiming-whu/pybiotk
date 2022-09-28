@@ -55,10 +55,10 @@ def df_merge_row(df, by=None, columns=None, method=("distinct",), sep=",", count
     return merge_df
 
 
-def main(filename, output, header, noheader, by, columns=None, method="distinct", sep=None, delim=",", count=False):
+def main(input, output, header, noheader, by, columns=None, method="distinct", sep=None, delim=",", count=False):
     if noheader or header < 0:
         header = None
-    df = read_table(filename, header=header, sep=sep)
+    df = read_table(input, header=header, sep=sep)
     out_header = True if header is not None else False
     if df.empty:
         write_table(df, output, header=out_header)
