@@ -118,6 +118,8 @@ def split_discontinuous(discontinuous_list: Iterable[int]) -> Iterator[List[int]
 
 
 def read_table(filepath_or_buffer: Union[str, TextIO], header: Optional[int] = 0, sep: Optional[str] = None, **kwargs) -> pd.DataFrame:
+    if filepath_or_buffer == "-":
+        filepath_or_buffer = sys.stdin
     if isinstance(filepath_or_buffer, TextIOWrapper):
         filename = filepath_or_buffer.name
     else:
@@ -140,6 +142,8 @@ def read_table(filepath_or_buffer: Union[str, TextIO], header: Optional[int] = 0
 
 
 def write_table(out_df: pd.DataFrame, path_or_buf: Union[str, TextIO], index: bool = False, header: bool = True, sep: str = "\t", **kwargs):
+    if path_or_buf == "-":
+        path_or_buf = sys.stdout
     if isinstance(path_or_buf, TextIOWrapper):
         filename = path_or_buf.name
     else:

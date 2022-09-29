@@ -101,8 +101,8 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", "--input", dest="input", type=argparse.FileType('r'),
-                        default=(None if sys.stdin.isatty() else sys.stdin), help="Input table file.")
+    parser.add_argument("-i", "--input", dest="input", type=str,
+                        default=(None if sys.stdin.isatty() else "-"), help="Input table file.")
     parser.add_argument("-o", "--output", dest="output", type=argparse.FileType('w'),
                         default=sys.stdout, help="Output file, discard this parameter to print output to stdout.")
     parser.add_argument("--header", dest="header", type=int, default=0,

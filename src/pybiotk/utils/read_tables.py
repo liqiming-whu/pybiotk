@@ -49,8 +49,8 @@ def run():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("input", type=str, nargs="+",
                         help="input tables.")
-    parser.add_argument('-o', dest='output', type=argparse.FileType('w'),
-                        default=sys.stdout, help="output file name [stdout]")
+    parser.add_argument('-o', dest='output', type=str,
+                        default="-", help="output file name [stdout]")
     parser.add_argument('-n', dest="namefile", type=argparse.FileType('r'), default=(None if sys.stdin.isatty() else sys.stdin),
                         help="whose name is listed in FILE|stdin")
     parser.add_argument('-H', "--noheader", dest="noheader", action="store_true", help="if noheader")
