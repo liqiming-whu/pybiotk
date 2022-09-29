@@ -4,6 +4,7 @@ A simple tool for joining and filtering tables
 """
 import argparse
 import csv
+import os
 import sys
 
 import pandas as pd
@@ -39,7 +40,10 @@ def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclud
         out_df = df_list[0]
     else:
         out_df = pd.concat(df_list)
-    write_table(out_df, outfile, header=not noheader, quoting=csv.QUOTE_NONE)
+    if os.path.splitext(outfile)[1] == ".xlsx":
+        write_table(out_df, outfile, header=not noheader)
+    else:
+        write_table(out_df, outfile, header=not noheader, quoting=csv.QUOTE_NONE)
 
 
 @ignore

@@ -126,10 +126,10 @@ def read_table(filepath_or_buffer: Union[str, TextIO], header: Optional[int] = 0
         filename = filepath_or_buffer
     ext = os.path.splitext(filename)[1]
     try:
-        if ext == "csv":
+        if ext == ".csv":
             deli = sep if sep else ","
             df = pd.read_csv(filepath_or_buffer, delimiter=deli, header=header, **kwargs)
-        elif ext == "xlsx":
+        elif ext == ".xlsx":
             df = pd.read_excel(filepath_or_buffer, header=header, **kwargs)
         else:
             deli = sep if sep else "\t"
@@ -149,9 +149,9 @@ def write_table(out_df: pd.DataFrame, path_or_buf: Union[str, TextIO], index: bo
     else:
         filename = path_or_buf
     ext = os.path.splitext(filename)[1]
-    if ext == "csv":
+    if ext == ".csv":
         out_df.to_csv(path_or_buf, index=index, header=header, sep=",", **kwargs)
-    elif ext == "xlsx":
+    elif ext == ".xlsx":
         out_df.to_excel(path_or_buf, index=index, header=header, **kwargs)
     else:
         out_df.to_csv(path_or_buf, index=index, header=header, sep=sep, **kwargs)
