@@ -54,7 +54,8 @@ def run():
                         default=None, help="choose gene names to filter gtf.")
     args = parser.parse_args()
     if args.gtf is None:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
 
     main(args.gtf, args.features, args.gene_types, args.transcript_types, args.output,
          args.transcript_ids, args.transcript_names, args.gene_ids, args.gene_names)

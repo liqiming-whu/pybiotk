@@ -21,7 +21,8 @@ def run():
     parser.add_argument(dest="input", type=str, nargs="*", default=(None if sys.stdin.isatty() else "-"), help="input fastq files. [stdin]")
     args = parser.parse_args()
     if not args.input:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
     main(args.input)
 
 

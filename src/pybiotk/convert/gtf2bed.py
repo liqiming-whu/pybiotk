@@ -76,7 +76,8 @@ def run():
 
     args = parser.parse_args()
     if args.gtf is None:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
 
     main(args.gtf, args.name, args.feature,
          args.gene_types, args.transcript_types,

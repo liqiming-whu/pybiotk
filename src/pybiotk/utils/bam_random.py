@@ -51,7 +51,8 @@ def run():
     parser.add_argument("-n", dest="count", type=int, default=10000, help="number of alignments to grab")
     args = parser.parse_args()
     if args.filename is None:
-        args = parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
     if not args.filename == "-" and not os.path.exists(args.filename):
         raise OSError(f"No such file or directory: {args.filename}")
     try:

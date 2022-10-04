@@ -129,9 +129,10 @@ def run():
     args = parser.parse_args()
 
     if args.input is None:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
 
-    main(**args.__dict__)
+    main(**vars(args))
 
 
 if __name__ == "__main__":

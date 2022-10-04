@@ -37,7 +37,8 @@ def run():
     parser.add_argument("--outfmt", dest="outfmt", type=str, choices=("fasta", 'fastq'), default="fastq",  help="output file format fasta or fastq, default:fastq.")
     args = parser.parse_args()
     if args.input is None:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
     reverse_fastx(args.input, args.output, args.outfmt)
 
 

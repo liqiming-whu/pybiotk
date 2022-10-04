@@ -38,7 +38,8 @@ def run():
     parser.add_argument("--outfmt", dest="outfmt", type=str, choices=("fastq", "fasta"), default="fastq", help="output fastq or fasta. [fastq]")
     args = parser.parse_args()
     if args.input is None:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
     fastx_rename(args.input, args.output, args.outfmt)
 
 

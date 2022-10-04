@@ -82,7 +82,8 @@ def run():
     parser.add_argument("-n", "--by-name", dest="name", action="store_true", help="by full name instead of just id.")
     args = parser.parse_args()
     if not args.input:
-        parser.parse_args(['-h'])
+        parser.print_help()
+        sys.exit(1)
     by = "seq"
     if args.id:
         by = "id"
