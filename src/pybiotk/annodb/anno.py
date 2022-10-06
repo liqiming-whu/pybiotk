@@ -57,7 +57,15 @@ class AnnoSet:
         self,
         priority: Tuple[str, ...] = ("Promoter", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Downstream", "Intergenic")
     ) -> str:
-        return GenomicAnnotation.select_anno(set(self.anno), priority)
+        anno = GenomicAnnotation.select_anno(set(self.anno), priority)
+        types = set(self.type)
+        if anno == "Exon" and "protein_coding" in types:
+            if types == {"protein_coding"}:
+                anno = "Intron"
+            else:
+                self.type = list(types - {"protein_coding"})
+
+        return anno
 
     def __str__(self) -> str:
         _id = ",".join(self.id)
