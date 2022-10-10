@@ -26,7 +26,11 @@ class BamType(Enum):
 def check_bam_type(filename: str) -> BamType:
     logging.info(f"checking bam type: {filename} ...")
     with pysam.AlignmentFile(filename) as bam:
-        read = next(bam)
+        try:
+            read = next(bam)
+        except StopIteration:
+            logging.warning(f"empty bam file: {filename}")
+            return None
         if read.is_read1 or read.is_read2:
             bamtype = BamType.PE
         else:
