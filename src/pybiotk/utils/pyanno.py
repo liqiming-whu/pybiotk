@@ -73,6 +73,7 @@ def annobam(filename: str,
         else:
             gene_types = set(gene.gene_type for gene in genes)
             annoset = AnnoSet(gene.annotation(_blocks, tss_region, downstream) for gene in genes)
+            annoset.primary_anno()
             if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                 annoset.type = gene_types
             file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\t{annoset}\n")
@@ -126,6 +127,7 @@ def annobed(filename: str,
             else:
                 gene_types = set(gene.gene_type for gene in genes)
                 annoset = AnnoSet(gene.annotation([(bed.start, bed.end)], tss_region, downstream) for gene in genes)
+                annoset.primary_anno()
                 if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                     annoset.type = gene_types
                 file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\t{annoset}\n")

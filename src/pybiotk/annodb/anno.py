@@ -21,7 +21,7 @@ class GenomicAnnotation:
     @staticmethod
     def select_anno(
         annoset: AbstractSet[str],
-        priority: Tuple[str, ...] = ("Promoter", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ):
         for anno in priority:
             if anno in annoset:
@@ -29,7 +29,7 @@ class GenomicAnnotation:
 
     def primary_anno(
         self,
-        priority: Tuple[str, ...] = ("Promoter", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ):
         return self.select_anno(self.detail, priority)
 
@@ -55,7 +55,7 @@ class AnnoSet:
 
     def primary_anno(
         self,
-        priority: Tuple[str, ...] = ("Promoter", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ) -> str:
         anno = GenomicAnnotation.select_anno(set(self.anno), priority)
         types = set(self.type)
@@ -64,6 +64,8 @@ class AnnoSet:
                 anno = "Intron"
             else:
                 self.type = list(types - {"protein_coding"})
+        elif anno in ("5UTR", "3UTR", "CDS") and "protein_coding" not in types:
+            anno = "Exon"
 
         return anno
 
