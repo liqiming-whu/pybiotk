@@ -199,6 +199,8 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
             if gene_gtf:
                 if transcript.gene_type is None:
                     transcript.gene_type = gene_gtf[0].gene_type()
+            if transcript.transcript_type is None:
+                transcript.transcript_type = transcript.gene_type
 
             yield transcript
 
