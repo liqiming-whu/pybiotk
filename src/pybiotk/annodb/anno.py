@@ -119,13 +119,15 @@ class GFeature(ABC):
     def utr3_len(self) -> int:
         return blocks_len(self.utr3_exons())
 
-    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-1000, 1000), down: int = 3000) -> Set[str]:
+    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-3000, 0), down: int = 3000) -> Set[str]:
         anno = []
-        tss = intervals_is_overlap(blocks, [self.tss_region(region=region)])
-        introns = self.introns()
-        if introns:
-            introns = intervals_is_overlap(blocks, introns)
-        downstream = intervals_is_overlap(blocks, [self.downstream(down=down)])
+        st = self.tss_region(region=region)
+        end = self.downstream(down=down)
+        pos = sorted([*st, *end])
+        if blocks[0][0] < pos[0] or blocks[-1][1] > pos[3]:
+            anno.append("Intergenic")
+        tss = intervals_is_overlap(blocks, [st])
+        downstream = intervals_is_overlap(blocks, [end])
         if self.is_protein_coding():
             utr5_exons = self.utr5_exons()
             if utr5_exons:
@@ -154,10 +156,12 @@ class GFeature(ABC):
                 anno.append("CDS")
         elif exons:
             anno.append("Exon")
-        if introns:
-            anno.append("Intron")
         if downstream:
             anno.append("Downstream")
         if not anno:
-            anno.append("Intergenic")
+            anno.append("Intron")
+        elif not {"5UTR", "3UTR", "CDS", "Exon"} & set(anno):
+            if intervals_is_overlap(blocks, [(pos[1], pos[2])]):
+                anno.append("Intron")
+
         return set(anno)

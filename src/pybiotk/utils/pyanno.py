@@ -38,7 +38,7 @@ def load_grangetree(
                     sys.stderr.write(f"\rload {i:6} {level}s.")
         else:
             for transcripts in gtf.to_transcript() | groupby(lambda x: x.gene_id):
-                gene = Gene.init_by_transcipts(transcripts)
+                gene = Gene.init_by_transcripts(transcripts)
                 grange = [*gene.tss_region(tss_region), *gene.downstream(downstream)]
                 grange.sort()
                 grangetree.add(gene, gene.chrom, grange[0], grange[-1], gene.strand)
@@ -140,7 +140,7 @@ def main(
     outfilename: str,
     gtf_file: str,
     level: Literal["transcript", "gene"] = "transcript",
-    tss_region: Tuple[int, int] = (-1000, 1000),
+    tss_region: Tuple[int, int] = (-3000, 0),
     downstream: int = 3000,
     strand: bool = True,
     rule: str = "1+-,1-+,2++,2--",
@@ -150,7 +150,11 @@ def main(
     start = time.perf_counter()
     filetype = os.path.splitext(filename)[1]
     grangetree = load_grangetree(gtf_file, level, tss_region, downstream, strand)
-    with open(outfilename, "w", encoding="utf-8") as annofile:
+    if outfilename == "-":
+        ostream = sys.stdout
+    else:
+        ostream = open(outfilename, "w", encoding="utf-8")
+    with ostream as annofile:
         if filetype == ".bam":
             annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bam mode ...")
@@ -171,12 +175,12 @@ def run():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", "--input", dest="input", type=str, required=True,
                         help="input file, bam or bed. The file type will be inferred from the filename suffix ['*.bam', '*.bed'].")
-    parser.add_argument("-o", "--output", dest="output", type=str, required=True, help="output file name.")
+    parser.add_argument("-o", "--output", dest="output", type=str, default="-", help="output file name. [stdout]")
     parser.add_argument("-g", "--gtf", dest='gtf', required=True,
                         help="gtf file download from Genecode, or a sorted gtf file.")
     parser.add_argument("-l", "--level", dest="level", type=str, default="transcript", choices=("transcript", "gene"),
                         help="annotation level, transcript or gene.")
-    parser.add_argument("--tss_region", dest="tss_region", type=int, nargs="+", default=[-1000, 1000],
+    parser.add_argument("--tss_region", dest="tss_region", type=int, nargs="+", default=[-3000, 0],
                         help="choose region from tss.")
     parser.add_argument("--downstream", dest="downstream", type=int, default=3000, help="downstream length from tes.")
     parser.add_argument("-s", "--strand", dest="strand", action="store_true", help="require same strandedness.")
