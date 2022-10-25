@@ -45,28 +45,47 @@ class AnnoSet:
     anno: List[str] = field(init=False, default_factory=list)
 
     def __post_init__(self):
+        preferred = []
+        second = []
+        other = []
         for anno in self.annoset:
-            self.id.append(anno.id)
-            self.name.append(anno.name)
-            self.start.append(anno.start)
-            self.end.append(anno.end)
-            self.type.append(anno.type)
-            self.anno.append(anno.primary_anno())
+            if not {"Promoter", "Downstream", "Intergenic"} & anno.detail:
+                if not anno.primary_anno() == "Intron":
+                    preferred.append(anno)
+                else:
+                    second.append(anno)
+            else:
+                other.append(anno)
+        if preferred:
+            for anno in preferred:
+                self.id.append(anno.id)
+                self.name.append(anno.name)
+                self.start.append(anno.start)
+                self.end.append(anno.end)
+                self.type.append(anno.type)
+                self.anno.append(anno.primary_anno())
+        elif second:
+            for anno in second:
+                self.id.append(anno.id)
+                self.name.append(anno.name)
+                self.start.append(anno.start)
+                self.end.append(anno.end)
+                self.type.append(anno.type)
+                self.anno.append(anno.primary_anno())
+        else:
+            for anno in other:
+                self.id.append(anno.id)
+                self.name.append(anno.name)
+                self.start.append(anno.start)
+                self.end.append(anno.end)
+                self.type.append(anno.type)
+                self.anno.append(anno.primary_anno())
 
     def primary_anno(
         self,
         priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ) -> str:
         anno = GenomicAnnotation.select_anno(set(self.anno), priority)
-        types = set(self.type)
-        if anno == "Exon" and "protein_coding" in types:
-            if types == {"protein_coding"}:
-                anno = "Intron"
-            else:
-                self.type = list(types - {"protein_coding"})
-        elif anno in ("5UTR", "3UTR", "CDS") and "protein_coding" not in types:
-            anno = "Exon"
-
         return anno
 
     def __str__(self) -> str:
