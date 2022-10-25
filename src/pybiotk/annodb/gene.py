@@ -38,6 +38,7 @@ class Gene(GFeature):
         self._cds_exons = None
         self._utr5_exons = None
         self._utr3_exons = None
+        self.id = self.gene_id
 
     def __repr__(self) -> str:
         return f"{self.gene_id}:{self.chrom}:{self.start}-{self.end}({self.strand})"
