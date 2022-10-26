@@ -45,19 +45,26 @@ class AnnoSet:
     anno: List[str] = field(init=False, default_factory=list)
 
     def __post_init__(self):
-        preferred = []
+        first = []
         second = []
+        third = []
+        fourth = []
         other = []
         for anno in self.annoset:
             if not {"Promoter", "Downstream", "Intergenic"} & anno.detail:
                 if not anno.primary_anno() == "Intron":
-                    preferred.append(anno)
+                    first.append(anno)
                 else:
-                    second.append(anno)
+                    third.append(anno)
             else:
-                other.append(anno)
-        if preferred:
-            for anno in preferred:
+                if {"5UTR", "3UTR", "CDS", "Exon"} & anno.detail:
+                    second.append(anno)
+                elif "Intron" in anno.detail:
+                    fourth.append(anno)
+                else:
+                    other.append(anno)
+        if first:
+            for anno in first:
                 self.id.append(anno.id)
                 self.name.append(anno.name)
                 self.start.append(anno.start)
@@ -66,6 +73,22 @@ class AnnoSet:
                 self.anno.append(anno.primary_anno())
         elif second:
             for anno in second:
+                self.id.append(anno.id)
+                self.name.append(anno.name)
+                self.start.append(anno.start)
+                self.end.append(anno.end)
+                self.type.append(anno.type)
+                self.anno.append(anno.primary_anno())
+        elif third:
+            for anno in third:
+                self.id.append(anno.id)
+                self.name.append(anno.name)
+                self.start.append(anno.start)
+                self.end.append(anno.end)
+                self.type.append(anno.type)
+                self.anno.append(anno.primary_anno())
+        elif fourth:
+            for anno in fourth:
                 self.id.append(anno.id)
                 self.name.append(anno.name)
                 self.start.append(anno.start)
