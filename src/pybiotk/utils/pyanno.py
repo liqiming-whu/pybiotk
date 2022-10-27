@@ -192,7 +192,8 @@ def run():
 
     args = parser.parse_args()
 
-    assert len(args.tss_region) == 2, "tss_region must be a tuple of 2 elements."
+    if not len(args.tss_region) == 2:
+        parser.error("--tss_region must be a tuple of 2 elements.")
     main(args.input, args.output, args.gtf, args.level, args.tss_region, args.downstream, args.strand, args.rule, args.pair, args.ordered_by_name)
 
 
