@@ -47,6 +47,7 @@ console_scripts =
     fastq_uniq = pybiotk.utils.fastq_uniq:run
     fastq_join = pybiotk.utils.fastq_join:run
     fastx_rename = pybiotk.utils.fastx_rename:run
+    genomefetcher = pybiotk.utils.genomefetcher:run
     reverse_fastx = pybiotk.utils.reverse_fastx:run
     seq_random = pybiotk.utils.seq_random:run
     merge_row = pybiotk.utils.merge_row:run
