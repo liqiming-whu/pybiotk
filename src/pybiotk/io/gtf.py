@@ -53,6 +53,8 @@ class GTF:
             attr = self.parse_attributes(term, self.attributes)
             if attr is not None:
                 return attr
+        else:
+            return self.gene_id()
 
     def transcript_type(self):
         for term in ["transcript_type", "transcript_biotype"]:
