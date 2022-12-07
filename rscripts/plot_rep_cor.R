@@ -75,14 +75,14 @@ log10_x <- log10(data$x)[!is.infinite(log10(data$x))]
 
 p <- ggplot(data) +
     geom_point(aes(x=log10(x), y=log10(y)), color="blue") +
-    geom_text(aes(x=min(log10_x) + 0.05*(max(log10_x) - min(log10_x)), y=max(log10(y))), label=label, size = 4, check_overlap=T) +
+    geom_text(aes(x=min(log10_x) + 0.1*(max(log10_x) - min(log10_x)), y=max(log10(y))), label=label, size = 2, check_overlap=T) +
     labs(x=paste0(samples_name[1]," log10(FPKM)"), y=paste0(samples_name[2], " log10(FPKM)")) +
-    theme_bw(base_size = 12) +
-    theme(panel.grid=element_blank(), legend.position="none")
+    theme_bw() +
+    theme(panel.grid=element_blank(), legend.position="none", text = element_text(size = 8))
 
 if(args$density) {
     p <- p + stat_density2d(geom = 'polygon', aes(x=log10(x), y=log10(y), fill=..level..)) +
         scale_fill_viridis(begin = 0.1, end = 0.9, option = "turbo", alpha = 0.8)
 }
 
-ggsave(args$outfig, p)
+ggsave(args$outfig, p, width=5, height=5, dpi=300, units="cm")
