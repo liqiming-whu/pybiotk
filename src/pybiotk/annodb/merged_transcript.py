@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import itertools
@@ -184,7 +184,8 @@ def merge_transcripts(gtf: GtfFile, strand: Optional[Literal["+", "-"]] = "+",
     merged_transcripts = gtf.to_transcript() | filter(lambda x: not x.gene_name.startswith(
         escape_gene_name_startswith)) | filter(lambda x: x.gene_type not in escape) | filter(
             lambda x: x.strand == strand if strand else True) | transform(
-                group_overlap_transcripts) | mapwith(MergedTranscript.init_by_transcripts) | window | filter(
+                group_overlap_transcripts) | mapwith(MergedTranscript.init_by_transcripts) | filter(
+                    lambda x: x.strand in {'+', '-'}) | window | filter(
                     lambda x: x[0].chrom == x[-1].chrom) | apply(add_before_and_after) | flatten | uniq(
                         lambda x: x.gene_name) | apply(add_chrom_ends_before_and_after_partial)
     return merged_transcripts
@@ -196,15 +197,29 @@ def merge_transcripts_groupby_strand(
     escape_gene_name_startswith: Tuple[str] = (),
     chrom_length_dict: Optional[Dict[str, int]] = None,
     savebed: Optional[str] = None,
+    remove_strand_overlap: bool = False
 ) -> Dict[str, List[MergedTranscript]]:
     bedpath = savebed if savebed is not None else os.devnull
     with open(bedpath, "w") as bed:
-        merged_transcripts_dict = {
-            '+': merge_transcripts(gtf, '+', escape_gene_types, escape_gene_name_startswith, chrom_length_dict) | apply(
-                lambda x: bed.write(f"{x.to_bed6()}\n")) | to_list,
-            '-': merge_transcripts(gtf, '-', escape_gene_types, escape_gene_name_startswith, chrom_length_dict) | apply(
-                lambda x: bed.write(f"{x.to_bed6()}\n")) | to_list,
-        }
+        if remove_strand_overlap:
+            fwd = []
+            rev = []
+            for x in merge_transcripts(gtf, None, escape_gene_types, escape_gene_name_startswith, chrom_length_dict):
+                bed.write(f"{x.to_bed6()}\n")
+                if x.strand == '+':
+                    fwd.append(x)
+                elif x.strand == '-':
+                    rev.append(x)
+                else:
+                    raise RuntimeError(f"Wrong strand for {x.gene_name}.")
+            merged_transcripts_dict = {'+': fwd, '-': rev}
+        else:
+            merged_transcripts_dict = {
+                '+': merge_transcripts(gtf, '+', escape_gene_types, escape_gene_name_startswith, chrom_length_dict) | apply(
+                    lambda x: bed.write(f"{x.to_bed6()}\n")) | to_list,
+                '-': merge_transcripts(gtf, '-', escape_gene_types, escape_gene_name_startswith, chrom_length_dict) | apply(
+                    lambda x: bed.write(f"{x.to_bed6()}\n")) | to_list,
+            }
     if savebed is not None:
         bedtools_sort(savebed)
     return merged_transcripts_dict
