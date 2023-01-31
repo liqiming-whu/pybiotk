@@ -75,7 +75,7 @@ class Openbwn(TrackFile):
     def stats(self, chrom: str, start: int, end: int, stat: Literal['mean', 'max', 'min', 'sum', 'coverage', 'std'] = 'mean') -> np.ndarray:
         try:
             a = np.nan_to_num(np.array([bw.stats(chrom, start, end, exact=True, type=stat)[0] for bw in self.bws]))
-            a[a is None] = 0
+            a[a == None] = 0
             return np.abs(a.astype(np.float32))
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
@@ -84,7 +84,7 @@ class Openbwn(TrackFile):
     def values(self, chrom: str, start: int = None, end: int = None) -> np.ndarray:
         try:
             a = np.nan_to_num(np.array([bw.values(chrom, start, end) for bw in self.bws]))
-            a[a is None] = 0
+            a[a == None] = 0
             return np.abs(a.astype(np.float32))
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
@@ -152,6 +152,8 @@ class Openbw(TrackFile):
     def stats(self, chrom: str, start: int, end: int, stat: Literal['mean', 'max', 'min', 'sum', 'coverage', 'std'] = 'mean') -> np.ndarray:
         try:
             a = np.nan_to_num(np.array(self.bw.stats(chrom, start, end, exact=True, type=stat)[0]))
+            if a is None:
+                a = np.float32(0)
             return np.abs(a.astype(np.float32))
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
@@ -160,7 +162,7 @@ class Openbw(TrackFile):
     def values(self, chrom: str, start: int = None, end: int = None) -> np.ndarray:
         try:
             a = np.nan_to_num(np.array(self.bw.values(chrom, start, end)))
-            a[a is None] = 0
+            a[a == None] = 0
             return np.abs(a.astype(np.float32))
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
@@ -200,7 +202,7 @@ class Openbw(TrackFile):
     @staticmethod
     def coverage_sliding_window_np_values(a: np.ndarray, nbins: int) -> np.ndarray:
         a2 = sliding_window_view(a, nbins)
-        return (a2 > 0).sum(axis=1) / nbins
+        return np.count_nonzero(a2, axis=1) / nbins
 
     def coverage_sliding_window(self, chrom: str, start: int, end: int, nbins: int):
         a = self.values(chrom, start, end)
