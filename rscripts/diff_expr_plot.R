@@ -11,6 +11,7 @@ parser$add_argument('-p', dest='pvalue', type="double", default=0.05, help='cuto
 parser$add_argument('-f', dest='font_size', type="integer", default=8, help='font size')
 parser$add_argument('--nudge_x', dest='nudge_x', type="double", default=0, help='nudge_x')
 parser$add_argument('--nudge_y', dest='nudge_y', type="double", default=0, help='nudge_y')
+parser$add_argument('--box_padding', dest='box_padding', type="double", default=0.35, help='box_padding')
 parser$add_argument('--nopvalue', dest='nopvalue', action='store_true', help='plot log2fc and reads')
 parser$add_argument('--rankplot', dest='rankplot', action='store_true', help='plot log2fc and rank')
 parser$add_argument('--labels', dest='labels', type="character", nargs="+", default=NULL, help="labels list")
@@ -26,6 +27,7 @@ p_value <- args$pvalue
 font_size <- args$font_size
 nudge_x <- args$nudge_x
 nudge_y <- args$nudge_y
+box_padding <- args$box_padding
 labels <- args$labels
 
 # library(ggthemes)
@@ -99,7 +101,7 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
     geom_text(x=max.x*0.1, y=max.y, label= paste0("up: ", as.character(up.count)), size = 2, color="#ff4757", check_overlap=T) +
     geom_text_repel(inherit.aes=F, data=need_rank,
         aes(x=rank, y=log2FoldChange, label=gene_id), color=need_rank$color, na.rm=T, segment.size = 0.3, segment.colour="black", 
-        box.padding = unit(0.35, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
+        box.padding = unit(box_padding, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
     # scale_y_continuous(breaks=c(-6, -3, -1, 0, 1, 3, 6)) +
     theme_bw(base_size=8) +
     theme(legend.position="right",
@@ -133,7 +135,7 @@ plot <- ggplot(data=data,
     geom_text(x=max.x/2, y=max.y, label= paste0("up: ", as.character(up.count)), size = 2, color="#ff4757", check_overlap=T) +
     geom_text_repel(inherit.aes=F, data=need_label,
         aes(x=log2FoldChange, y=log10(reads), label=gene_id), color=need_label$color, na.rm=T, segment.size = 0.3, segment.colour="black",
-        box.padding = unit(0.35, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
+        box.padding = unit(box_padding, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
     # scale_x_continuous(breaks=c(-6, -3, -1, 0, 3, 1, 6)) +
     theme_bw(base_size=8) +
     theme(legend.position="right",
@@ -213,7 +215,7 @@ plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange,color=pos, fill=pos)
     geom_text(x=max.x*0.1, y=max.y, label= paste0("up: ", as.character(up.count)), size = 2, color="#ff4757", check_overlap=T) +
     geom_text_repel(inherit.aes=F, data=need_rank,
         aes(x=rank, y=log2FoldChange, label=gene_id), color=need_rank$color, na.rm=T, segment.size = 0.3, segment.colour="black",
-        box.padding = unit(0.35, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
+        box.padding = unit(box_padding, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
     # scale_y_continuous(breaks=c(-6, -3, -1, 0, 1, 3, 6)) +
     theme_bw(base_size=8) +
     theme(legend.position="right",
@@ -246,7 +248,7 @@ plot <- ggplot(data=data,
     geom_text(x=max.x/2, y=max.y, label= paste0("up: ", as.character(up.count)), size = 2, color="#ff4757", check_overlap=T) +
     geom_text_repel(inherit.aes=F, data=need_label,
         aes(x=log2FoldChange, y=-log10(pvalue), label=gene_id), color=need_label$color, na.rm=T, segment.size = 0.3, segment.colour="black",
-        box.padding = unit(0.35, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
+        box.padding = unit(box_padding, "lines"), size=2, direction='both', nudge_x=nudge_x, nudge_y=nudge_y, min.segment.length = 0, max.overlaps=Inf) +
     theme_bw(base_size=8) +
     theme(legend.position="right",
          panel.grid=element_blank(),
