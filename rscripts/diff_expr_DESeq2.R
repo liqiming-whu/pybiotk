@@ -75,6 +75,9 @@ coldata <- data.frame(row.names=colnames(counts_table), condition)
 
 dds <- DESeqDataSetFromMatrix(counts_table, coldata, design=~condition)
 
+keep <- rowSums(counts(dds) >= 10) >= floor(length(group) / 2)
+dds <- dds[keep,]
+
 if(!is.null(spike_in)) {
 
     spike_table <- read_data(spike_in[1], samples_name[1])
