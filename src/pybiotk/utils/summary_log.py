@@ -4,7 +4,7 @@ import os
 import re
 import sys
 from collections import namedtuple
-from typing import Optional, Sequence, TextIO, Union
+from typing import Optional, Sequence, TextIO, Union, Literal
 
 import pandas as pd
 
@@ -42,6 +42,22 @@ def parse_cutadapt(filename: str):
         ])
     return cutadapt_summary(total, read1_num, read2_num, read1_percent, read2_percent)
 
+def parse_fastp(filename: str):
+    reads_count = []
+    for line in cat(filename) | head(22):
+        if line.startswith("total reads"):
+            reads_count.append(line.split()[-1])
+    assert reads_count[0] == reads_count[1]
+    assert reads_count[2] == reads_count[3]
+    total_read_pairs = reads_count[0]
+    qc_read_pairs = reads_count[2]
+
+    fastp_summary = namedtuple("fastp_summary", [
+        "total_read_pairs",
+        "qc_read_pairs"
+    ])
+    return fastp_summary(total_read_pairs, qc_read_pairs)
+
 
 def parse_bowtie2(filename: str):
     lines = [line.strip() for line in cat(filename)]
@@ -56,6 +72,51 @@ def parse_bowtie2(filename: str):
 
     return bowtie2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)
 
+def parse_hisat2(filename: str):
+    lines = [line.strip() for line in cat(filename)]
+    input_read_pairs = lines[0].split()[0]
+    mapped_read_pairs = str(int(lines[3].split()[0]) + int(lines[4].split()[0]) + int(
+        lines[7].split()[0]) + int(lines[12].split()[0]) + int(lines[13].split()[0]))
+    alignment_rate = lines[-1].split()[0]
+    hisat2_summary = namedtuple("hisat2_summary", [
+        "input_read_pairs",
+        "mapped_read_pairs",
+        "alignment_rate"
+    ])
+
+    return hisat2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)    
+
+def parse_STAR(filename: str):
+    input_read_pairs = None
+    unique_mapped = None
+    unique_rate = None
+    multiple_mapped = None
+    multiple_rate = None
+    for line in cat(filename):
+        line = line.strip()
+        if line.startswith("Number of input reads"):
+            input_read_pairs = line.split()[-1]
+        if line.startswith("Uniquely mapped reads number"):
+            unique_mapped = line.split()[-1]
+        if line.startswith("Uniquely mapped reads %"):
+            unique_rate = line.split()[-1]
+        if line.startswith("Number of reads mapped to multiple loci"):
+            multiple_mapped = line.split()[-1]
+        if line.startswith(r"% of reads mapped to multiple loci"):
+            multiple_rate = line.split()[-1]
+    mapped_read_pairs = int(unique_mapped) + int(multiple_mapped)
+    alignment_rate = float(unique_rate.rstrip("%")) + float(multiple_rate.rstrip("%"))
+    alignment_rate = f"{alignment_rate:.2f}%"
+    star_summary = namedtuple("star_summary", [
+        "input_read_pairs",
+        "unique_mapped",
+        "unique_rate",
+        "multiple_mapped",
+        "multiple_rate",
+        "mapped_read_pairs",
+        "alignment_rate"
+    ])
+    return star_summary(input_read_pairs, unique_mapped, unique_rate, multiple_mapped, multiple_rate, mapped_read_pairs, alignment_rate)
 
 def parse_picards_rmdup(filename: str):
     lines = ""
@@ -90,8 +151,12 @@ def parse_path(filename: str):
 
 
 def main(filepath_or_buffer: Union[str, TextIO],
-         cutadapt: Optional[Sequence[str]],
+         cutadapt: Optional[Sequence[str]] = None,
+         fastp: Optional[Sequence[str]] = None,
+         rmRNA: Optional[Sequence[str]] = None,
+         rmRNA_use: Literal["hisat2", "STAR"] = "STAR",
          bowtie2: Optional[Sequence[str]] = None,
+         star: Optional[Sequence[str]] = None,
          picards_rmdup: Optional[Sequence[str]] = None,
          flagstat: Optional[Sequence[str]] = None,
          reads_in_peaks: Optional[Sequence[str]] = None,
@@ -99,31 +164,61 @@ def main(filepath_or_buffer: Union[str, TextIO],
          replicates: Optional[Sequence[str]] = None,
          group: Optional[Sequence[str]] = None,
          ):
-    sample_names = sample_names if sample_names is not None else [parse_path(i) for i in cutadapt]
+    flag = None
+    for i in (cutadapt, fastp, rmRNA, bowtie2, star, picards_rmdup, flagstat, reads_in_peaks):
+        if i is not None:
+            flag = i
+            break
+    if flag is None:
+        raise RuntimeError("No logfile input.")
+    sample_names = sample_names if sample_names is not None else [parse_path(i) for i in flag]
     group = group if group is not None else [parse_sample_name(i).group for i in sample_names]
     replicates = replicates if replicates is not None else [parse_sample_name(i).replicate for i in sample_names]
-    assert len(sample_names) == len(cutadapt)
+    assert len(sample_names) == len(flag)
     data = dict()
     data["samples"] = sample_names
     data["group"] = group
     data["replicates"] = replicates
-    total_read_pairs = []
-    read1_with_adapter = []
-    read2_with_adapter = []
-    read1_with_adapter_percent = []
-    read2_with_adapter_percent = []
-    for log in cutadapt:
-        cutadapt_summary = parse_cutadapt(log)
-        total_read_pairs.append(cutadapt_summary.total_read_pairs)
-        read1_with_adapter.append(cutadapt_summary.read1_with_adapter)
-        read2_with_adapter.append(cutadapt_summary.read2_with_adapter)
-        read1_with_adapter_percent.append(cutadapt_summary.read1_with_adapter_percent)
-        read2_with_adapter_percent.append(cutadapt_summary.read2_with_adapter_percent)
-    data["total_read_pairs"] = total_read_pairs
-    data["read1_with_adapter"] = read1_with_adapter
-    data["read2_with_adapter"] = read2_with_adapter
-    data["read1_with_adapter_percent"] = read1_with_adapter_percent
-    data["read2_with_adapter_percent"] = read2_with_adapter_percent
+    if cutadapt is not None:
+        total_read_pairs = []
+        read1_with_adapter = []
+        read2_with_adapter = []
+        read1_with_adapter_percent = []
+        read2_with_adapter_percent = []
+        for log in cutadapt:
+            cutadapt_summary = parse_cutadapt(log)
+            total_read_pairs.append(cutadapt_summary.total_read_pairs)
+            read1_with_adapter.append(cutadapt_summary.read1_with_adapter)
+            read2_with_adapter.append(cutadapt_summary.read2_with_adapter)
+            read1_with_adapter_percent.append(cutadapt_summary.read1_with_adapter_percent)
+            read2_with_adapter_percent.append(cutadapt_summary.read2_with_adapter_percent)
+        data["total_read_pairs"] = total_read_pairs
+        data["read1_with_adapter"] = read1_with_adapter
+        data["read2_with_adapter"] = read2_with_adapter
+        data["read1_with_adapter_percent"] = read1_with_adapter_percent
+        data["read2_with_adapter_percent"] = read2_with_adapter_percent
+    if fastp is not None:
+        total_read_pairs = []
+        qc_read_pairs = []
+        for log in fastp:
+            fastp_summary = parse_fastp(log)
+            total_read_pairs.append(fastp_summary.total_read_pairs)
+            qc_read_pairs.append(fastp_summary.qc_read_pairs)
+        data["total_read_pairs"] = total_read_pairs
+        data["qc_read_pairs"] = qc_read_pairs
+    if rmRNA is not None:
+        rRNA_mapped = []
+        rRNA_ratio = []
+        for log in rmRNA:
+            if rmRNA_use == "hisat2":
+                rmRNA_summary = parse_hisat2(log)
+            else:
+                rmRNA_summary = parse_STAR(log)
+            rRNA_mapped.append(rmRNA_summary.mapped_read_pairs)
+            rRNA_ratio.append(rmRNA_summary.alignment_rate)
+        data["rRNA_mapped"] = rRNA_mapped
+        data["rRNA_ratio"] = rRNA_ratio
+
     if bowtie2 is not None:
         assert len(bowtie2) == len(sample_names)
         input_read_pairs = []
@@ -137,6 +232,32 @@ def main(filepath_or_buffer: Union[str, TextIO],
         data["input_read_pairs"] = input_read_pairs
         data["mapped_read_pairs"] = mapped_read_pairs
         data["alignment_rate"] = alignment_rate
+    if star is not None:
+        assert len(star) == len(sample_names)
+        input_read_pairs = []
+        unique_mapped = []
+        unique_rate = []
+        multiple_mapped = []
+        multiple_rate = []
+        mapped_read_pairs = []
+        alignment_rate = []
+
+        for log in star:
+            star_summary = parse_STAR(log)
+            input_read_pairs.append(star_summary.input_read_pairs)
+            unique_mapped.append(star_summary.unique_mapped)
+            unique_rate.append(star_summary.unique_rate)
+            multiple_mapped.append(star_summary.multiple_mapped)
+            multiple_rate.append(star_summary.multiple_rate)
+            mapped_read_pairs.append(star_summary.mapped_read_pairs)
+            alignment_rate.append(star_summary.alignment_rate)
+        data["input_read_pairs"] = input_read_pairs
+        data["unique_mapped"] = unique_mapped
+        data["unique_rate"] = unique_rate
+        data["multiple_rate"] = multiple_rate
+        data["mapped_read_pairs"] = mapped_read_pairs
+        data["alignment_rate"] = alignment_rate
+
     if picards_rmdup is not None:
         assert len(picards_rmdup) == len(sample_names)
         duplication_rate = []
@@ -182,9 +303,17 @@ def run():
     parser.add_argument('-g', "--group", dest="group", nargs="+",
                         type=str, default=None, help="group.")
     parser.add_argument('--cutadapt', dest="cutadapt", nargs="+", type=str,
-                        required=True, help="cutadapt log.")
+                        default=None, help="cutadapt log.")
+    parser.add_argument('--fastp', dest="fastp", nargs="+", type=str,
+                        default=None, help="fastp log.")
+    parser.add_argument('--rmRNA', dest="rmRNA", nargs="+", type=str,
+                        default=None, help="rmRNA log.")
+    parser.add_argument('--rmRNA-use', dest="rmRNA_use", type=str,
+                        default="hisat2", choices=["hisat2", "STAR"], help="rmRNA use") 
     parser.add_argument('--bowtie2', dest="bowtie2", nargs="+", type=str,
                         default=None, help="bowtie2 log.")
+    parser.add_argument('--star', dest="star", nargs="+", type=str,
+                        default=None, help="star log.")    
     parser.add_argument('--picards_rmdup', dest="picards_rmdup", nargs="+", type=str,
                         default=None, help="picards_rmdup.")
     parser.add_argument('--flagstat', dest="flagstat", nargs="+", type=str,
@@ -192,7 +321,7 @@ def run():
     parser.add_argument('--reads_in_peaks', dest="reads_in_peaks", nargs="+", type=str,
                         default=None, help="reads_in_peaks.")
     args = parser.parse_args()
-    main(args.output, args.cutadapt, args.bowtie2, args.picards_rmdup, args.flagstat, args.reads_in_peaks, args.sample_names, args.replicates, args.group)
+    main(args.output, args.cutadapt, args.fastp, args.rmRNA, args.rmRNA_use, args.bowtie2, args.star, args.picards_rmdup, args.flagstat, args.reads_in_peaks, args.sample_names, args.replicates, args.group)
 
 
 if __name__ == "__main__":
