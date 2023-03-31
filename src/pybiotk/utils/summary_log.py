@@ -299,7 +299,7 @@ def run():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-o', dest='output', type=str,
-                        default="-", help="output file name.")
+                        default="-", help="output file name. [stdout]")
     parser.add_argument('-s', "--sample_names", dest="sample_names", nargs="+",
                         type=str, default=None, help="sample_names.")
     parser.add_argument('-r', "--replicates", dest="replicates", nargs="+",

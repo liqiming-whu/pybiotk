@@ -103,8 +103,8 @@ def run():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", "--input", dest="input", type=str,
                         default=(None if sys.stdin.isatty() else "-"), help="Input table file.")
-    parser.add_argument("-o", "--output", dest="output", type=argparse.FileType('w'),
-                        default=sys.stdout, help="Output file, discard this parameter to print output to stdout.")
+    parser.add_argument("-o", "--output", dest="output", type=str,
+                        default="-", help="Output file, discard this parameter to print output to stdout.")
     parser.add_argument("--header", dest="header", type=int, default=0,
                         help="The selected row will be the header, 0 based.")
     parser.add_argument("--noheader", dest="noheader", action="store_true",
