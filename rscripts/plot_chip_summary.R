@@ -64,7 +64,7 @@ fig1 <- ggarrange(fig1A, fig1B, fig1C, ncol = 3, common.legend = TRUE, legend="b
 alignres <- data.frame("group"=data$group, "replicate"=data$replicates,
                        "sequencedepth"=data$input_read_pairs,
                        "mappedfragments"=data$mapped_read_pairs,
-                       "alignmentratio"=data$alignment_ratio)
+                       "alignmentrate"=data$alignment_rate)
 
 fig2A <- ggplot(alignres, aes(x=group, y=sequencedepth/1000000, fill=group))+
   geom_boxplot() +
@@ -94,10 +94,10 @@ fig2B <- ggplot(alignres, aes(x=group, y=mappedfragments/1000000, fill=group))+
   ggtitle("2B. Alignable Fragments")
 
 
-fig2C <- ggplot(alignres, aes(x=group, y=as.numeric(sub("%", "", alignmentratio)), fill=group))+
+fig2C <- ggplot(alignres, aes(x=group, y=as.numeric(sub("%", "", alignmentrate)), fill=group))+
   geom_boxplot() +
   geom_jitter(aes(color = replicate), position = position_jitter(0.15))+
-  geom_text_repel(aes(label=alignmentratio, x=group, y=as.numeric(sub("%", "", alignmentratio))), color="black", segment.color="grey", size=2, direction='both') +
+  geom_text_repel(aes(label=alignmentrate, x=group, y=as.numeric(sub("%", "", alignmentrate))), color="black", segment.color="grey", size=2, direction='both') +
   theme_bw(base_size = 12) +
   theme(panel.grid=element_blank()) +
   scale_fill_viridis(discrete = TRUE, begin = 0.15, end = 0.85, option = "turbo", alpha = 0.8) +
@@ -105,29 +105,29 @@ fig2C <- ggplot(alignres, aes(x=group, y=as.numeric(sub("%", "", alignmentratio)
   ggpubr::rotate_x_text(angle = 20) +
   ylab("% of Mapped Fragments") +
   xlab("") +
-  ggtitle("2C. Alignment ratio")
+  ggtitle("2C. Alignment rate")
 
 fig2 <- ggarrange(fig2A, fig2B, fig2C, ncol = 3, common.legend = TRUE, legend="bottom")
 
 
 dupdata <- data.frame("group"=data$group, "replicate"=data$replicates,
-                      "dupratio"=data$duplication_ratio,
-                      "uniquefragments"=data$mapped_read_pairs * (100 - as.numeric(sub("%", "", data$duplication_ratio)))/100,
+                      "duprate"=data$duplication_rate,
+                      "uniquefragments"=data$mapped_read_pairs * (100 - as.numeric(sub("%", "", data$duplication_rate)))/100,
                       "libarysize"=data$filtered_reads)
 
 
-fig3A <- ggplot(dupdata, aes(x=group, y=as.numeric(sub("%", "", dupratio)), fill=group))+
+fig3A <- ggplot(dupdata, aes(x=group, y=as.numeric(sub("%", "", duprate)), fill=group))+
   geom_boxplot() +
   geom_jitter(aes(color = replicate), position = position_jitter(0.15))+
-  geom_text_repel(aes(label=dupratio, x=group, y=as.numeric(sub("%", "", dupratio))), color="black", segment.color="grey", size=2, direction='both') +
+  geom_text_repel(aes(label=duprate, x=group, y=as.numeric(sub("%", "", duprate))), color="black", segment.color="grey", size=2, direction='both') +
   theme_bw(base_size = 12) +
   theme(panel.grid=element_blank()) +
   scale_fill_viridis(discrete = TRUE, begin = 0.15, end = 0.85, option = "turbo", alpha = 0.8) +
   # scale_color_viridis(discrete = TRUE, begin = 0.15, end = 0.85) +
   ggpubr::rotate_x_text(angle = 20) +
-  ylab("Duplication ratio (*100%)") +
+  ylab("Duplication rate (*100%)") +
   xlab("") +
-  ggtitle("3A. Duplication ratio")
+  ggtitle("3A. Duplication rate")
 
 
 fig3B <- ggplot(dupdata, aes(x=group, y=uniquefragments/1000000, fill=group))+
