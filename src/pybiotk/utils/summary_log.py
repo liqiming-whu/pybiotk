@@ -84,7 +84,7 @@ def parse_hisat2(filename: str):
         "alignment_rate"
     ])
 
-    return hisat2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)    
+    return hisat2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)
 
 def parse_STAR(filename: str):
     input_read_pairs = None
@@ -104,7 +104,7 @@ def parse_STAR(filename: str):
             multiple_mapped = line.split()[-1]
         if line.startswith(r"% of reads mapped to multiple loci"):
             multiple_rate = line.split()[-1]
-    mapped_read_pairs = int(unique_mapped) + int(multiple_mapped)
+    mapped_read_pairs = str(int(unique_mapped) + int(multiple_mapped))
     alignment_rate = float(unique_rate.rstrip("%")) + float(multiple_rate.rstrip("%"))
     alignment_rate = f"{alignment_rate:.2f}%"
     star_summary = namedtuple("star_summary", [
@@ -134,8 +134,11 @@ def parse_picards_rmdup(filename: str):
 
 def parse_flagstat(filename: str):
     lines = [line.strip() for line in cat(filename)]
-    filtered_reads = lines[0].split()[0]
-    return filtered_reads
+    filtered_read_pairs = None
+    for line in lines:
+        if "properly paired" in line:
+            filtered_read_pairs = str(int(int(line.split()[0]) / 2))
+    return filtered_read_pairs
 
 
 def parse_sample_name(sample_name: str):
@@ -254,6 +257,7 @@ def main(filepath_or_buffer: Union[str, TextIO],
         data["input_read_pairs"] = input_read_pairs
         data["unique_mapped"] = unique_mapped
         data["unique_rate"] = unique_rate
+        data["multiple_mapped"] = multiple_mapped
         data["multiple_rate"] = multiple_rate
         data["mapped_read_pairs"] = mapped_read_pairs
         data["alignment_rate"] = alignment_rate
@@ -270,10 +274,10 @@ def main(filepath_or_buffer: Union[str, TextIO],
         data["estimated_librarysize"] = estimated_librarysize
     if flagstat is not None:
         assert len(flagstat) == len(sample_names)
-        filtered_reads = []
+        filtered_read_pairs = []
         for log in flagstat:
-            filtered_reads.append(parse_flagstat(log))
-        data["filtered_reads"] = filtered_reads
+            filtered_read_pairs.append(parse_flagstat(log))
+        data["filtered_read_pairs"] = filtered_read_pairs
     if reads_in_peaks is not None:
         assert len(reads_in_peaks) == len(sample_names)
         peaks = []
@@ -294,8 +298,8 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-o', dest='output', type=argparse.FileType('w'),
-                        default=sys.stdout, help="output file name.")
+    parser.add_argument('-o', dest='output', type=str,
+                        default="-", help="output file name.")
     parser.add_argument('-s', "--sample_names", dest="sample_names", nargs="+",
                         type=str, default=None, help="sample_names.")
     parser.add_argument('-r', "--replicates", dest="replicates", nargs="+",
@@ -313,7 +317,7 @@ def run():
     parser.add_argument('--bowtie2', dest="bowtie2", nargs="+", type=str,
                         default=None, help="bowtie2 log.")
     parser.add_argument('--star', dest="star", nargs="+", type=str,
-                        default=None, help="star log.")    
+                        default=None, help="star log.")
     parser.add_argument('--picards_rmdup', dest="picards_rmdup", nargs="+", type=str,
                         default=None, help="picards_rmdup.")
     parser.add_argument('--flagstat', dest="flagstat", nargs="+", type=str,
@@ -321,6 +325,10 @@ def run():
     parser.add_argument('--reads_in_peaks', dest="reads_in_peaks", nargs="+", type=str,
                         default=None, help="reads_in_peaks.")
     args = parser.parse_args()
+
+    if not any([args.cutadapt, args.fastp, args.rmRNA, args.bowtie2, args.star, args.picards_rmdup, args.flagstat, args.reads_in_peaks]):
+        parser.error("as least input one log file.")
+
     main(args.output, args.cutadapt, args.fastp, args.rmRNA, args.rmRNA_use, args.bowtie2, args.star, args.picards_rmdup, args.flagstat, args.reads_in_peaks, args.sample_names, args.replicates, args.group)
 
 

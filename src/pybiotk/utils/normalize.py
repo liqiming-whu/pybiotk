@@ -103,7 +103,7 @@ def run():
     parser.add_argument("input", type=str, help="featureCount out file.")
     parser.add_argument("-c", dest="columns", type=int, nargs="+", default=[0, 5, 6], help="geneid, length(required by RPKM and TPM), count column, 0 based.")
     parser.add_argument("-m", dest="method", type=str, default="CPM", choices=("CPM", "RPKM", "TPM"), help="normalize method, [CPM|RPKM|TPM].")
-    parser.add_argument("-o", dest="output", type=argparse.FileType('w'), default=sys.stdout, help="output file.")
+    parser.add_argument("-o", dest="output", type=str, default="-", help="output file.")
 
     args = parser.parse_args()
     main(args.input, args.columns, args.method, args.output)
