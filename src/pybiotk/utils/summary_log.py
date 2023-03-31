@@ -63,35 +63,35 @@ def parse_bowtie2(filename: str):
     lines = [line.strip() for line in cat(filename)]
     input_read_pairs = lines[0].split()[0]
     mapped_read_pairs = str(int(lines[3].split()[0]) + int(lines[4].split()[0]))
-    alignment_rate = lines[5].split()[0]
+    alignment_ratio = lines[5].split()[0]
     bowtie2_summary = namedtuple("bowtie2_summary", [
         "input_read_pairs",
         "mapped_read_pairs",
-        "alignment_rate"
+        "alignment_ratio"
     ])
 
-    return bowtie2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)
+    return bowtie2_summary(input_read_pairs, mapped_read_pairs, alignment_ratio)
 
 def parse_hisat2(filename: str):
     lines = [line.strip() for line in cat(filename)]
     input_read_pairs = lines[0].split()[0]
     mapped_read_pairs = str(int(lines[3].split()[0]) + int(lines[4].split()[0]) + int(
         lines[7].split()[0]) + int(lines[12].split()[0]) + int(lines[13].split()[0]))
-    alignment_rate = lines[-1].split()[0]
+    alignment_ratio = lines[-1].split()[0]
     hisat2_summary = namedtuple("hisat2_summary", [
         "input_read_pairs",
         "mapped_read_pairs",
-        "alignment_rate"
+        "alignment_ratio"
     ])
 
-    return hisat2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)
+    return hisat2_summary(input_read_pairs, mapped_read_pairs, alignment_ratio)
 
 def parse_STAR(filename: str):
     input_read_pairs = None
     unique_mapped = None
-    unique_rate = None
+    unique_ratio = None
     multiple_mapped = None
-    multiple_rate = None
+    multiple_ratio = None
     for line in cat(filename):
         line = line.strip()
         if line.startswith("Number of input reads"):
@@ -99,24 +99,24 @@ def parse_STAR(filename: str):
         if line.startswith("Uniquely mapped reads number"):
             unique_mapped = line.split()[-1]
         if line.startswith("Uniquely mapped reads %"):
-            unique_rate = line.split()[-1]
+            unique_ratio = line.split()[-1]
         if line.startswith("Number of reads mapped to multiple loci"):
             multiple_mapped = line.split()[-1]
         if line.startswith(r"% of reads mapped to multiple loci"):
-            multiple_rate = line.split()[-1]
+            multiple_ratio = line.split()[-1]
     mapped_read_pairs = str(int(unique_mapped) + int(multiple_mapped))
-    alignment_rate = float(unique_rate.rstrip("%")) + float(multiple_rate.rstrip("%"))
-    alignment_rate = f"{alignment_rate:.2f}%"
+    alignment_ratio = float(unique_ratio.rstrip("%")) + float(multiple_ratio.rstrip("%"))
+    alignment_ratio = f"{alignment_ratio:.2f}%"
     star_summary = namedtuple("star_summary", [
         "input_read_pairs",
         "unique_mapped",
-        "unique_rate",
+        "unique_ratio",
         "multiple_mapped",
-        "multiple_rate",
+        "multiple_ratio",
         "mapped_read_pairs",
-        "alignment_rate"
+        "alignment_ratio"
     ])
-    return star_summary(input_read_pairs, unique_mapped, unique_rate, multiple_mapped, multiple_rate, mapped_read_pairs, alignment_rate)
+    return star_summary(input_read_pairs, unique_mapped, unique_ratio, multiple_mapped, multiple_ratio, mapped_read_pairs, alignment_ratio)
 
 def parse_picards_rmdup(filename: str):
     lines = ""
@@ -127,9 +127,9 @@ def parse_picards_rmdup(filename: str):
     assert lines
     line_toks = lines.split()
     estimated_librarysize = line_toks[-1]
-    duplication_rate = f"{float(line_toks[-2]) * 100:.2f}%"
-    picards_rmdup_summary = namedtuple("picards_rmdup_summary", ["duplication_rate", "estimated_librarysize"])
-    return picards_rmdup_summary(duplication_rate, estimated_librarysize)
+    duplication_ratio = f"{float(line_toks[-2]) * 100:.2f}%"
+    picards_rmdup_summary = namedtuple("picards_rmdup_summary", ["duplication_ratio", "estimated_librarysize"])
+    return picards_rmdup_summary(duplication_ratio, estimated_librarysize)
 
 
 def parse_flagstat(filename: str):
@@ -218,7 +218,7 @@ def main(filepath_or_buffer: Union[str, TextIO],
             else:
                 rmRNA_summary = parse_STAR(log)
             rRNA_mapped.append(rmRNA_summary.mapped_read_pairs)
-            rRNA_ratio.append(rmRNA_summary.alignment_rate)
+            rRNA_ratio.append(rmRNA_summary.alignment_ratio)
         data["rRNA_mapped"] = rRNA_mapped
         data["rRNA_ratio"] = rRNA_ratio
 
@@ -226,51 +226,51 @@ def main(filepath_or_buffer: Union[str, TextIO],
         assert len(bowtie2) == len(sample_names)
         input_read_pairs = []
         mapped_read_pairs = []
-        alignment_rate = []
+        alignment_ratio = []
         for log in bowtie2:
             bowtie2_log = parse_bowtie2(log)
             input_read_pairs.append(bowtie2_log.input_read_pairs)
             mapped_read_pairs.append(bowtie2_log.mapped_read_pairs)
-            alignment_rate.append(bowtie2_log.alignment_rate)
+            alignment_ratio.append(bowtie2_log.alignment_ratio)
         data["input_read_pairs"] = input_read_pairs
         data["mapped_read_pairs"] = mapped_read_pairs
-        data["alignment_rate"] = alignment_rate
+        data["alignment_ratio"] = alignment_ratio
     if star is not None:
         assert len(star) == len(sample_names)
         input_read_pairs = []
         unique_mapped = []
-        unique_rate = []
+        unique_ratio = []
         multiple_mapped = []
-        multiple_rate = []
+        multiple_ratio = []
         mapped_read_pairs = []
-        alignment_rate = []
+        alignment_ratio = []
 
         for log in star:
             star_summary = parse_STAR(log)
             input_read_pairs.append(star_summary.input_read_pairs)
             unique_mapped.append(star_summary.unique_mapped)
-            unique_rate.append(star_summary.unique_rate)
+            unique_ratio.append(star_summary.unique_ratio)
             multiple_mapped.append(star_summary.multiple_mapped)
-            multiple_rate.append(star_summary.multiple_rate)
+            multiple_ratio.append(star_summary.multiple_ratio)
             mapped_read_pairs.append(star_summary.mapped_read_pairs)
-            alignment_rate.append(star_summary.alignment_rate)
+            alignment_ratio.append(star_summary.alignment_ratio)
         data["input_read_pairs"] = input_read_pairs
         data["unique_mapped"] = unique_mapped
-        data["unique_rate"] = unique_rate
+        data["unique_ratio"] = unique_ratio
         data["multiple_mapped"] = multiple_mapped
-        data["multiple_rate"] = multiple_rate
+        data["multiple_ratio"] = multiple_ratio
         data["mapped_read_pairs"] = mapped_read_pairs
-        data["alignment_rate"] = alignment_rate
+        data["alignment_ratio"] = alignment_ratio
 
     if picards_rmdup is not None:
         assert len(picards_rmdup) == len(sample_names)
-        duplication_rate = []
+        duplication_ratio = []
         estimated_librarysize = []
         for log in picards_rmdup:
             picards_rmdup_summary = parse_picards_rmdup(log)
-            duplication_rate.append(picards_rmdup_summary.duplication_rate)
+            duplication_ratio.append(picards_rmdup_summary.duplication_ratio)
             estimated_librarysize.append(picards_rmdup_summary.estimated_librarysize)
-        data["duplication_rate"] = duplication_rate
+        data["duplication_ratio"] = duplication_ratio
         data["estimated_librarysize"] = estimated_librarysize
     if flagstat is not None:
         assert len(flagstat) == len(sample_names)
