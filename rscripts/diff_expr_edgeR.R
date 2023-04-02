@@ -79,7 +79,7 @@ dgelist <- DGEList(counts = table[,-1], genes = table[,1], group=group)
 # keep <- rowSums(cpm(dgelist)>1) >= 1
 
 # 3.自动过滤
-keep<- filterByExpr(deglist, group=group)
+keep<- filterByExpr(dgelist, group=group)
 
 dgelist <- dgelist[keep, , keep.lib.sizes=FALSE]
 
