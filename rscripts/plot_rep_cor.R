@@ -81,7 +81,7 @@ p <- ggplot(data) +
     theme(panel.grid=element_blank(), legend.position="none", text = element_text(size = 8))
 
 if(args$density) {
-    p <- p + stat_density2d(geom = 'polygon', aes(x=log10(x), y=log10(y), fill=..level..)) +
+    p <- p + stat_density2d(geom = 'polygon', aes(x=log10(x), y=log10(y), fill=after_stat(level))) +
         scale_fill_viridis(begin = 0.1, end = 0.9, option = "turbo", alpha = 0.8)
 }
 
