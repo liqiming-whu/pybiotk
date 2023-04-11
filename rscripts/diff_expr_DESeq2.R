@@ -5,12 +5,14 @@ parser <- ArgumentParser()
 parser$add_argument('input', type="character", nargs='+', help='control and case')
 parser$add_argument('-s', dest='samples', type="character", nargs='+', default=NULL, help='sample names.')
 parser$add_argument('-g', dest='group', type="character", nargs='+', default=NULL, help='sample groups.')
+parser$add_argument('--level', dest='level', type="character", nargs='+', default=NULL, help='sample groups.')
 parser$add_argument('-b', dest='by', type="integer", default=1, help='use columns to merge.')
 parser$add_argument('-c', dest='column', type="integer", default=2, help='use column to calculate.')
 parser$add_argument('-o', dest='outdir', type="character", required=TRUE, help='output dir')
 parser$add_argument('-l', dest='log2fc', type="double", default=1.0, help='log2fc [default=1].')
 parser$add_argument("-p", dest="padj_value", type="double", default=0.05, help="cutoff of padj_value [default=0.05].")
 parser$add_argument('--spike-in', dest="spike_in", type="character", nargs='+', default=NULL, help='control and case spike_in.')
+parser$add_argument('--coef', dest="coef", type="character", nargs='+', default=NULL, help='control and case group pair, like control_vs_treat')
 
 args <- parser$parse_args()
 input_files <- args$input
@@ -70,12 +72,19 @@ rownames(counts_table) <- table[,1]
 
 counts_table <- round(counts_table, digits=0) 
 counts_table <- as.matrix(counts_table)
-condition <- factor(group, levels=c("control", "treat"))
-coldata <- data.frame(row.names=colnames(counts_table), condition)
+if(is.null(args$level)) {
+    condition <- factor(group)
+}else {
+    condition <- factor(group, levels=args$level)
+}
 
+coldata <- data.frame(row.names=colnames(counts_table), condition)
 dds <- DESeqDataSetFromMatrix(counts_table, coldata, design=~condition)
 
-keep <- rowSums(counts(dds) >= 10) >= floor(length(group) / 2)
+
+min.group <- min(as.data.frame(table(group))$Freq)
+
+keep <- rowSums(counts(dds) >= 10) >= min.group
 dds <- dds[keep,]
 
 if(!is.null(spike_in)) {
@@ -106,28 +115,42 @@ dds <- DESeq(dds) # This function performs a default analysis through the steps:
 # dds <- estimateDispersions(dds)
 # dds <- nbinomWaldTest(dds)
 
-res <- results(dds)
-
 if(!dir.exists(outdir)) {
     dir.create(outdir, recursive=TRUE)
 }
 
 setwd(outdir)
+fpm_table <- fpm(dds)
+write.table(fpm_table, "cpm.xls", quote=F, row.names=T, col.names=T, sep="\t")
 
+group.diff <- function(control, treat) {
+res <- results(dds, contrast=c("condition", treat, control))
 res <- res[order(res$padj),]
-res <- merge(as.data.frame(res), as.data.frame(counts(dds, normalize=T)),
-             by="row.names", sort=F)
-deseq_res <- data.frame(res)
 
+res.dir = file.path(paste(control, "vs", treat, sep="-")) 
+if(!dir.exists(res.dir)) dir.create(res.dir, recursive=TRUE)
+
+res <- merge(as.data.frame(res), norm.counts[,rownames(coldata)[coldata$condition %in% c(control, treat)]], by="row.names", sort=F)
+deseq_res <- data.frame(res)
 up_diff <- subset(deseq_res, (padj < padj_value) & (log2FoldChange > log2fc))
 down_diff <- subset(deseq_res, (padj < padj_value) & (log2FoldChange < -log2fc))
 sig_result <- subset(deseq_res, (padj < padj_value) & (abs(log2FoldChange) > log2fc))
 all_result <- subset(deseq_res, baseMean != 0)
 
-fpm_table <- fpm(dds)
+write_xlsx(up_diff, file.path(res.dir, "up.xlsx"))
+write_xlsx(down_diff, file.path(res.dir, "down.xlsx"))
+write_xlsx(sig_result, file.path(res.dir, "sig.xlsx"))
+write_xlsx(all_result, file.path(res.dir, "all.xlsx"))
+}
 
-write.table(up_diff, "up.xls", quote=F, row.names=F, col.names=T, sep="\t")
-write.table(down_diff, "down.xls", quote=F, row.names=F, col.names=T, sep="\t")
-write.table(sig_result, "sig.xls", quote=F, row.names=F, col.names=T, sep="\t")
-write.table(all_result, "all.xls", quote=F, row.names=T, col.names=T, sep="\t")
-write.table(fpm_table, "cpm.xls", quote=F, row.names=T, col.names=T, sep="\t")
+if(is.null(args$coef)) {
+    combo <- t(combn(levels(group), 2))
+    for(i in 1:nrow(combo)) {
+        group.diff(combo[i, 1], combo[i, 2])
+        }
+}else {
+for(i in seq_along(args$coef)) {
+    pair <- unlist(strsplit(args$coef[i], "_vs_", fixed=T))
+    group.diff(pair[1], pair[2])
+}
+}
