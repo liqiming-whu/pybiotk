@@ -57,7 +57,9 @@ def annobam(filename: str,
             grangetree: GRangeTree,
             anno_fragments: bool = False,
             tss_region: Tuple[int, int] = (-1000, 1000),
+            tss_region_name: str = "Upstream",
             downstream: int = 3000,
+            downstream_name: str = "Downstream",
             rule: str = "1+-,1-+,2++,2--",
             ordered_by_name: bool = False
             ):
@@ -75,7 +77,10 @@ def annobam(filename: str,
             gene_types = set(gene.gene_type for gene in genes if gene.id in set(annoset.id))
             if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                 annoset.type = gene_types
-            file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\t{annoset}\n")
+            anno_str = str(annoset)
+            anno_str = tss_region_name if anno_str == "Promoter" else anno_str
+            anno_str = downstream_name if anno_str == "Downstream" else anno_str
+            file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\t{anno_str}\n")
 
     if bamtype is BamType.PE and anno_fragments:
         with BamPE(filename) as bam:
@@ -115,7 +120,9 @@ def annobed(filename: str,
             file_obj: TextIO,
             grangetree: GRangeTree,
             tss_region: Tuple[int, int] = (-1000, 1000),
-            downstream: int = 3000
+            tss_region_name: str = "Upstream",
+            downstream: int = 3000,
+            downstream_name: str = "Downstream",
             ):
     with Openbed(filename) as bedfile:
         i = 0
@@ -128,7 +135,10 @@ def annobed(filename: str,
                 gene_types = set(gene.gene_type for gene in genes if gene.id in set(annoset.id))
                 if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                     annoset.type = gene_types
-                file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\t{annoset}\n")
+                anno_str = str(annoset)
+                anno_str = tss_region_name if anno_str == "Promoter" else anno_str
+                anno_str = downstream_name if anno_str == "Downstream" else anno_str
+                file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\t{anno_str}\n")
             i += 1
         sys.stderr.write(f"annotate {i} beds.\n")
 
@@ -139,7 +149,9 @@ def main(
     gtf_file: str,
     level: Literal["transcript", "gene"] = "transcript",
     tss_region: Tuple[int, int] = (-3000, 0),
+    tss_region_name: str = "Upstream",
     downstream: int = 3000,
+    downstream_name: str = "Downstream",
     strand: bool = True,
     rule: str = "1+-,1-+,2++,2--",
     annofragments: bool = False,
@@ -156,11 +168,11 @@ def main(
         if filetype == ".bam":
             annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bam mode ...")
-            annobam(filename, annofile, grangetree, annofragments, tss_region, downstream, rule, ordered_by_name)
+            annobam(filename, annofile, grangetree, annofragments, tss_region, tss_region_name, downstream, downstream_name, rule, ordered_by_name)
         elif filetype.startswith(".bed"):
             annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bed mode ...")
-            annobed(filename, annofile, grangetree, tss_region, downstream)
+            annobed(filename, annofile, grangetree, tss_region, tss_region_name, downstream, downstream_name)
         else:
             raise RuntimeError(f"Unable to infer file type as bam or bed from filename: {filename}.")
     end = time.perf_counter()
@@ -180,7 +192,9 @@ def run():
                         help="annotation level, transcript or gene.")
     parser.add_argument("--tss_region", dest="tss_region", type=int, nargs="+", default=[-3000, 0],
                         help="choose region from tss.")
+    parser.add_argument("--tss_region_name", dest="tss_region_name", type=str, default="Upstream", help="tss region name.")
     parser.add_argument("--downstream", dest="downstream", type=int, default=3000, help="downstream length from tes.")
+    parser.add_argument("--downstream_name", dest="downstream_name", type=str, default="Downstream", help="downstream name.")
     parser.add_argument("-s", "--strand", dest="strand", action="store_true", help="require same strandedness.")
     parser.add_argument("--rule", dest="rule", type=str, default="1+-,1-+,2++,2--",
                         choices=("1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"),
@@ -194,7 +208,9 @@ def run():
 
     if not len(args.tss_region) == 2:
         parser.error("--tss_region must be a tuple of 2 elements.")
-    main(args.input, args.output, args.gtf, args.level, args.tss_region, args.downstream, args.strand, args.rule, args.pair, args.ordered_by_name)
+    main(args.input, args.output, args.gtf, args.level,
+         args.tss_region, args.tss_region_name, args.downstream, args.downstream_name,
+         args.strand, args.rule, args.pair, args.ordered_by_name)
 
 
 if __name__ == "__main__":
