@@ -7,11 +7,11 @@ from pybiotk.io import FastaFile
 from pybiotk.utils import logging, ignore
 
 
-def main(filename, chromList: Sequence[str], wrap: bool = True):
+def main(filename, chromList: Sequence[str], wrap: bool = True, wrap_len: int = 60):
     logging.info("reading fasta ....")
     start = time.perf_counter()
     with FastaFile(filename) as fa:
-        fa.stdout(referenceList=chromList, wrap=wrap)
+        fa.stdout(referenceList=chromList, wrap=wrap, wrap_len=wrap_len)
     end = time.perf_counter()
     logging.info(f"task finished in {end-start:.2f}s.")
 
@@ -24,8 +24,9 @@ def run():
     parser.add_argument(dest="fasta", type=str, help="Genome fasta file.")
     parser.add_argument("-c", dest="chromlist", nargs="+", default=None, help="chrom list for split genome.")
     parser.add_argument("--wrap", dest="wrap", action="store_true", help="line-wrapped display.")
+    parser.add_argument("--wrap-len", dest="wrap_len", type=int, default=60, help="line length.")
     args = parser.parse_args()
-    main(args.fasta, args.chromlist, args.wrap)
+    main(args.fasta, args.chromlist, args.wrap, args.wrap_len)
 
 
 if __name__ == "__main__":

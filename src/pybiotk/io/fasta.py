@@ -19,23 +19,32 @@ class FastaFile(pysam.FastaFile):
     def __iter__(self) -> Iterator:
         for reference in self.references:
             yield reference, self[reference]
+            
+    def _stdout(self, reference:str, wrap: bool = True, wrap_len: int = 60):
+        sys.stdout.write(f">{reference}\n")
+        sequence = self[reference]
+        if wrap:
+            seqlen = len(sequence)
+            index = range(seqlen)
+            for i in itertools.islice(index, None, None, wrap_len):
+                sys.stdout.write(f"{sequence[i: i+60]}\n")
+        else:
+            sys.stdout.write(f"{sequence}\n")
 
-    def stdout(self, referenceList: Optional[Sequence[str]] = None, wrap: bool = True):
+    def stdout(self, referenceList: Optional[Sequence[str]] = None, wrap: bool = True, wrap_len: int = 60):
         if not referenceList:
             referenceList = self.references
-
-        for reference in referenceList:
-            if reference not in self.references:
-                continue
-            sys.stdout.write(f">{reference}\n")
-            sequence = self[reference]
-            if wrap:
-                seqlen = len(sequence)
-                index = range(seqlen)
-                for i in itertools.islice(index, None, None, 60):
-                    sys.stdout.write(f"{sequence[i: i+60]}\n")
-            else:
-                sys.stdout.write(f"{sequence}\n")
+            
+        if len(referenceList) == 1:
+            for reference in self.references:
+                if not re.match(referenceList[0], reference):
+                    continue
+                self._stdout(reference, wrap, wrap_len)
+        else:
+            for reference in referenceList:
+                if reference not in self.references:
+                    continue
+                self._stdout(reference, wrap, wrap_len)
 
     def load_into_dict(self) -> Dict[str, str]:
         self.reference_dict = dict((reference, seq) for reference, seq in self)
@@ -83,7 +92,7 @@ class GenomeFile(FastaFile):
     def chroms_norm(self) -> List[str]:
         chroms = []
         for chrom in self.chroms:
-            if chrom.startswith("chr") or re.match(r"\d.*", chrom):
+            if chrom.startswith("chr") or re.match(r"\d.*|X|Y|M|MT", chrom):
                 chroms.append(chrom)
         return chroms
 
