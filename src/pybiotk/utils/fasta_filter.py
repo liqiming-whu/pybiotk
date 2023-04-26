@@ -22,7 +22,7 @@ def run():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(dest="fasta", type=str, help="Genome fasta file.")
-    parser.add_argument("-c", dest="chromlist", nargs="+", default=None, help="chrom list for split genome.")
+    parser.add_argument("-c", dest="chromlist", nargs="+", default=None, help="chrom list for split genome. one parameter will be regarded as a regular expression.")
     parser.add_argument("--wrap", dest="wrap", action="store_true", help="line-wrapped display.")
     parser.add_argument("--wrap-len", dest="wrap_len", type=int, default=60, help="line length.")
     args = parser.parse_args()
