@@ -46,7 +46,7 @@ read_data <- function(filename, sample) {
     table <- read.table(filename, sep="\t", header=T)
     table <- table[, columns]
     names(table) <- c("id", sample)
-    table <- table[complete.cases(table),]
+    table <- na.omit(table)
     return(table)
 }
 
