@@ -2,7 +2,7 @@
 import re
 from dataclasses import dataclass, field
 from io import TextIOWrapper
-from typing import List, Sequence, Tuple, Literal, Iterable, Iterator, Optional, Union, TextIO
+from typing import List, Sequence, Tuple, Dict, Literal, Iterable, Iterator, Optional, Union, TextIO
 
 from pybiotk.annodb import Transcript
 from pybiotk.utils import logging
@@ -22,56 +22,71 @@ class GTF:
     frame: str = field(default=None, repr=False)
     attributes: str = field(default=None, repr=False)
     chrom: str = field(init=False, repr=False)
+    attributes_dict: Dict[str, str] = field(init=False, repr=False)
 
     def __post_init__(self):
         self.chrom = self.seqname
         self.start = int(self.start)
         self.end = int(self.end)
+        self.attributes_dict = self.get_attributes_dict()
 
     def __str__(self):
-        return "\t".join(str(s) for s in list(self.__dict__.values())[:9])
+        return "\t".join(str(s) for s in list(vars(self).values())[:9])
 
     @staticmethod
     def parse_attributes(term: str, attributes: str) -> Optional[str]:
-        parse_attr = re.compile(f'{term} "([^"]+)"')
+        parse_attr = re.compile(f'{term} ("[^"]+"|[^"]+);')
         patterns = parse_attr.findall(attributes)
 
         if patterns:
-            return patterns[0]
-
+            if len(patterns) == 1:
+                attribute = patterns[0].strip('"')
+            else:
+                attribute = ",".join(i.strip('"') for i in patterns)
+            return attribute
+    
+    def get_attributes_dict(self) -> Dict[str, str]:
+        attr_dict = {}
+        parse_attr = re.compile(r'(?P<key>\S+) (?P<value1>"(?P<value2>[^"]+)"|[^"]+);')
+        for p in parse_attr.finditer(self.attributes):
+            key = p.group("key")
+            value = p.group("value2") if p.group("value2") is not None else p.group("value1")
+            if key not in attr_dict:
+                attr_dict[key] = value
+            else:
+                attr_dict[key] += f",{value}"
+        return attr_dict        
+        
     def gene_type(self):
         for term in ['gene_type', 'gene_biotype']:
-            attr = self.parse_attributes(term, self.attributes)
-            if attr is not None:
-                return attr
+            if term in self.attributes_dict:
+                return self.attributes_dict[term]
 
     def gene_id(self):
-        return self.parse_attributes("gene_id", self.attributes)
+        return self.attributes_dict.get("gene_id")
 
     def gene_name(self):
         for term in ["gene_name", "gene"]:
-            attr = self.parse_attributes(term, self.attributes)
-            if attr is not None:
-                return attr
+            if term in self.attributes_dict:
+                attr = self.attributes_dict[term]
         else:
-            return self.gene_id()
+            attr = self.gene_id()
+        
+        return attr
 
     def transcript_type(self):
         for term in ["transcript_type", "transcript_biotype"]:
-            attr = self.parse_attributes(term, self.attributes)
-            if attr is not None:
-                return attr
+            if term in self.attributes_dict:
+                return self.attributes_dict[term]
 
     def transcript_id(self):
-        attr = self.parse_attributes("transcript_id", self.attributes)
-        if attr is None:
-            attr = self.gene_id()
+        attr = self.attributes_dict.get("transcript_id")
+        attr = self.gene_id() if attr is None else attr
         return attr
 
     def transcript_name(self):
-        attr = self.parse_attributes("transcript_name", self.attributes)
-        if attr is None:
-            attr = self.gene_name()
+        attr = self.attributes_dict.get("transcript_name")
+        attr = self.gene_name() if attr is None else attr
         return attr
 
     def get_attribute(self, attribute):
@@ -86,7 +101,7 @@ class GTF:
         elif attribute == "transcript_name":
             return self.transcript_name()
         else:
-            return self.parse_attributes(attribute, self.attributes)
+            return self.attributes_dict.get(attribute)
 
 
 @Pipe
