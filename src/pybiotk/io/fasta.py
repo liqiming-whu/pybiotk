@@ -27,7 +27,7 @@ class FastaFile(pysam.FastaFile):
             seqlen = len(sequence)
             index = range(seqlen)
             for i in itertools.islice(index, None, None, wrap_len):
-                sys.stdout.write(f"{sequence[i: i+60]}\n")
+                sys.stdout.write(f"{sequence[i: i+wrap_len]}\n")
         else:
             sys.stdout.write(f"{sequence}\n")
 
