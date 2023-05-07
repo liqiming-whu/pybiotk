@@ -67,11 +67,11 @@ class GTF:
         return self.attributes_dict.get("gene_id")
 
     def gene_name(self):
+        attr = None
         for term in ["gene_name", "gene"]:
             if term in self.attributes_dict:
                 attr = self.attributes_dict[term]
-        else:
-            attr = self.gene_id()
+        attr = self.gene_id() if attr is None else attr
         
         return attr
 
