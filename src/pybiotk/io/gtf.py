@@ -20,7 +20,7 @@ class GTF:
     score: str = field(default=None, repr=False)
     strand: Literal['+', '-'] = field(default='+')
     frame: str = field(default=None, repr=False)
-    attributes: str = field(default=None, repr=False)
+    attributes: str = field(default="", repr=False)
     chrom: str = field(init=False, repr=False)
     attributes_dict: Dict[str, str] = field(init=False, repr=False)
 
@@ -44,7 +44,7 @@ class GTF:
             else:
                 attribute = ",".join(i.strip('"') for i in patterns)
             return attribute
-    
+
     def get_attributes_dict(self) -> Dict[str, str]:
         attr_dict = {}
         parse_attr = re.compile(r'(?P<key>\S+) (?P<value1>"(?P<value2>[^"]+)"|[^"]+);')
@@ -56,8 +56,8 @@ class GTF:
                 attr_dict[key] = value
             else:
                 attr_dict[key] += f",{value}"
-        return attr_dict        
-        
+        return attr_dict
+
     def gene_type(self):
         for term in ['gene_type', 'gene_biotype']:
             if term in self.attributes_dict:
@@ -72,7 +72,7 @@ class GTF:
             if term in self.attributes_dict:
                 attr = self.attributes_dict[term]
         attr = self.gene_id() if attr is None else attr
-        
+
         return attr
 
     def transcript_type(self):
@@ -130,11 +130,16 @@ def to_TransInfo(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[TransInfo]:
     for group in iterable:
         gene_gtf: Sequence[GTF] = []
         trans_gtf: Sequence[GTF] = []
+        last_gtf = None
         for gtf in group:
+            last_gtf = gtf
             if gtf.feature == "gene":
                 gene_gtf.append(gtf)
             else:
                 trans_gtf.append(gtf)
+        if not trans_gtf:
+
+            logging.warning(f"No transcript feature found for gene: {last_gtf.get_attribute('gene_name')}")
         for gtf in trans_gtf:
             trans_info = TransInfo.init_by_gtf(gtf)
             if gene_gtf :
@@ -213,7 +218,7 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
                 transcript.cds_end = cds_end
             else:
                 transcript.cds_start = transcript.cds_end = None
-    
+
             if gene_gtf:
                 if transcript.gene_type is None:
                     transcript.gene_type = gene_gtf[0].gene_type()
