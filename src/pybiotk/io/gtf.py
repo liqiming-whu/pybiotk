@@ -50,7 +50,8 @@ class GTF:
         parse_attr = re.compile(r'(?P<key>\S+) (?P<value1>"(?P<value2>[^"]+)"|[^"]+);')
         for p in parse_attr.finditer(self.attributes):
             key = p.group("key")
-            value = p.group("value2") if p.group("value2") is not None else p.group("value1")
+            value = p.group("value2")
+            value = p.group("value1") if value is None else value
             if key not in attr_dict:
                 attr_dict[key] = value
             else:
