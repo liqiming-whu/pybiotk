@@ -3,6 +3,7 @@ library(argparse)
 
 parser <- ArgumentParser()
 parser$add_argument('input', type="character", nargs='+', help='control and case')
+parser$add_argument('--info', 'info', type="character", default=NULL, help='gene info table with a header, first column must be same as -b option.')
 parser$add_argument('-s', dest='samples', type="character", nargs='+', default=NULL, help='sample names.')
 parser$add_argument('-g', dest='group', type="character", nargs='+', default=NULL, help='sample groups.')
 parser$add_argument('--level', dest='level', type="character", nargs='+', default=NULL, help='sample groups.')
@@ -16,6 +17,7 @@ parser$add_argument('--coef', dest="coef", type="character", nargs='+', default=
 
 args <- parser$parse_args()
 input_files <- args$input
+info <- args$info
 samples_name <- args$samples
 columns <- c(args$by, args$column)
 outdir <- args$outdir
@@ -41,6 +43,19 @@ if(!is.null(samples_name)) {
 }
 
 library(DESeq2)
+
+add.info <- function(data) {
+    if(!is.null(info)) {
+        raw.table <- read.table(info, header=T)
+        info.table <- raw.table[,-1]
+        rownames(info.table) <- raw.table[,1]
+        data <- merge(data, info.table, by="row.names", sort=F)
+        stopifnot(colnames(data)[1] == "Row.names")
+        data <- data[,-1]
+    }
+    return(data)
+}
+
 
 read_data <- function(filename, sample) {
     table <- read.table(filename, sep="\t", header=T)
@@ -125,6 +140,14 @@ if(!dir.exists(outdir)) {
 
 setwd(outdir)
 fpm_table <- fpm(dds)
+
+raw.counts <- add.info(raw.counts)
+norm.counts <- add.info(norm.counts)
+fpm_table <- add.info(fpm_table)
+
+info.columns <- c()
+if(ncol(norm.counts)-input_files_len > 0) info.columns <- colnames(norm.counts)[input_files_len+1:ncol(norm.counts)]
+
 write.table(raw.counts, "raw.counts.xls", quote=F, row.names=T, col.names=T, sep="\t")
 write.table(norm.counts, "norm.counts.xls", quote=F, row.names=T, col.names=T, sep="\t")
 write.table(fpm_table, "cpm.xls", quote=F, row.names=T, col.names=T, sep="\t")
@@ -136,7 +159,7 @@ res <- res[order(res$padj),]
 res.dir = file.path(paste(control, "vs", treat, sep="-"))
 if(!dir.exists(res.dir)) dir.create(res.dir, recursive=TRUE)
 
-res <- merge(as.data.frame(res), norm.counts[,rownames(coldata)[coldata$condition %in% c(control, treat)]], by="row.names", sort=F)
+res <- merge(as.data.frame(res), norm.counts[,append(rownames(coldata)[coldata$condition %in% c(control, treat)], info.columns)], by="row.names", sort=F)
 deseq_res <- data.frame(res)
 up_diff <- subset(deseq_res, (padj < padj_value) & (log2FoldChange > log2fc))
 down_diff <- subset(deseq_res, (padj < padj_value) & (log2FoldChange < -log2fc))
