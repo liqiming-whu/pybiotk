@@ -143,10 +143,11 @@ down_diff <- subset(deseq_res, (padj < padj_value) & (log2FoldChange < -log2fc))
 sig_result <- subset(deseq_res, (padj < padj_value) & (abs(log2FoldChange) > log2fc))
 all_result <- subset(deseq_res, baseMean != 0)
 
-sig_result$states <- "Up"
-sig_result[sig_result$log2FoldChange > 0,]$states <- "Up"
-sig_result[sig_result$log2FoldChange < 0,]$states <- "Down"
-
+if(nrow(sig_result) > 0){
+    sig_result$states <- "Up"
+    sig_result[sig_result$log2FoldChange > 0,]$states <- "Up"
+    sig_result[sig_result$log2FoldChange < 0,]$states <- "Down"
+}
 write.table(up_diff, file.path(res.dir, "up.xls"), quote=F, row.names=F, col.names=T, sep="\t")
 write.table(down_diff, file.path(res.dir, "down.xls"), quote=F, row.names=F, col.names=T, sep="\t")
 write.table(sig_result, file.path(res.dir, "sig.xls"), quote=F, row.names=F, col.names=T, sep="\t")
