@@ -40,7 +40,9 @@ pybiotk: A python toolkit for bioinformatics analysis
 Install
 ====
 
-python setup.py install
+git clone https://gitee.com/liqiming_whu/pybiotk.git
+cd pybiotk
+pip install .
 
 Modules
 ====
