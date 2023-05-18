@@ -38,10 +38,10 @@ library(ggpubr)
 
 .lwd <- ggplot2::.pt / ggplot2::.stroke
 gg_lwd_convert <- function(value, unit = "pt") {
-  
+
   # convert input type to mm
   value_out <- grid::convertUnit(grid::unit(value, unit), "mm", valueOnly = TRUE)
-  
+
   # return with conversion factor
   return(
     value_out / .lwd
@@ -53,16 +53,16 @@ volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_lab
   data <- data[complete.cases(data),]
   data$threshold <- as.factor(ifelse(data$padj <= padj_value & abs(data$log2FoldChange) >= log2fc,
                                      ifelse((data$log2FoldChange) >= log2fc ,'up','down'),'not'))
-  
+
   up.count <- nrow(data[data$threshold=="up",])
   down.count <- nrow(data[data$threshold=="down",])
-  
+
   data$label <- "NS"
-  if(up.count > 0) data[data$threshold=="up",]$label <- paste0("UP: ", up.count)
+  if(up.count > 0) data[data$threshold=="up",]$label <- paste0("Up: ", up.count)
   if(down.count > 0) data[data$threshold=="down",]$label <- paste("Down: ", down.count)
-  
-  data$label <- factor(data$label, levels = c(paste0("UP: ", up.count), paste("Down: ", down.count), "NS"))
-  
+
+  data$label <- factor(data$label, levels = c(paste0("Up: ", up.count), paste0("Down: ", down.count), "NS"))
+
   if(nrow(data[data$padj==0,]) > 0) data[data$padj==0,]$padj <- .Machine$double.xmin
   max.y <- max(-log10(data$padj))
   max.x <- max(data$log2FoldChange)
@@ -79,22 +79,22 @@ volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_lab
     if(dnrow > down_label) down_cut <- down_label else down_cut <- dnrow
     label_data[1:dnrow, 'pos'] <- 'down'
     label_data[1:dnrow, 'color'] <- '#546de5'
-      
+
     unrow <- nrow(label_data[label_data$threshold=='up', ])
     if(unrow > up_label) up_cut <- up_label else up_cut <- unrow
-    
+
     label_data[(nrow(label_data)-up_cut+1):nrow(label_data), 'pos'] <- 'up'
     label_data[(nrow(label_data)-up_cut+1):nrow(label_data), 'color'] <- '#ff4757'
-      
+
     need_label <- label_data[c(1:down_cut, (nrow(label_data)-up_cut+1):nrow(label_data)),]
     need_label <- need_label[nchar(need_label$gene_id) < 10,]
   }
-  
+
   max.overlaps = getOption("ggrepel.max.overlaps", default = Inf)
-  
-  p <- ggplot(data=data,
-              aes(x=log2FoldChange, y=-log10(padj), color=label, fill=label)) +
-    scale_color_manual(values=c(paste0("UP: ", up.count)="#B31B21", paste("Down: ", down.count)="#1465AC", "NS"="darkgray")) +
+
+  cols = setNames(c("#B31B21", "#1465AC", "darkgray"), c(paste0("Up: ", up.count), paste0("Down: ", down.count), "NS"))
+  p <- ggplot(data=data, aes(x=log2FoldChange, y=-log10(padj), color=label, fill=label)) +
+    scale_color_manual(values=cols) +
     geom_point(size=0.4, alpha=1) +
     geom_vline(xintercept=c(-log2fc, log2fc), linetype=2, color="black", linewidth=gg_lwd_convert(1)) +
     geom_hline(yintercept=-log10(padj_value), linetype=2, color="black", linewidth=gg_lwd_convert(1)) +
@@ -116,9 +116,9 @@ volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_lab
       axis.title = element_text(color="black", size=font_size),
     ) +
     labs(x="Log2 fold change",y="-Log10 p-adjust",title=title)
-  
+
   ggsave(path, p, width=12, height=9, unit="cm", dpi=300)
-  
+
 }
 
 
@@ -153,7 +153,7 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
                       main = NULL, xlab = "Log2 mean expression",  ylab = "Log2 fold change",
                       ggtheme = theme_classic(),...)
 {
-  
+
   if(!base::inherits(data, c("matrix", "data.frame", "DataFrame", "DE_Results", "DESeqResults")))
     stop("data must be an object of class matrix, data.frame, DataFrame, DE_Results or DESeqResults")
   if(!is.null(detection_call)){
@@ -164,7 +164,7 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
     detection_call <- as.vector(data$detection_call)
   }
   else detection_call = rep(1, nrow(data))
-  
+
   # Legend position
   if(is.null(list(...)$legend)) legend <- c(0.12, 0.9)
   # If basemean logged, we'll leave it as is, otherwise log2 transform
@@ -175,22 +175,22 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
   else if("baseMean" %in% colnames(data)){
     data$baseMean <- log2(data$baseMean +1)
   }
-  
+
   # Check data format
   ss <- base::setdiff(c("baseMean", "log2FoldChange", "padj"), colnames(data))
   if(length(ss)>0) stop("The colnames of data must contain: ",
                         paste(ss, collapse = ", "))
-  
+
   if(is.null(genenames)) genenames <- rownames(data)
   else if(length(genenames)!=nrow(data))
     stop("genenames should be of length nrow(data).")
-  
+
   sig <- rep(3, nrow(data))
   sig[which(data$padj <= fdr & data$log2FoldChange < 0 & abs(data$log2FoldChange) >= log2fc & detection_call ==1)] = 2
   sig[which(data$padj <= fdr & data$log2FoldChange > 0 & abs(data$log2FoldChange) >= log2fc & detection_call ==1)] = 1
   data <- data.frame(name = genenames, mean = data$baseMean, lfc = data$log2FoldChange,
                      padj = data$padj, sig = sig)
-  
+
   # Change level labels
   . <- NULL
   data$sig <- as.factor(data$sig)
@@ -201,10 +201,9 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
     paste0("Down: ", sum(sig == 2)),
     "NS"
   ) %>% .[.lev]
-  
+
   data$sig <- factor(data$sig, labels = new.levels)
-  
-  
+
   # Ordering for selecting top gene
   select.top.method <- match.arg(select.top.method)
   if(select.top.method == "padj") data <- data[order(data$padj), ]
@@ -220,23 +219,22 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
     labs_data <- dplyr::bind_rows(labs_data, selected_labels) %>%
       dplyr::distinct(.data$name, .keep_all = TRUE)
   }
-  
-  
+
   font.label <- .parse_font(font.label)
   font.label$size <- ifelse(is.null(font.label$size), 12, font.label$size)
   font.label$color <- ifelse(is.null(font.label$color), "black", font.label$color)
   font.label$face <- ifelse(is.null(font.label$face), "plain", font.label$face)
-  
+
   # Plot
   mean <- lfc <- sig <- name <- padj <-  NULL
   p <- ggplot(data, aes(x = mean, y = lfc)) +
     geom_point(aes(color = sig), size = size, alpha = alpha)
-  
+
   max.overlaps = getOption("ggrepel.max.overlaps", default = Inf)
-  
+
   if(label.rectangle){
     p <- p + ggrepel::geom_label_repel(data = labs_data, mapping = aes(label = name),
-                                       box.padding = unit(box.padding, "lines"),
+                                       box.padding = unit(box_padding, "lines"),
                                        point.padding = unit(0.3, "lines"),
                                        force = 1, seed = seed, fontface = font.label$face,
                                        size = font.label$size/3, color = font.label$color,
@@ -245,19 +243,19 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
   }
   else{
     p <- p + ggrepel::geom_text_repel(data = labs_data, mapping = aes(label = name),
-                                      box.padding = unit(box.padding, "lines"),
+                                      box.padding = unit(box_padding, "lines"),
                                       point.padding = unit(0.3, "lines"),
                                       force = 1, seed = seed, fontface = font.label$face,
                                       size = font.label$size/3, color = font.label$color,
                                       direction="both", nudge_x=nudge_x, nudge_y=nudge_y,
                                       max.overlaps = max.overlaps)
   }
-  
+
   p <- p + scale_x_continuous(breaks=seq(0, max(data$mean), 2))+
     labs(x = xlab, y = ylab, title = main, color = "")+ # to remove legend title use color = ""
     geom_hline(yintercept = c(0, -log2fc, log2fc), linetype = c(1, 2, 2),
                color = c("black", "black", "black"), linewidth=gg_lwd_convert(1))
-  
+
   p <- ggpar(p, palette = palette, ggtheme = ggtheme, ...)
   p
 }
@@ -296,7 +294,7 @@ ma.plot <-function(data, path, title="", labels=NULL) {
         axis.text.y = element_text(color="black", size=font_size),
         axis.title.x = element_text(color="black", size=font_size),
         axis.title.y = element_text(color="black", size=font_size),
-      ) 
+      )
   )
   ggsave(path, p, width=12, height=9, unit="cm", dpi=300)
 }
@@ -335,8 +333,9 @@ rank.plot <- function(data, path, title="", labels=NULL) {
 
   max.overlaps = getOption("ggrepel.max.overlaps", default = Inf)
 
-    plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange, fill=pos)) +
-        scale_color_manual(values=c(paste0("UP: ", unrow)="#B31B21", paste("Down: ", dnrow)="#1465AC", "NS"="darkgray")) +
+  cols = setNames(c("#B31B21", "#1465AC", "darkgray"), c(paste0("Up: ", up.count), paste0("Down: ", down.count), "NS"))
+  plot <- ggplot(data=rank_data, aes(x=rank, y=log2FoldChange, fill=pos)) +
+        scale_color_manual(values=cols) +
         geom_point(size=0.4, alpha=1) +
         geom_hline(yintercept=c(-log2fc, log2fc), linetype=1, color="grey", linewidth=0.6) +
         geom_hline(yintercept=0, linetype=1, color="grey", linewidth=0.6) +
@@ -362,11 +361,15 @@ rank.plot <- function(data, path, title="", labels=NULL) {
 
 data <- read.table(file=data_table, header=T)
 if(is.null(columns)) data <- data[,c("Row.names", "baseMean", "log2FoldChange", "padj")] else data <- data[, columns]
-data <- data[complete.cases(data),]
+data <- na.omit(data)
+columns <- colnames(data)
 if((ncol(data) < 4) & (!"padj" %in% colnames(data))) data$padj <- 0
-data <- data[,c("Row.names", "baseMean", "log2FoldChange", "padj")]
+data <- data[,append(columns, "padj")]
 
-if(plot_type == "volcano") volcano.plot(data, output, title, labels)
-else if(plot_type == "ma") ma.plot(data, output, title, labels)
-else if(plot_type == "rank") rank.plot(data, output, title, labels)
-else volcano.plot(data, output, title, labels)
+if(plot_type == "volcano") {
+    volcano.plot(data, output, title, labels)
+}else if(plot_type == "ma") {
+    ma.plot(data, output, title, labels)
+}else if(plot_type == "rank") {
+    rank.plot(data, output, title, labels)
+}else volcano.plot(data, output, title, labels)
