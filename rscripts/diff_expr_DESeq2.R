@@ -44,11 +44,16 @@ if(!is.null(samples_name)) {
 
 library(DESeq2)
 
+info.table <- NULL
+if(!is.null(info)) {
+    raw.table <- read.table(info, header=T)
+    info.table <- raw.table[,-1]
+    rownames(info.table) <- raw.table[,1]
+}
+
+
 add.info <- function(data) {
-    if(!is.null(info)) {
-        raw.table <- read.table(info, header=T)
-        info.table <- raw.table[,-1]
-        rownames(info.table) <- raw.table[,1]
+    if(!is.null(info.table)) {
         data <- merge(data, info.table, by="row.names", sort=F)
         stopifnot(colnames(data)[1] == "Row.names")
         data <- data[,-1]
