@@ -3,7 +3,7 @@ library(argparse)
 
 parser <- ArgumentParser()
 parser$add_argument('input', type="character", nargs='+', help='control and case')
-parser$add_argument('--info', 'info', type="character", default=NULL, help='gene info table with a header, first column must be same as -b option.')
+parser$add_argument('--info', dest='info', type="character", default=NULL, help='gene info table with a header, first column must be same as -b option.')
 parser$add_argument('-s', dest='samples', type="character", nargs='+', default=NULL, help='sample names.')
 parser$add_argument('-g', dest='group', type="character", nargs='+', default=NULL, help='sample groups.')
 parser$add_argument('--level', dest='level', type="character", nargs='+', default=NULL, help='sample groups.')
