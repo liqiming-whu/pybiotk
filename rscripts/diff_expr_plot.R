@@ -50,7 +50,7 @@ gg_lwd_convert <- function(value, unit = "pt") {
 
 volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_label=5) {
   names(data) <- c("gene_id", "baseMean", "log2FoldChange", "padj")
-  data <- data[complete.cases(data),]
+  data <- na.omit(data)
   data$threshold <- as.factor(ifelse(data$padj <= padj_value & abs(data$log2FoldChange) >= log2fc,
                                      ifelse((data$log2FoldChange) >= log2fc ,'up','down'),'not'))
 
@@ -73,7 +73,7 @@ volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_lab
     need_label$color = "black"
   }else{
     label_data <- data[!data$threshold=='not',]
-    label_data$pos <- 'middle'
+    if(nrow(label_data) > 0) label_data$pos <- 'middle'
     label_data <- label_data[order(label_data$log2FoldChange), ]
     dnrow <- nrow(label_data[label_data$threshold=='down', ])
     if(dnrow > down_label) down_cut <- down_label else down_cut <- dnrow
@@ -263,7 +263,7 @@ ggmaplot <- function (data, fdr = 0.05, log2fc = 1.5, genenames = NULL,
 
 ma.plot <-function(data, path, title="", labels=NULL) {
   names(data) <- c("gene_id", "baseMean", "log2FoldChange", "padj")
-  data <- data[complete.cases(data),]
+  data <- na.omit(data)
   p <- ggmaplot(
     data,
     fdr = padj_value,
@@ -304,6 +304,8 @@ rank.plot <- function(data, path, title="", labels=NULL) {
   names(data) <- c("gene_id", "baseMean", "log2FoldChange", "padj")
   data$threshold <- as.factor(ifelse(data$padj <= padj_value & abs(data$log2FoldChange) >= log2fc,
                                      ifelse((data$log2FoldChange) >= log2fc ,'up','down'),'not'))
+  up.count <- nrow(data[data$threshold=="up",])
+  down.count <- nrow(data[data$threshold=="down",])
   rank_data <- data[data$padj < padj_value,]
   rank_data$pos <- 'NS'
   rank_data <- rank_data[order(rank_data$log2FoldChange), ]
