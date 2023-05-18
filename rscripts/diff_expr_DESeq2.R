@@ -56,6 +56,7 @@ add.info <- function(data) {
     if(!is.null(info.table)) {
         data <- merge(data, info.table, by="row.names", sort=F)
         stopifnot(colnames(data)[1] == "Row.names")
+        rownames(data) <- data[, 1]
         data <- data[,-1]
     }
     return(data)
@@ -151,7 +152,8 @@ norm.counts <- add.info(norm.counts)
 fpm_table <- add.info(fpm_table)
 
 info.columns <- c()
-if(ncol(norm.counts)-input_files_len > 0) info.columns <- colnames(norm.counts)[input_files_len+1:ncol(norm.counts)]
+if(ncol(norm.counts)-input_files_len > 0) info.columns <- colnames(norm.counts)[(input_files_len+1):ncol(norm.counts)]
+
 
 write.table(raw.counts, "raw.counts.xls", quote=F, row.names=T, col.names=T, sep="\t")
 write.table(norm.counts, "norm.counts.xls", quote=F, row.names=T, col.names=T, sep="\t")
