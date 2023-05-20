@@ -59,7 +59,7 @@ volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_lab
 
   data$label <- "NS"
   if(up.count > 0) data[data$threshold=="up",]$label <- paste0("Up: ", up.count)
-  if(down.count > 0) data[data$threshold=="down",]$label <- paste("Down: ", down.count)
+  if(down.count > 0) data[data$threshold=="down",]$label <- paste0("Down: ", down.count)
 
   data$label <- factor(data$label, levels = c(paste0("Up: ", up.count), paste0("Down: ", down.count), "NS"))
 
@@ -314,7 +314,7 @@ rank.plot <- function(data, path, title="", labels=NULL) {
   marks <- c()
   if(dnrow > 5) down_cut <- 5 else down_cut <- dnrow
   if(dnrow > 0) {
-    rank_data[1:dnrow, 'pos'] <- paste("Down: ", dnrow)
+    rank_data[1:dnrow, 'pos'] <- paste0("Down: ", dnrow)
     marks <- append(marks, rank_data[1:down_cut,]$gene_id)
   }
 
@@ -325,7 +325,7 @@ rank.plot <- function(data, path, title="", labels=NULL) {
     marks <- append(marks, rank_data[(nrow(rank_data)-up_cut+1):nrow(rank_data),]$gene_id)
   }
 
-  rank_data$pos <- factor(rank_data$pos, levels = c(paste0("UP: ", unrow), paste("Down: ", dnrow), "NS"))
+  rank_data$pos <- factor(rank_data$pos, levels = c(paste0("UP: ", unrow), paste0("Down: ", dnrow), "NS"))
 
   if(!is.null(labels)){
     need_rank <- rank_data[rank_data$gene_id%in%labels,]
