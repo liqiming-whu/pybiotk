@@ -3,6 +3,7 @@ import importlib
 import importlib.resources
 import logging
 import os
+import re
 import subprocess
 import sys
 import warnings
@@ -44,6 +45,12 @@ def intervals_is_overlap(intervals1: List[Tuple[int, int]], intervals2: List[Tup
             if is_overlap(interval1, interval2):
                 return True
     return False
+
+
+def cigar2cigar_tuples(cigar: str) -> List[Tuple[int, int]]:
+    code2cigar = "MIDNSHP=XBp"
+    cigar_regex = re.compile("([-\d]+)([MIDNSHP=XBp])")
+    return [(code2cigar.find(x[1]), int(x[0])) for x in re.findall(cigar_regex, cigar)]
 
 
 def cigar_tuples2blocks(start: int, cigartuples: Sequence[Tuple[int, int]], shift: int = 0) -> List[Tuple[int, int]]:
@@ -193,10 +200,15 @@ def ignore(func: Callable):
         try:
             traceback = func(*args, **kargs)
         except BrokenPipeError:
-            sys.stdout = None
+            # https://docs.python.org/3/library/signal.html#note-on-sigpipe
+            # Python flushes standard streams on exit; redirect remaining output
+            # to devnull to avoid another BrokenPipeError at shutdown
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
             sys.exit(0)
         except KeyboardInterrupt:
-            sys.stdout = None
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
             sys.exit(0)
         return traceback
     return wrapper
