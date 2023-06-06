@@ -8,7 +8,7 @@ import os
 import sys
 
 import pandas as pd
-from pybiotk.utils import ignore, read_table, write_table
+from pybiotk.utils import ignore, read_table, write_table, logging
 
 
 def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclude=False, contains=False):
@@ -17,7 +17,11 @@ def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclud
         header = None if noheader else 0
         df = read_table(table, header=header, dtype=str, comment="#")
         if namefile is not None:
-            names = set(j for i in namefile for j in i.split())
+            try:
+                names = set(j for i in namefile for j in i.split())
+            except Exception as e:
+                logging.warning(str(e))
+                names = False
             if names:
                 if exclude:
                     if contains:
