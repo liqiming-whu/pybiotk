@@ -199,6 +199,7 @@ def ignore(func: Callable):
     def wrapper(*args, **kargs):
         try:
             traceback = func(*args, **kargs)
+            sys.stdout.flush()
         except BrokenPipeError:
             # https://docs.python.org/3/library/signal.html#note-on-sigpipe
             # Python flushes standard streams on exit; redirect remaining output
