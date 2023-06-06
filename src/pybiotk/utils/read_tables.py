@@ -20,7 +20,7 @@ def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclud
             try:
                 names = set(j for i in namefile for j in i.split())
             except Exception as e:
-                logging.warning(str(e))
+                logging.warning("Failed to load namefile: "+str(e))
                 names = False
             if names:
                 if exclude:
