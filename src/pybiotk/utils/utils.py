@@ -16,7 +16,7 @@ import pandas as pd
 
 from rich.logging import RichHandler
 
-logging.basicConfig(level="NOTSET", format="%(message)s", datefmt='%x %a %X', handlers=[RichHandler()])
+logging.basicConfig(level="NOTSET", format="%(asctime)s %(levelname)s: %(message)s", datefmt='%x %a %X')
 
 def reverse_seq(seq: str) -> str:
     seq = seq.upper()
