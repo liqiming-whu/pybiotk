@@ -107,7 +107,7 @@ class Pipe(Generic[_T]):
         return Pipe(lambda x: self.func(x, *args, **kwargs))
 
 
-def cat(files: str|Iterable[str]) -> Iterator[str]:
+def cat(files: Union[str, Iterable[str]]) -> Iterator[str]:
     if isinstance(files, str):
         files = [files]
     for file in files:
@@ -118,7 +118,7 @@ def cat(files: str|Iterable[str]) -> Iterator[str]:
                     yield line
 
 
-def zcat(files: str|Iterable[str]) -> Iterator[str]:
+def zcat(files: Union[str, Iterable[str]]) -> Iterator[str]:
     if isinstance(files, str):
         files = [files]
     for file in files:
