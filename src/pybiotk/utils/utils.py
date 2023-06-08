@@ -17,8 +17,8 @@ import pandas as pd
 from rich.logging import RichHandler
 from rich.console import Console
 
-Handler = RichHandler(console=Console(stderr=True), show_time=False, omit_repeated_times=False, show_level=False, markup=True)
-logging.basicConfig(level="NOTSET", format="%(asctime)s %(levelname)s: %(message)s", datefmt='%x %a %X', handlers=[Handler])
+Handler = RichHandler(console=Console(stderr=True), show_time=True, omit_repeated_times=False, show_level=True, markup=True, log_time_format='[%x %a %X]')
+logging.basicConfig(level="NOTSET", format="%(message)s", handlers=[Handler])
 
 def reverse_seq(seq: str) -> str:
     seq = seq.upper()
