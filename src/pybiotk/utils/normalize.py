@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import os
-import sys
 from typing import Sequence, Literal
 
 import pandas as pd
