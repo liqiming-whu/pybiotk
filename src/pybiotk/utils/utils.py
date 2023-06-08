@@ -16,7 +16,7 @@ import pandas as pd
 
 from rich.logging import RichHandler
 
-logging.basicConfig(level="NOTSET", format="%(asctime)s %(levelname)s: %(message)s", datefmt='%x %a %X', handlers=[RichHandler()])
+logging.basicConfig(level="NOTSET", format="%(message)s", datefmt='%x %a %X', handlers=[RichHandler()])
 
 def reverse_seq(seq: str) -> str:
     seq = seq.upper()
@@ -200,7 +200,6 @@ def ignore(func: Callable):
     def wrapper(*args, **kargs):
         try:
             traceback = func(*args, **kargs)
-            sys.stdout.flush()
         except BrokenPipeError:
             # https://docs.python.org/3/library/signal.html#note-on-sigpipe
             # Python flushes standard streams on exit; redirect remaining output
