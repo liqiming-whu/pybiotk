@@ -159,7 +159,7 @@ def cd(path):
     if os.path.exists(path):
         os.chdir(path)
     else:
-        raise RuntimeError(f'{path} not exist')
+        raise FileNotFoundError(f'No such directory: {path}')
 
 
 @Pipe

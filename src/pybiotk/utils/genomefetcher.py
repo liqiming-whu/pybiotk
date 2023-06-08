@@ -5,7 +5,6 @@
 Fetch sequences from genome fasta file with gtf file.
 """
 import argparse
-import itertools
 import re
 import sys
 import time
