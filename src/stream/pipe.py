@@ -107,20 +107,26 @@ class Pipe(Generic[_T]):
         return Pipe(lambda x: self.func(x, *args, **kwargs))
 
 
-def cat(file: str) -> Iterator[str]:
-    with open(file) as f:
-        for line in f:
-            line = line.rstrip("\n")
-            if line:
-                yield line
+def cat(files: str|Iterable[str]) -> Iterator[str]:
+    if isinstance(files, str):
+        files = [files]
+    for file in files:
+        with open(file) as f:
+            for line in f:
+                line = line.rstrip("\r\n")
+                if line:
+                    yield line
 
 
-def zcat(file: str) -> Iterator[str]:
-    with gzip.open(file, "rb") as f:
-        for line in f:
-            line = line.decode().rstrip("\n")
-            if line:
-                yield line
+def zcat(files: str|Iterable[str]) -> Iterator[str]:
+    if isinstance(files, str):
+        files = [files]
+    for file in files:
+        with gzip.open(file, "rb") as f:
+            for line in f:
+                line = line.decode().rstrip("\r\n")
+                if line:
+                    yield line
 
 
 def stdin() -> Iterator[str]:

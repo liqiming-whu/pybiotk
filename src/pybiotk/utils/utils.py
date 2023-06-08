@@ -14,8 +14,9 @@ from typing import List, Dict, Sequence, Tuple, Literal, Iterator, Iterable, Opt
 
 import pandas as pd
 
-logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", datefmt='%Y-%m-%d %A %H:%M:%S', level=logging.INFO)
+from rich.logging import RichHandler
 
+logging.basicConfig(level="NOTSET", format="%(asctime)s %(levelname)s: %(message)s", datefmt='%x %a %X', handlers=[RichHandler()])
 
 def reverse_seq(seq: str) -> str:
     seq = seq.upper()
