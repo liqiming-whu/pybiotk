@@ -136,8 +136,8 @@ def annobed(filename: str,
                 if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                     annoset.type = gene_types
                 anno_str = str(annoset)
-                anno_str = tss_region_name if anno_str == "Promoter" else anno_str
-                anno_str = downstream_name if anno_str == "Downstream" else anno_str
+                anno_str = anno_str.replace("Promoter", tss_region_name) if anno_str.startswith("Promoter") else anno_str
+                anno_str = anno_str.replace("Downstream", downstream_name) if anno_str.startswith("Downstream") else anno_str
                 file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\t{anno_str}\n")
             i += 1
         sys.stderr.write(f"annotate {i} beds.\n")
