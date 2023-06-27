@@ -32,6 +32,13 @@ class GRange:
         if not is_overlap((self.start, self.end), (other.start, other.end)):
             return False
         return True
+    
+    def is_match(self, other: GRange, shift_cutoff: int = 2) -> bool:
+        if not self.is_overlap(other):
+            return False
+        if(abs(self.start-other.start) <= shift_cutoff) and (abs(self.end-other.end) <= shift_cutoff):
+            return True
+        return False
 
 
 class GRangeTree:
