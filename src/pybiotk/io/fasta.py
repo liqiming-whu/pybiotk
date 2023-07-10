@@ -7,6 +7,7 @@ from typing import Dict, List, Sequence, Iterable, Iterator, Tuple, Literal, Cal
 
 import pysam
 
+from pybiotk.io.fastq import OpenFqGzip
 from pybiotk.intervals import GRange
 from pybiotk.utils import reverse_seq
 
@@ -66,6 +67,11 @@ class FastaFile(pysam.FastaFile):
     def dict_fetch(self, reference: str, start: int, end: int, strand: Literal["+", "-"] = "+"):
         assert self.reference_dict is not None
         return self.fetch_use_dict(self.reference_dict, reference, start, end, strand)
+    
+    def to_fastq(self, path: str = "-"):
+        with OpenFqGzip(path) as fq:
+            for reference, sequence in self:
+                fq.write_entry(reference, sequence)
 
 
 class GenomeFile(FastaFile):
