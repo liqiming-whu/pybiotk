@@ -2,12 +2,12 @@
 import argparse
 import sys
 
-from pybiotk.io import FastaFile
+from pybiotk.io import FastxFile
 from pybiotk.utils import ignore
 
 def main(fa_list):
     for fa in fa_list:
-        with FastaFile(fa) as f:
+        with FastxFile(fa) as f:
             f.to_fastq()
 
 

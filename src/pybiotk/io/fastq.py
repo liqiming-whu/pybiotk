@@ -16,6 +16,11 @@ class FastxFile(pysam.FastxFile):
     def to_fasta(self) -> Iterator[str]:
         for entry in self:
             yield f">{entry.name}\n{entry.sequence}"
+    
+    def to_fastq(self, path: str = "-"):
+        with OpenFqGzip(path) as fq:
+            for entry in self:
+                fq.write_fastx_record(entry)
 
     def uniq(self, by: Literal["id", "name", "seq"] = "seq") -> Iterator[pysam.libcfaidx.FastxRecord]:
         self.ptr = 0
