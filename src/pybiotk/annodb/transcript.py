@@ -64,7 +64,10 @@ class Transcript(GFeature):
 
     @classmethod
     def init_by_bed(cls, transinfo: TransInfo, bed12: Bed12):
-        return cls(*transinfo.__slots__, bed12.chrom, bed12.start, bed12.end,
+        return cls(transinfo.transcript_id, transinfo.transcript_name,
+                   transinfo.transcript_type, transinfo.gene_id,
+                   transinfo.gene_name, transinfo.gene_type,
+                   bed12.chrom, bed12.start, bed12.end,
                    bed12.strand, bed12.thickStart, bed12.thickEnd, bed12.exons())
 
     def is_protein_coding(self) -> bool:
