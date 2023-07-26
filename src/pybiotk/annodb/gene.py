@@ -214,6 +214,9 @@ class Gene(GFeature):
         if self._utr3_exons is None:
             self._classify_exons()
         return self._utr3_exons
+    
+    def length(self):
+        return self.end - self.start
 
     def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000) -> GenomicAnnotation:
         return GenomicAnnotation(self.gene_id, self.gene_name, self.start, self.end, self.gene_type, self.anno(blocks, tss_region, downstream))

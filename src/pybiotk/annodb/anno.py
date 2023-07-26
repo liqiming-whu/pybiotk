@@ -145,12 +145,21 @@ class GFeature(ABC):
 
     @abstractmethod
     def utr3_exons(self) -> List[Tuple[int, int]]: ...
+    
+    @abstractmethod
+    def length(self) -> int: ...
 
     def exons_len(self) -> int:
         return blocks_len(self.exons())
+    
+    def exons_count(self) -> int:
+        return len(self.exons())
 
     def introns_len(self) -> int:
         return blocks_len(self.introns())
+    
+    def introns_count(self) -> int:
+        return len(self.introns())
 
     def cds_len(self) -> int:
         return blocks_len(self.cds_exons())

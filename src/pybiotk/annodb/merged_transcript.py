@@ -3,21 +3,23 @@ from __future__ import annotations
 
 import itertools
 import os
+import warnings
 from collections import deque
 from functools import partial
 from typing import List, Dict, Tuple, Literal, Iterable, Iterator, Sequence, Optional, TYPE_CHECKING
 
+from pybiotk.annodb.anno import GFeature
 from pybiotk.intervals import merge_intervals
 from pybiotk.io.bed import Bed6
 from pybiotk.utils import bedtools_sort
-from stream import window, to_list, filter, transform, mapwith, apply, uniq, flatten
+from stream import window, to_list, filter, transform, mapwith, apply, uniq, flatten, skip_while
 
 if TYPE_CHECKING:
     from pybiotk.io import GtfFile
     from pybiotk.annodb import Transcript
 
 
-class MergedTranscript:
+class MergedTranscript(GFeature):
     def __init__(
         self,
         transcript_id: Optional[str] = None,
@@ -49,7 +51,11 @@ class MergedTranscript:
         self.strand = strand
         self.cds_start = int(cds_start) if cds_start is not None else cds_start
         self.cds_end = int(cds_end) if cds_end is not None else cds_end
-        self.exons = exons
+        self._exons = list(exons)
+        self._introns = None
+        self._cds_exons = None
+        self._utr5_exons = None
+        self._utr3_exons = None
         self.count = count
         self.before = int(before) if before is not None else before
         self.after = int(after) if after is not None else after
@@ -117,6 +123,63 @@ class MergedTranscript:
                    gene_id, gene_name, gene_type,
                    chrom, start, end, strand,
                    cds_start, cds_end, exons, count)
+
+    def _classify_exons(self):
+        if self.cds_start is not None and self.cds_end is not None:
+            utr5_exons = []
+            utr3_exons = []
+            cds_exons = []
+            for exon in self.exons():
+                if exon[1] <= self.cds_start:
+                    utr5_exons.append(exon)
+                elif exon[0] >= self.cds_end:
+                    utr3_exons.append(exon)
+                elif self.cds_start <= exon[0] and exon[1] <= self.cds_end:
+                    cds_exons.append(exon)
+                elif exon[0] < self.cds_start < exon[1] <= self.cds_end:
+                    utr5_exons.append((exon[0], self.cds_start))
+                    cds_exons.append((self.cds_start, exon[1]))
+                elif self.cds_start <= exon[0] < self.cds_end < exon[1]:
+                    cds_exons.append((exon[0], self.cds_end))
+                    utr3_exons.append((self.cds_end, exon[1]))
+                elif exon[0] < self.cds_start and self.cds_end < exon[1]:
+                    utr5_exons.append((exon[0], self.cds_start))
+                    cds_exons.append((self.cds_start, self.cds_end))
+                    utr3_exons.append((self.cds_end, exon[1]))
+
+            if self.strand == '-':
+                utr5_exons, utr3_exons = utr3_exons, utr5_exons
+                self._utr5_exons = utr5_exons
+                self._cds_exons = cds_exons
+                self._utr3_exons = utr3_exons
+            loginfo = f"merged exons: {self.exons()}\ncds_start: {self.cds_start}, cds_end: {self.cds_end}"
+            if not cds_exons:
+                warnings.warn(f"cds_exons of {self.gene_id} does not exist, please check:\n{loginfo}")
+        else:
+            self._utr5_exons = []
+            self._cds_exons = []
+            self._utr3_exons = []
+
+    def is_protein_coding(self) -> bool:
+        if self.gene_type == 'protein_coding':
+            return True
+        else:
+            return False
+
+    def exons(self) -> List[Tuple[int, int]]:
+        return self._exons
+
+    def introns(self) -> List[Tuple[int, int]]:
+        if self._introns is None:
+            self._introns = [self.start, *(self.exons() | flatten), self.end] | window(2, 2) | skip_while(lambda x: x[0] == x[1]) | to_list
+        return self._introns
+
+    def tss_region(self, region: Tuple[int, int] = (-1000, 1000)) -> Tuple[int, ...]:
+        if self.strand == '+':
+            region = tuple(i+self.start for i in region)
+        else:
+            region = tuple(reversed(tuple(self.end-i for i in region)))
+        return region
 
     def to_bed6(self) -> Bed6:
         return Bed6(self.chrom, self.start, self.end, self.gene_name, str(self.count), self.strand)
