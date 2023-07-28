@@ -196,6 +196,23 @@ class MergedTranscript(GFeature):
         else:
             return self.after
 
+    downstream = downStream
+
+    def cds_exons(self) -> List[Tuple[int, int]]:
+        if self._cds_exons is None:
+            self._classify_exons()
+        return self._cds_exons
+
+    def utr5_exons(self) -> List[Tuple[int, int]]:
+        if self._utr5_exons is None:
+            self._classify_exons()
+        return self._utr5_exons
+
+    def utr3_exons(self) -> List[Tuple[int, int]]:
+        if self._utr3_exons is None:
+            self._classify_exons()
+        return self._utr3_exons
+
     def length(self):
         return self.end - self.start
 
