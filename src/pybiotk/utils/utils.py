@@ -18,7 +18,7 @@ from rich.logging import RichHandler
 from rich.console import Console
 
 Handler = RichHandler(console=Console(stderr=True), show_time=True, omit_repeated_times=False, show_level=True, markup=True, log_time_format='[%x %a %X]')
-logging.basicConfig(level="NOTSET", format="%(message)s", handlers=[Handler])
+logging.basicConfig(level="INFO", format="%(message)s", handlers=[Handler])
 
 def reverse_seq(seq: str) -> str:
     seq = seq.upper()
