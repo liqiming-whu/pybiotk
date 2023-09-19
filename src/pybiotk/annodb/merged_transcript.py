@@ -34,6 +34,10 @@ class MergedTranscript(GFeature):
         strand: Optional[Literal['+', '-']] = None,
         cds_start: Optional[int] = None,
         cds_end: Optional[int] = None,
+        starts: Iterable[int] = (),
+        ends: Iterable[int] = (),
+        cds_starts: Iterable[int] = (),
+        cds_ends: Iterable[int] = (),
         exons: Iterable[Tuple[int, int]] = (),
         count: int = 0,
         before: Optional[int] = None,
@@ -51,6 +55,10 @@ class MergedTranscript(GFeature):
         self.strand = strand
         self.cds_start = int(cds_start) if cds_start is not None else cds_start
         self.cds_end = int(cds_end) if cds_end is not None else cds_end
+        self.starts = list(starts)
+        self.ends = list(ends)
+        self.cds_starts = list(cds_starts)
+        self.cds_ends = list(cds_ends)
         self._exons = list(exons)
         self._introns = None
         self._cds_exons = None
@@ -71,6 +79,10 @@ class MergedTranscript(GFeature):
         max_end = 0
         min_cds_start = float("inf")
         max_cds_end = 0
+        starts = []
+        ends = []
+        cds_starts = []
+        cds_ends = []
         transcript_ids = []
         transcript_names = []
         transcript_types = set()
@@ -90,12 +102,16 @@ class MergedTranscript(GFeature):
             chroms.add(transcript.chrom)
             strands.add(transcript.strand)
             exons.extend(transcript.exons())
+            starts.append(transcript.start)
+            ends.append(transcript.end)
             if min_start > transcript.start:
                 min_start = transcript.start
             if max_end < transcript.end:
                 max_end = transcript.end
             if transcript.cds_start is None and transcript.cds_end is None:
                 continue
+            cds_starts.append(transcript.cds_start)
+            cds_ends.append(transcript.cds_end)
             if min_cds_start > transcript.cds_start:
                 min_cds_start = transcript.cds_start
             if max_cds_end < transcript.cds_end:
@@ -122,7 +138,8 @@ class MergedTranscript(GFeature):
         return cls(transcript_id, transcript_name, transcript_type,
                    gene_id, gene_name, gene_type,
                    chrom, start, end, strand,
-                   cds_start, cds_end, exons, count)
+                   cds_start, cds_end, starts, ends, 
+                   cds_starts, cds_ends, exons, count)
 
     def _classify_exons(self):
         if self.cds_start is not None and self.cds_end is not None:
