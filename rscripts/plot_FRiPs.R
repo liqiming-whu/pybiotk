@@ -13,7 +13,7 @@ args <- parser$parse_args()
 
 data <- read.table(args$input, sep="\t", header=TRUE)
 
-data$FRiPs <- data$reads_in_peaks*100/data$filtered_reads
+data$FRiPs <- data$reads_in_peaks*100/data$filtered_read_pairs
 data$samples <- factor(data$samples, levels=data$samples)
 fig1A <- ggplot(data, aes(x=group, y=peaks_count, fill=group))+
   geom_boxplot() +
