@@ -113,7 +113,7 @@ fig2 <- ggarrange(fig2A, fig2B, fig2C, ncol = 3, common.legend = TRUE, legend="b
 dupdata <- data.frame("group"=data$group, "replicate"=data$replicates,
                       "duprate"=data$duplication_rate,
                       "uniquefragments"=data$mapped_read_pairs * (100 - as.numeric(sub("%", "", data$duplication_rate)))/100,
-                      "libarysize"=data$filtered_reads)
+                      "libarysize"=data$filtered_read_pairs)
 
 
 fig3A <- ggplot(dupdata, aes(x=group, y=as.numeric(sub("%", "", duprate)), fill=group))+
