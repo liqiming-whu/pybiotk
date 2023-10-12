@@ -219,4 +219,4 @@ class Gene(GFeature):
         return self.end - self.start
 
     def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000) -> GenomicAnnotation:
-        return GenomicAnnotation(self.gene_id, self.gene_name, self.start, self.end, self.gene_type, self.anno(blocks, tss_region, downstream))
+        return GenomicAnnotation(self.gene_id, self.gene_name, self.start, self.end, self.strand, self.gene_type, self.anno(blocks, tss_region, downstream))

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Set, Iterable, AbstractSet, Optional
+from typing import List, Tuple, Set, Iterable, AbstractSet, Optional, Literal
 
 from pybiotk.utils import blocks_len, intervals_is_overlap
 
@@ -12,6 +12,7 @@ class GenomicAnnotation:
     name: Optional[str] = field(default=None)
     start: Optional[int] = field(default=None)
     end: Optional[int] = field(default=None)
+    strand: Optional[Literal['+', '-']] = field(default=None)
     type: Optional[str] = field(default=None)
     detail: Set[str] = field(default_factory=set)
 
@@ -41,6 +42,7 @@ class AnnoSet:
     name: List[str] = field(init=False, default_factory=list)
     start: List[int] = field(init=False, default_factory=list)
     end: List[int] = field(init=False, default_factory=list)
+    strand: List[str] = field(init=False, default_factory=list)
     type: List[str] = field(init=False, default_factory=list)
     anno: List[str] = field(init=False, default_factory=list)
 
@@ -69,6 +71,7 @@ class AnnoSet:
                 self.name.append(anno.name)
                 self.start.append(anno.start)
                 self.end.append(anno.end)
+                self.strand.append(anno.strand)
                 self.type.append(anno.type)
                 self.anno.append(anno.primary_anno())
         elif second:
@@ -77,6 +80,7 @@ class AnnoSet:
                 self.name.append(anno.name)
                 self.start.append(anno.start)
                 self.end.append(anno.end)
+                self.strand.append(anno.strand)
                 self.type.append(anno.type)
                 self.anno.append(anno.primary_anno())
         elif third:
@@ -85,6 +89,7 @@ class AnnoSet:
                 self.name.append(anno.name)
                 self.start.append(anno.start)
                 self.end.append(anno.end)
+                self.strand.append(anno.strand)
                 self.type.append(anno.type)
                 self.anno.append(anno.primary_anno())
         elif fourth:
@@ -93,6 +98,7 @@ class AnnoSet:
                 self.name.append(anno.name)
                 self.start.append(anno.start)
                 self.end.append(anno.end)
+                self.strand.append(anno.strand)
                 self.type.append(anno.type)
                 self.anno.append(anno.primary_anno())
         else:
@@ -101,6 +107,7 @@ class AnnoSet:
                 self.name.append(anno.name)
                 self.start.append(anno.start)
                 self.end.append(anno.end)
+                self.strand.append(anno.strand)
                 self.type.append(anno.type)
                 self.anno.append(anno.primary_anno())
 
@@ -117,8 +124,9 @@ class AnnoSet:
         _type = ",".join(set(self.type))
         _start = ",".join(str(i) for i in set(self.start))
         _end = ",".join(str(i) for i in set(self.end))
+        _strand = ",".join(str(i) for i in set(self.strand))
         _anno = self.primary_anno()
-        return f"{_anno}\t{_start}\t{_end}\t{_name}\t{_id}\t{_type}"
+        return f"{_anno}\t{_start}\t{_end}\t{_strand}\t{_name}\t{_id}\t{_type}"
 
 
 class GFeature(ABC):

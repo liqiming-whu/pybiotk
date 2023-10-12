@@ -71,7 +71,7 @@ def annobam(filename: str,
         fragment_strand = infer_fragment_strand(_strand, rule, _read.is_read2)
         genes = grangetree.find(_read.reference_name, start, end, fragment_strand)
         if not genes:
-            file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\n")
+            file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\t*\n")
         else:
             annoset = AnnoSet(gene.annotation(_blocks, tss_region, downstream) for gene in genes)
             gene_types = set(gene.gene_type for gene in genes if gene.id in set(annoset.id))
@@ -129,7 +129,7 @@ def annobed(filename: str,
         for bed in bedfile:
             genes = grangetree.find(bed.chrom, bed.start, bed.end, bed.strand)
             if not genes:
-                file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\tIntergenic\t*\t*\t*\t*\t*\n")
+                file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\tIntergenic\t*\t*\t*\t*\t*\t*\n")
             else:
                 annoset = AnnoSet(gene.annotation([(bed.start, bed.end)], tss_region, downstream) for gene in genes)
                 gene_types = set(gene.gene_type for gene in genes if gene.id in set(annoset.id))
@@ -166,11 +166,11 @@ def main(
         ostream = open(outfilename, "w", encoding="utf-8")
     with ostream as annofile:
         if filetype == ".bam":
-            annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
+            annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneStrand\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bam mode ...")
             annobam(filename, annofile, grangetree, annofragments, tss_region, tss_region_name, downstream, downstream_name, rule, ordered_by_name)
         elif filetype.startswith(".bed"):
-            annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneName\tid\tgeneType\n")
+            annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneStrand\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bed mode ...")
             annobed(filename, annofile, grangetree, tss_region, tss_region_name, downstream, downstream_name)
         else:
