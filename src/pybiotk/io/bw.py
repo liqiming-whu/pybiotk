@@ -76,7 +76,7 @@ class Openbwn(TrackFile):
         try:
             a = np.nan_to_num(np.array([bw.stats(chrom, start, end, exact=True, type=stat)[0] for bw in self.bws]))
             a[a == None] = 0
-            return np.abs(a.astype(np.float32))
+            return a.astype(np.float32)
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
             raise
@@ -85,7 +85,7 @@ class Openbwn(TrackFile):
         try:
             a = np.nan_to_num(np.array([bw.values(chrom, start, end) for bw in self.bws]))
             a[a == None] = 0
-            return np.abs(a.astype(np.float32))
+            return a.astype(np.float32)
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
             raise
@@ -154,7 +154,7 @@ class Openbw(TrackFile):
             a = np.nan_to_num(np.array(self.bw.stats(chrom, start, end, exact=True, type=stat)[0]))
             if a is None:
                 a = np.float32(0)
-            return np.abs(a.astype(np.float32))
+            return a.astype(np.float32)
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
             raise
@@ -163,7 +163,7 @@ class Openbw(TrackFile):
         try:
             a = np.nan_to_num(np.array(self.bw.values(chrom, start, end)))
             a[a == None] = 0
-            return np.abs(a.astype(np.float32))
+            return a.astype(np.float32)
         except RuntimeError:
             sys.stderr.write(f'Invalid interval bounds! {chrom}:{start}-{end}')
             raise
