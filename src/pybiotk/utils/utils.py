@@ -88,17 +88,26 @@ def merge_blocks(blocks1: List[Tuple[int,int]], blocks2: List[Tuple[int,int]]) -
         js1_li = [(blocks1[i][1], blocks1[i + 1][0]) for i in range(len(blocks1) - 1)]
     if block2_num > 1:
         js2_li = [(blocks2[i][1], blocks2[i + 1][0]) for i in range(len(blocks2) - 1)]
-    for js1_s, js1_e in js1_li:
-        for js2_s, js2_e in js2_li:
-            if (js1_s == js2_s) and (js1_e == js2_e):
-                continue
-            if not ((js1_s >= js1_e) or (js2_s >= js2_e)):
-                conflict = True
-                return conflict, None
-    conflict = False
-    js_li = sorted(set(js1_li + js2_li))
     start = min([x[0] for x in blocks1 + blocks2])
     end = max([x[1] for x in blocks1 + blocks2])
+    conflict = False
+    js_li = sorted(set(js1_li + js2_li))
+    if js1_li and js2_li:
+        for js1_s, js1_e in js1_li:
+            for js2_s, js2_e in js2_li:
+                if (js1_s == js2_s) and (js1_e == js2_e):
+                    continue
+                if not ((js1_s >= js2_e) or (js2_s >= js1_e)):
+                    conflict = True
+                    return conflict, None
+    elif js1_li and not js2_li:
+        if intervals_is_overlap(js1_li, blocks2):
+            conflict = True
+            return conflict, blocks1
+    elif not js1_li and js2_li:
+        if intervals_is_overlap(blocks1, js2_li):
+            conflict = True
+            return conflict, blocks2
     if js_li:
         new_blocks = list()
         for i in range(len(js_li)):
