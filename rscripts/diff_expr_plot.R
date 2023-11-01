@@ -106,8 +106,7 @@ volcano.plot <- function(data, path, title="", labels=NULL, up_label=5, down_lab
     theme_bw(base_size=font_size) +
     theme(
       panel.grid=element_blank(),
-      panel.border = element_rect(color="black", linewidth=gg_lwd_convert(1)),
-      axis.line = element_blank(),
+      axis.line = element_line(color="black", linewidth=0.6),
       legend.position="right",
       legend.title = element_blank(),
       legend.text= element_text(color="black", size=font_size),
@@ -284,8 +283,7 @@ ma.plot <-function(data, path, title="", labels=NULL) {
     ggtheme = theme_bw(base_size = font_size)+
       theme(
         panel.grid=element_blank(),
-        panel.border = element_rect(color="black", linewidth=gg_lwd_convert(1)),
-        axis.line = element_blank(),
+        axis.line = element_line(color="black", linewidth=0.6),
         legend.position="right",
         legend.title = element_blank(),
         legend.text= element_text(color="black", size=font_size),
@@ -347,8 +345,7 @@ rank.plot <- function(data, path, title="", labels=NULL) {
                     min.segment.length = 0, max.overlaps=max.overlaps) +
         theme_bw(base_size=font_size) +
         theme(panel.grid=element_blank(),
-              panel.border = element_rect(color="black", linewidth=gg_lwd_convert(1)),
-              axis.line = element_blank(),
+              axis.line = element_line(color="black", linewidth=0.6),
               legend.position="right",
               legend.title = element_blank(),
               legend.text= element_text(color="black", size=font_size),
