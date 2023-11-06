@@ -183,7 +183,7 @@ class GFeature(ABC):
         st = self.tss_region(region=region)
         end = self.downstream(down=down)
         pos = sorted([*st, *end])
-        if blocks[0][0] < pos[0] or blocks[-1][1] > pos[3]:
+        if blocks[-1][1] < pos[0] or blocks[0][0] > pos[3]:
             anno.append("Intergenic")
         tss = intervals_is_overlap(blocks, [st])
         downstream = intervals_is_overlap(blocks, [end])
