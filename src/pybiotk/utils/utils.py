@@ -30,6 +30,14 @@ def reverse_seq(seq: str) -> str:
     }
     return "".join(reversed([complement[i] for i in seq]))
 
+rev_com = reverse_seq
+
+
+def iterline(file: str) -> Iterator[str]:
+    with open(file, "r") as f:
+        for line in f.readlines():
+            yield line
+
 
 def is_overlap(interval1: Tuple[int, int], interval2: Tuple[int, int]) -> bool:
     x1, y1 = interval1
