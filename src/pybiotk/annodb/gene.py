@@ -38,6 +38,8 @@ class Gene(GFeature):
         self._cds_exons = None
         self._utr5_exons = None
         self._utr3_exons = None
+        self._start_condon = None
+        self._stop_condon = None
         self.id = self.gene_id
 
     def __repr__(self) -> str:
@@ -215,8 +217,27 @@ class Gene(GFeature):
             self._classify_exons()
         return self._utr3_exons
     
+    def _condon(self):
+        if self.cds_start is not None and self.cds_end is not None:
+            start_condon_region = (self.cds_start, self.cds_start+3)
+            stop_condon_region = (self.cds_end-3, self.cds_end)
+            if self.strand == '-':
+                start_condon_region, stop_condon_region = stop_condon_region, start_condon_region
+            self._start_condon = start_condon_region
+            self._stop_condon = stop_condon_region
+            
+    def start_condon(self) -> Tuple[int, int]:
+        if self._start_condon is None:
+            self._condon()
+        return self._start_condon
+    
+    def stop_condon(self) -> Tuple[int, int]:
+        if self._stop_condon is None:
+            self._condon()
+        return self._stop_condon
+
     def length(self):
         return self.end - self.start
 
-    def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000) -> GenomicAnnotation:
-        return GenomicAnnotation(self.gene_id, self.gene_name, self.start, self.end, self.strand, self.gene_type, self.anno(blocks, tss_region, downstream))
+    def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000, start_condon: bool = False, stop_condon: bool = False) -> GenomicAnnotation:
+        return GenomicAnnotation(self.gene_id, self.gene_name, self.start, self.end, self.strand, self.gene_type, self.anno(blocks, tss_region, downstream, start_condon, stop_condon))

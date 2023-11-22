@@ -22,7 +22,7 @@ class GenomicAnnotation:
     @staticmethod
     def select_anno(
         annoset: AbstractSet[str],
-        priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ):
         for anno in priority:
             if anno in annoset:
@@ -30,7 +30,7 @@ class GenomicAnnotation:
 
     def primary_anno(
         self,
-        priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ):
         return self.select_anno(self.detail, priority)
 
@@ -59,7 +59,7 @@ class AnnoSet:
                 else:
                     third.append(anno)
             else:
-                if {"5UTR", "3UTR", "CDS", "Exon"} & anno.detail:
+                if {"StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon"} & anno.detail:
                     second.append(anno)
                 elif "Intron" in anno.detail:
                     fourth.append(anno)
@@ -113,7 +113,7 @@ class AnnoSet:
 
     def primary_anno(
         self,
-        priority: Tuple[str, ...] = ("5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
     ) -> str:
         anno = GenomicAnnotation.select_anno(set(self.anno), priority)
         return anno
@@ -178,7 +178,7 @@ class GFeature(ABC):
     def utr3_len(self) -> int:
         return blocks_len(self.utr3_exons())
 
-    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-3000, 0), down: int = 3000) -> Set[str]:
+    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-3000, 0), down: int = 3000, anno_start_condon: bool = False, anno_stop_condon: bool = False) -> Set[str]:
         anno = []
         st = self.tss_region(region=region)
         end = self.downstream(down=down)
@@ -198,11 +198,20 @@ class GFeature(ABC):
             if cds_exons:
                 cds_exons = intervals_is_overlap(blocks, cds_exons)
             exons = False
+            if anno_start_condon:
+                start_condon_region = self.start_condon()
+                if start_condon_region is not None:
+                    start_condon = intervals_is_overlap(blocks, start_condon_region)
+                stop_condon_region = self.stop_condon()
+                if stop_condon_region is not None:
+                    stop_condon = intervals_is_overlap(blocks, stop_condon_region)                    
         else:
             exons = intervals_is_overlap(blocks, self.exons())
             utr5_exons = False
             utr3_exons = False
             cds_exons = False
+            start_condon = False
+            stop_condon = False
 
         if tss:
             anno.append("Promoter")
@@ -213,6 +222,12 @@ class GFeature(ABC):
                 anno.append("3UTR")
             if cds_exons:
                 anno.append("CDS")
+            if anno_start_condon:
+                if start_condon:
+                    anno.append("StartCondon")
+            if anno_stop_condon:
+                if stop_condon:
+                    anno.append("StopCondon")
         elif exons:
             anno.append("Exon")
         if downstream:

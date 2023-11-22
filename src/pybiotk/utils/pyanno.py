@@ -61,7 +61,9 @@ def annobam(filename: str,
             downstream: int = 3000,
             downstream_name: str = "Downstream",
             rule: str = "1+-,1-+,2++,2--",
-            ordered_by_name: bool = False
+            ordered_by_name: bool = False,
+            start_condon: bool = False,
+            stop_condon: bool = False,
             ):
     bamtype = check_bam_type(filename)
 
@@ -73,7 +75,7 @@ def annobam(filename: str,
         if not genes:
             file_obj.write(f"{_read.query_name}\t{_read.reference_name}\t{start}\t{end}\t{_blocks}\t{fragment_strand}\tIntergenic\t*\t*\t*\t*\t*\t*\n")
         else:
-            annoset = AnnoSet(gene.annotation(_blocks, tss_region, downstream) for gene in genes)
+            annoset = AnnoSet(gene.annotation(_blocks, tss_region, downstream, start_condon, stop_condon) for gene in genes)
             gene_types = set(gene.gene_type for gene in genes if gene.id in set(annoset.id))
             if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                 annoset.type = gene_types
@@ -123,6 +125,8 @@ def annobed(filename: str,
             tss_region_name: str = "Upstream",
             downstream: int = 3000,
             downstream_name: str = "Downstream",
+            start_condon: bool = False,
+            stop_condon: bool = False,
             ):
     with Openbed(filename) as bedfile:
         i = 0
@@ -131,7 +135,7 @@ def annobed(filename: str,
             if not genes:
                 file_obj.write(f"{bed.name}\t{bed.chrom}\t{bed.start}\t{bed.end}\t{bed.strand}\tIntergenic\t*\t*\t*\t*\t*\t*\n")
             else:
-                annoset = AnnoSet(gene.annotation([(bed.start, bed.end)], tss_region, downstream) for gene in genes)
+                annoset = AnnoSet(gene.annotation([(bed.start, bed.end)], tss_region, downstream, start_condon, stop_condon) for gene in genes)
                 gene_types = set(gene.gene_type for gene in genes if gene.id in set(annoset.id))
                 if not ("protein_coding" in gene_types and "protein_coding" not in set(annoset.type)):
                     annoset.type = gene_types
@@ -155,7 +159,9 @@ def main(
     strand: bool = True,
     rule: str = "1+-,1-+,2++,2--",
     annofragments: bool = False,
-    ordered_by_name: bool = False
+    ordered_by_name: bool = False,
+    start_condon: bool = False,
+    stop_condon: bool = False,
 ):
     start = time.perf_counter()
     filetype = os.path.splitext(filename)[1]
@@ -168,11 +174,11 @@ def main(
         if filetype == ".bam":
             annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneStrand\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bam mode ...")
-            annobam(filename, annofile, grangetree, annofragments, tss_region, tss_region_name, downstream, downstream_name, rule, ordered_by_name)
+            annobam(filename, annofile, grangetree, annofragments, tss_region, tss_region_name, downstream, downstream_name, rule, ordered_by_name, start_condon, stop_condon)
         elif filetype.startswith(".bed"):
             annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneStrand\tgeneName\tid\tgeneType\n")
             logging.info("start annotating, use bed mode ...")
-            annobed(filename, annofile, grangetree, tss_region, tss_region_name, downstream, downstream_name)
+            annobed(filename, annofile, grangetree, tss_region, tss_region_name, downstream, downstream_name, start_condon, stop_condon)
         else:
             raise RuntimeError(f"Unable to infer file type as bam or bed from filename: {filename}.")
     end = time.perf_counter()
@@ -195,6 +201,8 @@ def run():
     parser.add_argument("--tss_region_name", dest="tss_region_name", type=str, default="Upstream", help="tss region name.")
     parser.add_argument("--downstream", dest="downstream", type=int, default=3000, help="downstream length from tes.")
     parser.add_argument("--downstream_name", dest="downstream_name", type=str, default="Downstream", help="downstream name.")
+    parser.add_argument("--start_condon", dest="start_condon", action="store_true", help="annotate start condon.")
+    parser.add_argument("--stop_condon", dest="stop_condon", action="store_true", help="annotate stop condon.")
     parser.add_argument("-s", "--strand", dest="strand", action="store_true", help="require same strandedness.")
     parser.add_argument("--rule", dest="rule", type=str, default="1+-,1-+,2++,2--",
                         choices=("1+-,1-+,2++,2--", "1++,1--,2+-,2-+", "+-,-+", "++,--"),
@@ -210,7 +218,7 @@ def run():
         parser.error("--tss_region must be a tuple of 2 elements.")
     main(args.input, args.output, args.gtf, args.level,
          args.tss_region, args.tss_region_name, args.downstream, args.downstream_name,
-         args.strand, args.rule, args.pair, args.ordered_by_name)
+         args.strand, args.rule, args.pair, args.ordered_by_name, args.start_condon, args.stop_condon)
 
 
 if __name__ == "__main__":
