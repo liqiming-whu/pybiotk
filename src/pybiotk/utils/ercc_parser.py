@@ -34,4 +34,7 @@ def run():
     parser.add_argument('-g', '--outgtf', dest="outgtf", type=str, default=None, help="output gtf.")
     parser.add_argument("-s", "--seq-ids", dest="seq_ids", nargs="+", default=None, help="ERCC ids.")
     args = parser.parse_args()
+    if args.input is None:
+        parser.print_help()
+        sys.exit(1)
     main(**vars(args))
