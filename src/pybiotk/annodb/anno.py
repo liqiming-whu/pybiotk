@@ -22,7 +22,7 @@ class GenomicAnnotation:
     @staticmethod
     def select_anno(
         annoset: AbstractSet[str],
-        priority: Tuple[str, ...] = ("StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("TSS", "TES", "StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Upstream", "Downstream", "Intergenic")
     ):
         for anno in priority:
             if anno in annoset:
@@ -30,7 +30,7 @@ class GenomicAnnotation:
 
     def primary_anno(
         self,
-        priority: Tuple[str, ...] = ("StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("TSS", "TES", "StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Upstream", "Downstream", "Intergenic")
     ):
         return self.select_anno(self.detail, priority)
 
@@ -53,13 +53,13 @@ class AnnoSet:
         fourth = []
         other = []
         for anno in self.annoset:
-            if not {"Promoter", "Downstream", "Intergenic"} & anno.detail:
+            if not {"Upstream", "Downstream", "Intergenic"} & anno.detail:
                 if not anno.primary_anno() == "Intron":
                     first.append(anno)
                 else:
                     third.append(anno)
             else:
-                if {"StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon"} & anno.detail:
+                if {"TSS", "TES", "StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon"} & anno.detail:
                     second.append(anno)
                 elif "Intron" in anno.detail:
                     fourth.append(anno)
@@ -113,7 +113,7 @@ class AnnoSet:
 
     def primary_anno(
         self,
-        priority: Tuple[str, ...] = ("StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Promoter", "Downstream", "Intergenic")
+        priority: Tuple[str, ...] = ("TSS", "TES", "StartCondon", "StopCondon", "5UTR", "3UTR", "CDS", "Exon", "Intron", "Upstream", "Downstream", "Intergenic")
     ) -> str:
         anno = GenomicAnnotation.select_anno(set(self.anno), priority)
         return anno
@@ -139,6 +139,12 @@ class GFeature(ABC):
     @abstractmethod
     def introns(self) -> List[Tuple[int, int]]: ...
 
+    @abstractmethod
+    def tss(self) -> int: ...
+
+    @abstractmethod
+    def tes(self) -> int: ...
+    
     @abstractmethod
     def tss_region(self, region: Tuple[int, int] = (-1000, 1000)) -> Tuple[int, int]: ...
 
@@ -178,15 +184,25 @@ class GFeature(ABC):
     def utr3_len(self) -> int:
         return blocks_len(self.utr3_exons())
 
-    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-3000, 0), down: int = 3000, anno_start_condon: bool = False, anno_stop_condon: bool = False) -> Set[str]:
+    def anno(self, blocks: List[Tuple[int, int]], region: Tuple[int, int] = (-3000, 0), down: int = 3000,
+             anno_tss: bool = False, anno_tes: bool = False,
+             anno_start_condon: bool = False, anno_stop_condon: bool = False) -> Set[str]:
         anno = []
         st = self.tss_region(region=region)
         end = self.downstream(down=down)
         pos = sorted([*st, *end])
         if blocks[-1][1] < pos[0] or blocks[0][0] > pos[3]:
             anno.append("Intergenic")
-        tss = intervals_is_overlap(blocks, [st])
+        upstream = intervals_is_overlap(blocks, [st])
         downstream = intervals_is_overlap(blocks, [end])
+        
+        if anno_tss:
+            tss_block = (self.tss(), self.tss()+1)
+            tss = intervals_is_overlap(blocks, [tss_block])
+        if anno_tes:
+            tes_block = (self.tes(), self.tes()+1)
+            tes = intervals_is_overlap(blocks, [tes_block])
+        
         if self.is_protein_coding():
             utr5_exons = self.utr5_exons()
             if utr5_exons:
@@ -213,8 +229,14 @@ class GFeature(ABC):
             start_condon = False
             stop_condon = False
 
-        if tss:
-            anno.append("Promoter")
+        if anno_tss:
+            if tss:
+                anno.append("TSS")
+        if anno_tes:
+            if tes:
+                anno.append("TES")
+        if upstream:
+            anno.append("Upstream")
         if self.is_protein_coding():
             if utr5_exons:
                 anno.append("5UTR")

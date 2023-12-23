@@ -89,6 +89,20 @@ class Transcript(GFeature):
                 self._introns = [self.start, *(self.exons() | flatten), self.end] | window(2, 2) | skip_while(lambda x: x[0] == x[1]) | to_list
         return self._introns
 
+    def tss(self) -> int:
+        if self.strand == '+':
+            tss = self.start
+        else:
+            tss = self.end
+        return tss
+
+    def tes(self) -> int:
+        if self.strand == '+':
+            tes = self.end
+        else:
+            tes = self.start
+        return tes
+    
     def tss_region(self, region: Tuple[int, int] = (-1000, 1000)) -> Tuple[int, ...]:
         if self.strand == '+':
             region = tuple(i+self.start for i in region)
@@ -176,5 +190,7 @@ class Transcript(GFeature):
     def length(self):
         return self.end - self.start
     
-    def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000, start_condon: bool = False, stop_condon: bool = False) -> GenomicAnnotation:
-        return GenomicAnnotation(self.transcript_id, self.gene_name, self.start, self.end, self.strand, self.transcript_type, self.anno(blocks, tss_region, downstream, start_condon, stop_condon))
+    def annotation(self, blocks: List[Tuple[int, int]], tss_region: Tuple[int, int] = (-1000, 1000), downstream: int = 3000,
+                   anno_tss: bool = False, anno_tes: bool = False, start_condon: bool = False, stop_condon: bool = False) -> GenomicAnnotation:
+        return GenomicAnnotation(self.transcript_id, self.gene_name, self.start, self.end, self.strand, self.transcript_type,
+                                 self.anno(blocks, tss_region, downstream, anno_tss, anno_tes, start_condon, stop_condon))
