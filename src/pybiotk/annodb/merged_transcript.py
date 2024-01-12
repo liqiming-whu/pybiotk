@@ -64,6 +64,8 @@ class MergedTranscript(GFeature):
         self._cds_exons = None
         self._utr5_exons = None
         self._utr3_exons = None
+        self._start_condon = None
+        self._stop_condon = None
         self.count = count
         self.before = int(before) if before is not None else before
         self.after = int(after) if after is not None else after
@@ -191,6 +193,20 @@ class MergedTranscript(GFeature):
             self._introns = [self.start, *(self.exons() | flatten), self.end] | window(2, 2) | skip_while(lambda x: x[0] == x[1]) | to_list
         return self._introns
 
+    def tss(self) -> int:
+        if self.strand == '+':
+            tss = self.start
+        else:
+            tss = self.end
+        return tss
+
+    def tes(self) -> int:
+        if self.strand == '+':
+            tes = self.end
+        else:
+            tes = self.start
+        return tes
+
     def tss_region(self, region: Tuple[int, int] = (-1000, 1000)) -> Tuple[int, ...]:
         if self.strand == '+':
             region = tuple(i+self.start for i in region)
@@ -229,6 +245,25 @@ class MergedTranscript(GFeature):
         if self._utr3_exons is None:
             self._classify_exons()
         return self._utr3_exons
+
+    def _condon(self):
+        if self.cds_start is not None and self.cds_end is not None:
+            start_condon_region = (self.cds_start, self.cds_start+3)
+            stop_condon_region = (self.cds_end-3, self.cds_end)
+            if self.strand == '-':
+                start_condon_region, stop_condon_region = stop_condon_region, start_condon_region
+            self._start_condon = start_condon_region
+            self._stop_condon = stop_condon_region
+            
+    def start_condon(self) -> Tuple[int, int]:
+        if self._start_condon is None:
+            self._condon()
+        return self._start_condon
+    
+    def stop_condon(self) -> Tuple[int, int]:
+        if self._stop_condon is None:
+            self._condon()
+        return self._stop_condon
 
     def length(self):
         return self.end - self.start
