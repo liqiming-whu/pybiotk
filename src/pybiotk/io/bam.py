@@ -10,7 +10,9 @@ from typing import (
     Literal,
     Tuple,
     Optional,
-    Iterator
+    Union,
+    Iterator,
+    Callable
 )
 
 import pysam
@@ -39,9 +41,16 @@ def check_bam_type(filename: str) -> BamType:
     return bamtype
 
 
-def count_bam_size(filename: str) -> int:
+def count_bam_size(filename: str, read_callback: Union[str, Callable[[pysam.AlignedSegment], bool]] = "all") -> int:
+    """
+    read_callback (string or function) 
+    select a call-back to ignore reads when counting. It can be either a string with the following values:
+        all: skip reads in which any of the following flags are set: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+        nofilter: uses every single read
+    Alternatively, read_callback can be a function check_read(read) that should return True only for those reads that shall be included in the counting.
+    """
     with pysam.AlignmentFile(filename) as bam:
-        count = bam.count()
+        count = bam.count(read_callback=read_callback)
     return count
 
 
