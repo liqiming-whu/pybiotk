@@ -4,6 +4,7 @@ import importlib.resources
 import logging
 import os
 import re
+import signal
 import subprocess
 import sys
 import warnings
@@ -214,19 +215,20 @@ def infer_fragment_strand(strand: Literal["+", "-"], rule: str = "1+-,1-+,2++,2-
     return fragment_strand
 
 
+def handler(signum, frame):
+    sys.exit(0)
+
+
 def ignore(func: Callable):
     @wraps(func)
     def wrapper(*args, **kargs):
         try:
+            signal.signal(signal.SIGINT, handler)
             traceback = func(*args, **kargs)
         except BrokenPipeError:
             # https://docs.python.org/3/library/signal.html#note-on-sigpipe
             # Python flushes standard streams on exit; redirect remaining output
             # to devnull to avoid another BrokenPipeError at shutdown
-            devnull = os.open(os.devnull, os.O_WRONLY)
-            os.dup2(devnull, sys.stdout.fileno())
-            sys.exit(0)
-        except KeyboardInterrupt:
             devnull = os.open(os.devnull, os.O_WRONLY)
             os.dup2(devnull, sys.stdout.fileno())
             sys.exit(0)
