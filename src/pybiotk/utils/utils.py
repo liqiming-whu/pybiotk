@@ -229,8 +229,8 @@ def ignore(func: Callable):
             # https://docs.python.org/3/library/signal.html#note-on-sigpipe
             # Python flushes standard streams on exit; redirect remaining output
             # to devnull to avoid another BrokenPipeError at shutdown
-            devnull = os.open(os.devnull, os.O_WRONLY)
             if not sys.stdout.closed:
+                devnull = os.open(os.devnull, os.O_WRONLY)
                 os.dup2(devnull, sys.stdout.fileno())
             sys.exit(0)
         return traceback
