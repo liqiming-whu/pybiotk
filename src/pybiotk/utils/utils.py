@@ -230,7 +230,8 @@ def ignore(func: Callable):
             # Python flushes standard streams on exit; redirect remaining output
             # to devnull to avoid another BrokenPipeError at shutdown
             devnull = os.open(os.devnull, os.O_WRONLY)
-            os.dup2(devnull, sys.stdout.fileno())
+            if not sys.stdout.closed:
+                os.dup2(devnull, sys.stdout.fileno())
             sys.exit(0)
         return traceback
     return wrapper
