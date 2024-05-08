@@ -61,7 +61,7 @@ def intervals_is_overlap(intervals1: List[Tuple[int, int]], intervals2: List[Tup
 
 def cigar2cigar_tuples(cigar: str) -> List[Tuple[int, int]]:
     code2cigar = "MIDNSHP=XBp"
-    cigar_regex = re.compile("([-\d]+)([MIDNSHP=XBp])")
+    cigar_regex = re.compile("([-0-9]+)([MIDNSHP=XBp])")
     return [(code2cigar.find(x[1]), int(x[0])) for x in re.findall(cigar_regex, cigar)]
 
 
