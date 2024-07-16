@@ -192,7 +192,7 @@ def run():
    parser.add_argument("-o", "--outbam", dest="output_bam", type=str, default=os.devnull, help="output file.")
    args=parser.parse_args()
    
-   if args.input is None:
+   if args.input_file is None:
         parser.print_help()
         sys.exit(1)
    configure_experiment(args.input_file, args.gtf_file, args.sample_size, args.map_qual, args.filter_strandness, args.output_bam)
