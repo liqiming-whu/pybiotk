@@ -71,7 +71,6 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
          chrom    = gtf.chrom
          start    = gtf.start
          end      = gtf.end
-         geneName = gtf.gene_name()
          strand   = gtf.strand
          if chrom not in gene_ranges:
             gene_ranges[chrom] = IntervalTree()
