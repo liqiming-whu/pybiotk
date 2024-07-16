@@ -182,14 +182,19 @@ def run():
    parser = argparse.ArgumentParser(
       description=__doc__,
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-   parser.add_argument("-i","--input-file",type="string",dest="input_file",help="Input alignment file in SAM or BAM format")
-   parser.add_argument("-g","--gtf",type="string",dest="gtf_file",help="Reference gene model in bed fomat.")
-   parser.add_argument("-s","--sample-size",type="int",dest="sample_size",default=200000, help="Number of reads sampled from SAM/BAM file.")
-   parser.add_argument("-q","--mapq",type="int",dest="map_qual",default=30,help="Minimum mapping quality (phred scaled) for an alignment to be considered as \"uniquely mapped\".")
-   parser.add_argument("-f","--filter",type="string",dest="filter_strandness",default=None, choices=('1++,1--,2+-,2-+', '1+-,1-+,2++,2--', '++,--', '+-,-+'),
+   parser.add_argument("-i","--input-file",dest="input_file", type=str, 
+                       default=(None if sys.stdin.isatty() else "-"), help="Input alignment file in SAM or BAM format")
+   parser.add_argument("-g","--gtf",dest="gtf_file", type=str, required=True, help="Reference gene model in bed fomat.")
+   parser.add_argument("-s","--sample-size",dest="sample_size",default=200000, help="Number of reads sampled from SAM/BAM file.")
+   parser.add_argument("-q","--mapq",dest="map_qual",type=int, default=30,help="Minimum mapping quality (phred scaled) for an alignment to be considered as \"uniquely mapped\".")
+   parser.add_argument("-f","--filter",dest="filter_strandness",type=str, default=None, choices=('1++,1--,2+-,2-+', '1+-,1-+,2++,2--', '++,--', '+-,-+'),
                         help="Filter reads with specified strandness, e.g. 1++,1--,2+-,2-+,1+-,1-+,2++,2--, when specified, --sample_size option will be ignored.")
-   parser.add_argument("-o", "--outbam", type=str, dest="output_bam", default=os.devnull, help="output file.")
+   parser.add_argument("-o", "--outbam", dest="output_bam", type=str, default=os.devnull, help="output file.")
    args=parser.parse_args()
+   
+   if args.input is None:
+        parser.print_help()
+        sys.exit(1)
    configure_experiment(args.input_file, args.gtf_file, args.sample_size, args.map_qual, args.filter_strandness, args.output_bam)
 
 if __name__ == "__main__":
