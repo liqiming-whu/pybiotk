@@ -60,7 +60,6 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
          chrom    = bed.chrom
          txStart  = bed.thickStart
          txEnd    = bed.thickEnd
-         geneName = bed.name
          strand   = bed.strand
          
          if chrom not in gene_ranges:
@@ -182,8 +181,8 @@ def run():
    parser = argparse.ArgumentParser(
       description=__doc__,
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-   parser.add_argument("-i","--input-file",dest="input_file", type=str, 
-                       default=(None if sys.stdin.isatty() else "-"), help="Input alignment file in SAM or BAM format")
+   parser.add_argument(dest="input_file", type=str, nargs='?', 
+                       default=(None if sys.stdin.isatty() else "-"), help="Input alignment file in SAM or BAM format.[stdin]")
    parser.add_argument("-g","--gtf",dest="gtf_file", type=str, required=True, help="Reference gene model in bed fomat.")
    parser.add_argument("-s","--sample-size",dest="sample_size",default=200000, help="Number of reads sampled from SAM/BAM file.")
    parser.add_argument("-q","--mapq",dest="map_qual",type=int, default=30,help="Minimum mapping quality (phred scaled) for an alignment to be considered as \"uniquely mapped\".")
