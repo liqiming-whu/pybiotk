@@ -65,7 +65,7 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
          
          if chrom not in gene_ranges:
             gene_ranges[chrom] = IntervalTree()
-         gene_ranges[chrom].add(txStart, txEnd, geneName, strand)
+         gene_ranges[chrom].add(txStart, txEnd, strand)
       assert gene_ranges
    except AssertionError:
       for gtf in GtfFile(gtf_file).iter_gene():
@@ -76,7 +76,7 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
          strand   = gtf.strand
          if chrom not in gene_ranges:
             gene_ranges[chrom] = IntervalTree()
-         gene_ranges[chrom].add(start, end, geneName, strand)
+         gene_ranges[chrom].add(start, end, strand)
 
    assert  gene_ranges
    logging.info("Done!")
