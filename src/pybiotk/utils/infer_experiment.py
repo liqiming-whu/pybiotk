@@ -121,7 +121,10 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
          readEnd = readStart + aligned_read.query_alignment_length
          if chrom in gene_ranges:
             tmp = set(gene_ranges[chrom].find(readStart,readEnd))
-            if len(tmp) == 0: continue
+            if len(tmp) == 0: 
+               if filter_strandness is not None:
+                  outsam.write(aligned_read)
+               continue
             strand_from_gene = ':'.join(tmp)
             strandness = map_strand + strand_from_gene
             s_strandness[strandness]+=1
