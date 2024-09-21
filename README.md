@@ -25,6 +25,7 @@ console_scripts =
     gtf2bed = pybiotk.convert.gtf2bed:run
     bed2bedgraph = pybiotk.convert.bed2bedgraph:run
     fq2fasta = pybiotk.convert.fq2fasta:run
+    fa2fastq = pybiotk.convert.fa2fastq:run
     bam2fastx = pybiotk.convert.bam2fastx:run
     bampe_order_by_name = pybiotk.convert.bampe_order_by_name:run
     bam_random = pybiotk.utils.bam_random:run
@@ -34,6 +35,7 @@ console_scripts =
     fastq_join = pybiotk.utils.fastq_join:run
     fastx_rename = pybiotk.utils.fastx_rename:run
     genomefetcher = pybiotk.utils.genomefetcher:run
+    bigwigfetcher = pybiotk.utils.bigwigfetcher:run
     reverse_fastx = pybiotk.utils.reverse_fastx:run
     seq_random = pybiotk.utils.seq_random:run
     merge_row = pybiotk.utils.merge_row:run
@@ -45,6 +47,9 @@ console_scripts =
     rna_fragment_size = pybiotk.utils.fragment_size:run
     merge_subseq = pybiotk.utils.merge_subseq:run
     subseq_analysis = pybiotk.utils.subseq_analysis:run
+    summary_log = pybiotk.utils.summary_log:run
+    ercc_parser = pybiotk.utils.ercc_parser:run
+    infer_experiment = pybiotk.utils.infer_experiment:run
 ```
 
 ## Usage
@@ -72,3 +77,5 @@ optional arguments:
   -p, --pair            annotate fragments instead of reads. (default: False)
   --ordered_by_name     if input bam is ordered by name, only for pair-end bam. (default: False)
 ```
+
+
