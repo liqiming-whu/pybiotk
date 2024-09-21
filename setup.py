@@ -13,8 +13,8 @@ from glob import glob
 
 ext_modules = [
     Extension("pybiotk.bx.bitset", ["src/bx/bitset.pyx", "src/bx/binBits.c", "src/bx/bits.c", "src/bx/common.c"], extra_compile_args = ["-std=c99"]),
-    Extension("pybiotk.bx.cluster", ["src/bx/cluster.pyx"]),
-    Extension("pybiotk.bx.intersection", ["src/bx/intersection.pyx"])
+    Extension("pybiotk.bx.cluster", ["src/bx/cluster.pyx"], extra_compile_args = ["-std=c99"]),
+    Extension("pybiotk.bx.intersection", ["src/bx/intersection.pyx"], extra_compile_args = ["-std=c99"])
 ]
 
 if __name__ == "__main__":
