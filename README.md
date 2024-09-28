@@ -55,27 +55,36 @@ console_scripts =
 ## Usage
 
 ```
-usage: pyanno [-h] -i INPUT -o OUTPUT -g GTF [-l {transcript,gene}] [--tss_region TSS_REGION [TSS_REGION ...]] [--downstream DOWNSTREAM] [-s]
+usage: pyanno [-h] -i INPUT [-o OUTPUT] -g GTF [-l {transcript,gene}] [--tss_region TSS_REGION [TSS_REGION ...]] [--tss_region_name TSS_REGION_NAME] [--downstream DOWNSTREAM] [--downstream_name DOWNSTREAM_NAME] [--tss] [--tes] [--start_condon] [--stop_condon] [-s]
               [--rule {1+-,1-+,2++,2--,1++,1--,2+-,2-+,+-,-+,++,--}] [-p] [--ordered_by_name]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
                         input file, bam or bed. The file type will be inferred from the filename suffix ['*.bam', '*.bed']. (default: None)
   -o OUTPUT, --output OUTPUT
-                        output file name. (default: None)
+                        output file name. [stdout] (default: -)
   -g GTF, --gtf GTF     gtf file download from Genecode, or a sorted gtf file. (default: None)
   -l {transcript,gene}, --level {transcript,gene}
                         annotation level, transcript or gene. (default: transcript)
   --tss_region TSS_REGION [TSS_REGION ...]
-                        choose region from tss. (default: [-1000, 1000])
+                        choose region from tss. (default: [-3000, 0])
+  --tss_region_name TSS_REGION_NAME
+                        tss region name. (default: Upstream)
   --downstream DOWNSTREAM
                         downstream length from tes. (default: 3000)
+  --downstream_name DOWNSTREAM_NAME
+                        downstream name. (default: Downstream)
+  --tss                 annotate tss. (default: False)
+  --tes                 annotate tes. (default: False)
+  --start_condon        annotate start condon. (default: False)
+  --stop_condon         annotate stop condon. (default: False)
   -s, --strand          require same strandedness. (default: False)
   --rule {1+-,1-+,2++,2--,1++,1--,2+-,2-+,+-,-+,++,--}
                         how read(s) were stranded during sequencing. only for bam. (default: 1+-,1-+,2++,2--)
   -p, --pair            annotate fragments instead of reads. (default: False)
   --ordered_by_name     if input bam is ordered by name, only for pair-end bam. (default: False)
+
 ```
 
 
