@@ -185,7 +185,7 @@ def run():
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
    parser.add_argument(dest="input_file", type=str, nargs='?', 
                        default=(None if sys.stdin.isatty() else "-"), help="Input alignment file in SAM or BAM format.[stdin]")
-   parser.add_argument("-g","--gtf",dest="gtf_file", type=str, required=True, help="Reference gene model in bed fomat.")
+   parser.add_argument("-g","--gtf",dest="gtf_file", type=str, required=True, help="Reference gene model in gtf fomat.")
    parser.add_argument("-s","--sample-size",dest="sample_size",default=200000, help="Number of reads sampled from SAM/BAM file.")
    parser.add_argument("-q","--mapq",dest="map_qual",type=int, default=30,help="Minimum mapping quality (phred scaled) for an alignment to be considered as \"uniquely mapped\".")
    parser.add_argument("-f","--filter",dest="filter_strandness",type=str, default=None, choices=('1++,1--,2+-,2-+', '1+-,1-+,2++,2--', '++,--', '+-,-+'),

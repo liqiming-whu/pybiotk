@@ -22,8 +22,8 @@ def single_end(input_fq: str, output: str, min_len: int = 15, by: Literal["seq",
         input_reads = fqi.ptr
         fqi.ptr = None
     duplicate_ratio = (input_reads - output_reads) * 100 / input_reads
-    logging.info((f"result summary:\nread pairs too short (<{min_len}nt): {too_short_reads}\ninput read pairs: {input_reads}\n"
-                  f"output read pairs: {output_reads}\nduplicate ratio: {duplicate_ratio:.2f}%"))
+    logging.info((f"result summary:\nreads too short (<{min_len}nt): {too_short_reads}\ninput reads: {input_reads}\n"
+                  f"output reads: {output_reads}\nduplicate ratio: {duplicate_ratio:.2f}%"))
 
 
 def pair_end(input_r1: str, input_r2: str, output_r1: str, output_r2: str, min_len: int = 15, by: Literal["seq", "id", "name"] = "seq"):
