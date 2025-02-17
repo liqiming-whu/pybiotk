@@ -110,7 +110,7 @@ class GenomeFile(FastaFile):
         chrom = chroms[random.randint(0, len(chroms)-1)]
         chrom_len = self.get_chrom_length(chrom)
         start = random.randint(0, chrom_len-length-1)
-        end = start + 50
+        end = start + length
         if self.reference_dict:
             seq = self.dict_fetch(chrom, start, end, strand)
         else:
