@@ -13,6 +13,7 @@ from typing import Sequence, Optional, TextIO, Literal
 from pybiotk.io import Openbwn, Openbed
 from pybiotk.utils import logging, ignore
 
+
 class LocationFormatError(Exception):
     pass
 
@@ -83,7 +84,7 @@ def run():
     if args.bedfile is not None and args.location is not None:
         logging.warning("both -l and -b are set, -l will be ignored.")
     main(**vars(args))
-    
+
 
 if __name__ == "__main__":
     run()

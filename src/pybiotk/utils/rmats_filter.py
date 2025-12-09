@@ -14,7 +14,7 @@ def main(inf, outf, up_out, down_out, topnumber, p_value=None, readnumber=None, 
     if inclevel:
         df = df[abs(df['IncLevelDifference']) > inclevel]
     if readnumber:
-        func = lambda x:sum(int(i) for i in str(x).split(","))
+        func = lambda x: sum(int(i) for i in str(x).split(","))
         df['AvgSAMPLE1'] = (df['IJC_SAMPLE_1'].apply(func) + df['SJC_SAMPLE_1'].apply(func)) / 2
         df['AvgSAMPLE2'] = (df['IJC_SAMPLE_2'].apply(func) + df['SJC_SAMPLE_2'].apply(func)) / 2
         df = df[(df['AvgSAMPLE1'] > readnumber) & (df['AvgSAMPLE2'] > readnumber)]

@@ -21,6 +21,7 @@ from rich.console import Console
 Handler = RichHandler(console=Console(stderr=True), show_time=True, omit_repeated_times=False, show_level=True, markup=True, log_time_format='[%x %a %X]')
 logging.basicConfig(level="INFO", format="%(message)s", handlers=[Handler])
 
+
 def reverse_seq(seq: str) -> str:
     seq = seq.upper()
     complement = {
@@ -30,6 +31,7 @@ def reverse_seq(seq: str) -> str:
         "B": "V", "V": "B", "D": "H", "&": "&",
     }
     return "".join(reversed([complement[i] for i in seq]))
+
 
 rev_com = reverse_seq
 

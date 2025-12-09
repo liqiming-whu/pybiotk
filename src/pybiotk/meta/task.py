@@ -54,10 +54,12 @@ def bw_task(func: Callable, gene: Dict[str, List[MergedTranscript]],
                 a = [i+0.01*sum(x[2 + len(bw_fwd)//2:]) for i in x[2: 2 + len(bw_fwd)//2]]
                 b = [i+0.01*sum(x[2: 2 + len(bw_fwd)//2]) for i in x[2 + len(bw_fwd)//2:]]
                 return ttest_ind(a, b, equal_var=levene(a,b).pvalue > 0.05).pvalue
+
             def fc(x):
                 a = sum(x[2: 2 + len(bw_fwd)//2]) + 0.01*sum(x[2 + len(bw_fwd)//2:])
                 b = sum(x[2 + len(bw_fwd)//2:]) + 0.01*sum(x[2: 2 + len(bw_fwd)//2])
                 return b / a
+
             def diff(x):
                 a = sum(x[2: 2 + len(bw_fwd)//2]) / (len(bw_fwd)//2)
                 b = sum(x[2 + len(bw_fwd)//2:]) / (len(bw_fwd)//2)
@@ -71,6 +73,7 @@ def bw_task(func: Callable, gene: Dict[str, List[MergedTranscript]],
                 a = x[2] + 0.01*x[3]
                 b = x[3] + 0.01*x[2]
                 return b / a
+
             def diff(x):
                 return x[3] - x[2]
             df['difference'] = df.apply(diff, axis=1)
@@ -195,7 +198,7 @@ def reference_point_task(numpy_file: str, gene: Dict[str, List[MergedTranscript]
         n = (gene['+'] | count) + (gene['-'] | count)
         with open(numpy_file, 'wb') as f:
             np.save(f, merged_strand_out/n)
-            
+
 
 def signal_point(bw: Openbw, a: np.ndarray, t: MergedTranscript,
                  loci: Literal['TES', 'TSS'] = 'TES',
@@ -215,8 +218,8 @@ def signal_point(bw: Openbw, a: np.ndarray, t: MergedTranscript,
     if values.shape != a.shape:
         values = np.concatenate([np.zeros(a.shape[-1]-values.shape[-1]), values])
     a += values
-    
-    
+
+
 def signal_point_single_task(gene: Dict[str, List[MergedTranscript]],
                              bw_file: str, strand: Literal['+', '-'],
                              loci: Literal['TES', 'TSS'] = 'TSS',
@@ -226,7 +229,7 @@ def signal_point_single_task(gene: Dict[str, List[MergedTranscript]],
         reference_point_func = partial(signal_point, bw, values, loci=loci, upStream=upStream, downStream=downStream)
         gene[strand] | for_each(reference_point_func)
         return values
-    
+
 
 def signal_point_task(numpy_file: str, gene: Dict[str, List[MergedTranscript]],
                       bw_fwd: str, bw_rev: str = None,
@@ -245,4 +248,3 @@ def signal_point_task(numpy_file: str, gene: Dict[str, List[MergedTranscript]],
     merged_out = np.array([signal, signal_opposite])
     with open(numpy_file, 'wb') as f:
         np.save(f, merged_out/n)
-

@@ -16,7 +16,7 @@ class FastxFile(pysam.FastxFile):
     def to_fasta(self) -> Iterator[str]:
         for entry in self:
             yield f">{entry.name}\n{entry.sequence}"
-    
+
     def to_fastq(self, path: str = "-"):
         with OpenFqGzip(path) as fq:
             for entry in self:
@@ -49,7 +49,6 @@ class FastxFile(pysam.FastxFile):
                 entry.name += f"_{count}"
             name_dict[key] = count
             yield entry
-            
 
     def iter_len(self) -> Iterator[int]:
         for entry in self:
@@ -118,7 +117,7 @@ class OpenFqGzip:
             self.fq.write(record)
         else:
             self.fq.write(record.encode("utf-8"))
-    
+
     def write_entry(self, name: str, sequence: str, comment: Optional[str] = None, quality: Optional[str] = None):
         if quality is None:
             quality = "F"*len(sequence)

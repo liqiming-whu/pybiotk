@@ -5,6 +5,7 @@ import sys
 from pybiotk.io import FastxFile
 from pybiotk.utils import ignore
 
+
 def main(fa_list):
     for fa in fa_list:
         with FastxFile(fa) as f:

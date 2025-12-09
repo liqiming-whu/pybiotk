@@ -20,8 +20,8 @@ class LocationFormatError(Exception):
 
 def main(
     fasta: str,
-    location:Optional[str] = None,
-    gtf: Optional[str] = None, 
+    location: Optional[str] = None,
+    gtf: Optional[str] = None,
     regions: Optional[str] = None,
     separate: bool = False,
     gene_types: Optional[Sequence[str]] = None,
@@ -32,7 +32,8 @@ def main(
     gene_names: Optional[Sequence[str]] = None,
     wrap: bool = True,
     no_sequence: bool = False,
-    output: Optional[TextIO] = None):
+    output: Optional[TextIO] = None
+):
     """Fetch sequences from genome fasta file.
 
     Args:
@@ -142,7 +143,6 @@ def main(
     logging.info(f"task finished in {time_end-time_start:.2f} seconds.")
 
 
-
 @ignore
 def run():
     parser = argparse.ArgumentParser(
@@ -171,7 +171,7 @@ def run():
     parser.add_argument("--no-sequence", dest="no_sequence", action="store_true", help="do not output sequence. only for -g option.")
     parser.add_argument('-o', '--output', dest='output', type=argparse.FileType('w'),
                         default=sys.stdout, help="output file name.")
-    
+
     args = parser.parse_args()
     if args.gtf is None and args.location is None:
         parser.error("please set -l or -g option.")

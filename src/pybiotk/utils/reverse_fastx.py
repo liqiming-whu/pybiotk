@@ -14,7 +14,7 @@ def reverse_fastx(filename: str, output: str, outfmt: Literal['fastq', 'fasta'] 
         ostream = OpenFqGzip(output)
     else:
         ostream = open(output, "w") if output != "-" else sys.stdout
-        
+
     for entry in pysam.FastxFile(filename):
         name = entry.name
         sequence = reverse_seq(entry.sequence)
@@ -25,7 +25,7 @@ def reverse_fastx(filename: str, output: str, outfmt: Literal['fastq', 'fasta'] 
         else:
             ostream.write(f">{name}\n{sequence}\n")
     ostream.close()
-    
+
 
 @ignore
 def run():

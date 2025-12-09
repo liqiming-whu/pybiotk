@@ -2,7 +2,6 @@
 import argparse
 import os
 import re
-import sys
 from collections import namedtuple
 from typing import Optional, Sequence, TextIO, Union, Literal
 
@@ -42,6 +41,7 @@ def parse_cutadapt(filename: str):
         ])
     return cutadapt_summary(total, read1_num, read2_num, read1_percent, read2_percent)
 
+
 def parse_fastp(filename: str):
     reads_count = []
     for line in cat(filename) | head(22):
@@ -72,6 +72,7 @@ def parse_bowtie2(filename: str):
 
     return bowtie2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)
 
+
 def parse_hisat2(filename: str):
     lines = [line.strip() for line in cat(filename)]
     input_read_pairs = lines[0].split()[0]
@@ -85,6 +86,7 @@ def parse_hisat2(filename: str):
     ])
 
     return hisat2_summary(input_read_pairs, mapped_read_pairs, alignment_rate)
+
 
 def parse_STAR(filename: str):
     input_read_pairs = None
@@ -117,6 +119,7 @@ def parse_STAR(filename: str):
         "alignment_rate"
     ])
     return star_summary(input_read_pairs, unique_mapped, unique_rate, multiple_mapped, multiple_rate, mapped_read_pairs, alignment_rate)
+
 
 def parse_picards_rmdup(filename: str):
     lines = ""

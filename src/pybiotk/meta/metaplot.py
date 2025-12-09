@@ -74,8 +74,8 @@ def point_metaplot(gene: Dict[str, List[MergedTranscript]],
                    smooth: bool = False,
                    smooth_k: int = 5
                    ):
-    plot_height=7
-    plot_width=11
+    plot_height = 7
+    plot_width = 11
     color_list = ["#3b5076", "#4cb6c4", "#1f9c81",  "#eb9277", "#db5342"]
     plt.rcParams['font.size'] = 8.0
     font_p = FontProperties()
@@ -146,7 +146,7 @@ def point_metaplot(gene: Dict[str, List[MergedTranscript]],
             color_list = ["#3b5076", "#eb9277", "#db5342"]
         if len(color_list) < numlines:
             logging.warning("\nThe given list of colors is too small, "
-                     "at least {} colors are needed\n".format(numlines))
+                            "at least {} colors are needed\n".format(numlines))
             color_list = None
         if color_list is None:
             cmap_plot = plt.get_cmap('jet')
@@ -209,8 +209,8 @@ def body_metaplot(gene: Dict[str, List[MergedTranscript]],
                   plotsem: bool = False,
                   smooth: bool = False,
                   smooth_k: int = 5):
-    plot_height=7
-    plot_width=11
+    plot_height = 7
+    plot_width = 11
     color_list = ["#3b5076", "#4cb6c4", "#1f9c81",  "#eb9277", "#db5342"]
     plt.rcParams['font.size'] = 8.0
     font_p = FontProperties()

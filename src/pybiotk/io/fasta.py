@@ -20,8 +20,8 @@ class FastaFile(pysam.FastaFile):
     def __iter__(self) -> Iterator:
         for reference in self.references:
             yield reference, self[reference]
-            
-    def _stdout(self, reference:str, wrap: bool = True, wrap_len: int = 60):
+
+    def _stdout(self, reference: str, wrap: bool = True, wrap_len: int = 60):
         sys.stdout.write(f">{reference}\n")
         sequence = self[reference]
         if wrap:
@@ -35,7 +35,7 @@ class FastaFile(pysam.FastaFile):
     def stdout(self, referenceList: Optional[Sequence[str]] = None, wrap: bool = True, wrap_len: int = 60):
         if not referenceList:
             referenceList = self.references
-            
+
         if len(referenceList) == 1:
             for reference in self.references:
                 if not re.match(referenceList[0], reference):
@@ -67,7 +67,7 @@ class FastaFile(pysam.FastaFile):
     def dict_fetch(self, reference: str, start: int, end: int, strand: Literal["+", "-"] = "+"):
         assert self.reference_dict is not None
         return self.fetch_use_dict(self.reference_dict, reference, start, end, strand)
-    
+
     def to_fastq(self, path: str = "-"):
         with OpenFqGzip(path) as fq:
             for reference, sequence in self:

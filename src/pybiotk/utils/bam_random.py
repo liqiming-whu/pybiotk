@@ -24,15 +24,15 @@ def main(filename: str = "-", output: str = "-", bam: bool = False, bamsize: Opt
                 bamsize = len(alignment)
         else:
             bamsize = count_bam_size(filename)
-    
+
     index_arr = np.arange(bamsize)
     np.random.shuffle(index_arr)
     select = set(index_arr[:count])
-    
+
     if not alignment:
         alignment = pysam.AlignmentFile(filename)
         header = alignment.header
-        
+
     with pysam.AlignmentFile(output, mode, header=header) as outf:
         for index, segment in enumerate(alignment):
             if index in select:
