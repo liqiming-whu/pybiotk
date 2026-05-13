@@ -8,7 +8,7 @@ import argparse
 import re
 import sys
 import time
-from typing import Sequence, Optional, TextIO, Literal
+from typing import Sequence, Optional, Literal
 
 from pybiotk.io import Openbwn, Openbed
 from pybiotk.utils import logging, ignore
@@ -24,7 +24,7 @@ def main(
     bedfile: Optional[str] = None,
     type: Literal["stats", "values"] = "stats",
     stats: Literal["mean", "max", "min", "sum", "coverage", "std"] = "mean",
-    output: Optional[TextIO] = None
+    output: Optional[str] = None
 ):
     """Fetch signal value from bigwig file.
 
@@ -32,13 +32,13 @@ def main(
         bwfile (str): bigwig files.
         location (str, optional): location file. Defaults to None.
         bedfile (str, optional): bed file. Defaults to None.
-        output (TextIO, optional): output file. Defaults to None.
+        output (str, optional): output file name. Defaults to None.
 
     Raises:
         LocationFormatError: location format error.
     """
     time_start = time.perf_counter()
-    with Openbwn(bwfiles) as bw, output or sys.stdout as out:
+    with Openbwn(bwfiles) as bw, open(output, "w") if output is not None else sys.stdout as out:
         logging.info("read bigwig file ...")
         if bedfile is not None:
             with Openbed(bedfile) as bed:
@@ -76,7 +76,7 @@ def run():
     parser.add_argument('-b', '--bedfile', dest="bedfile", type=str, default=None, help="bed file.")
     parser.add_argument('-t', '--type', dest="type", type=str, default="stats", choices=("stats", "values"), help="output type. [stats|values].")
     parser.add_argument('-s', '--stats', dest="stats", type=str, default="mean", choices=("mean", "max", "min", "sum", "coverage", "std"), help="stats type. [mean|max|min|sum|coverage|std].")
-    parser.add_argument('-o', '--output', dest='output', type=argparse.FileType('w'), default=sys.stdout, help="output file name.")
+    parser.add_argument('-o', '--output', dest='output', type=str, default=None, help="output file name.")
 
     args = parser.parse_args()
     if args.bedfile is None and args.location is None:

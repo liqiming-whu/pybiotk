@@ -59,7 +59,7 @@ def run():
                         help="input tables.")
     parser.add_argument('-o', dest='output', type=str,
                         default="-", help="output file name [stdout]")
-    parser.add_argument('-n', dest="namefile", type=argparse.FileType('r'), default=(None if sys.stdin.isatty() else sys.stdin),
+    parser.add_argument('-n', dest="namefile", type=str, default=(None if sys.stdin.isatty() else "-"),
                         help="whose name is listed in FILE|stdin")
     parser.add_argument('-H', "--noheader", dest="noheader", action="store_true", help="if noheader")
     parser.add_argument('-c', dest="column", type=int, default=0, help="name column")
@@ -67,6 +67,8 @@ def run():
     parser.add_argument('-d', dest="delimiter", type=str, default=None, help="name is separated by delimiter in input tables")
     parser.add_argument('--contains', dest="contains", action="store_true", help="contains one of a substrings listed in FILE|stdin.")
     args = parser.parse_args()
+    if args.namefile == "-":
+        args.namefile = sys.stdin
     main(args.input, args.output, args.namefile, args.noheader, args.column, args.delimiter, args.exclude, args.contains)
 
 

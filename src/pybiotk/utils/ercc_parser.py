@@ -2,16 +2,16 @@
 import argparse
 import os
 import sys
-from typing import Optional, Sequence, TextIO
+from typing import Optional, Sequence
 
 from pybiotk.utils import read_table, ignore
 
 
-def main(input: str = "-", outfa: Optional[TextIO] = None, outgtf: Optional[str] = None, seq_ids: Sequence[str] = None):
+def main(input: str = "-", outfa: Optional[str] = None, outgtf: Optional[str] = None, seq_ids: Sequence[str] = None):
     ercc = read_table(input)
     outgtf = os.devnull if outgtf is None else outgtf
     seq_ids = set(seq_ids) if seq_ids is not None else False
-    with outfa or sys.stdout as fa, open(outgtf, "w") as gtf:
+    with open(outfa, "w") if outfa is not None else sys.stdout as outfa, open(outgtf, "w") as gtf:
         for _, row in ercc.iterrows():
             id = row["ERCC_ID"]
             seq = row["Sequence"]
@@ -30,7 +30,7 @@ def run():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(dest="input", type=str, nargs="?", default=(None if sys.stdin.isatty() else "-"), help="""ERCC table(https://www.thermofisher.com): "ERCC Controls Annotation: ERCC RNA Spike-In Control Mixes (English)". [stdin]""")
-    parser.add_argument('-o', '--outfa', dest='outfa', type=argparse.FileType('w'), default=sys.stdout, help="output fasta.")
+    parser.add_argument('-o', '--outfa', dest='outfa', type=str, default=None, help="output fasta.")
     parser.add_argument('-g', '--outgtf', dest="outgtf", type=str, default=None, help="output gtf.")
     parser.add_argument("-s", "--seq-ids", dest="seq_ids", nargs="+", default=None, help="ERCC ids.")
     args = parser.parse_args()

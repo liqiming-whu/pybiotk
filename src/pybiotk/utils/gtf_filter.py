@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 import argparse
 import sys
-from typing import Sequence, Optional, TextIO
+from typing import Sequence, Optional, TextIO, Union
 
 from pybiotk.io import GtfFile
 from pybiotk.utils import ignore
 from stream import write
 
 
-def main(istream: TextIO,
+def main(filename: Union[TextIO, str],
          features: Optional[Sequence[str]] = None,
          gene_types: Optional[Sequence[str]] = None,
          transcript_types: Optional[Sequence[str]] = None,
-         output: Optional[TextIO] = None,
+         output: Union[str, TextIO] = sys.stdout,
          transcript_ids: Optional[Sequence[str]] = None,
          transcript_names: Optional[Sequence[str]] = None,
          gene_ids: Optional[Sequence[str]] = None,
          gene_names: Optional[Sequence[str]] = None
          ):
-    with GtfFile(istream) as gtf:
+    with GtfFile(filename) as gtf:
         gtf.iter(features=features,
                  gene_types=gene_types,
                  transcript_types=transcript_types,
@@ -34,16 +34,16 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('gtf', nargs='?', type=argparse.FileType('r'),
-                        default=(None if sys.stdin.isatty() else sys.stdin),
+    parser.add_argument('gtf', nargs='?', type=str,
+                        default=(None if sys.stdin.isatty() else "-"),
                         help="gtf file download from Genecode, or a sorted gtf file.")
     parser.add_argument('-f', '--features', dest='features', default=['exon'], nargs="+", help="annotation features.")
     parser.add_argument('-g', '--gene_types', dest='gene_types', nargs="+",
                         default=None, help="choose gene types to filter gtf.")
     parser.add_argument('-t', '--transcript_types', dest='transcript_types', nargs="+",
                         default=None, help="choose transcript types to filter gtf.")
-    parser.add_argument('-o', dest='output', type=argparse.FileType('w'),
-                        default=sys.stdout, help="output file name.")
+    parser.add_argument('-o', dest='output', type=str,
+                        default="-", help="output file name.")
     parser.add_argument('--transcript_ids', dest='transcript_ids', nargs="+",
                         default=None, help="choose transcript ids to filter gtf.")
     parser.add_argument('--transcript_names', dest='transcript_names', nargs="+",
@@ -56,6 +56,10 @@ def run():
     if args.gtf is None:
         parser.print_help()
         sys.exit(1)
+    if args.gtf == "-":
+        args.gtf = sys.stdin
+    if args.output == "-":
+        args.output = sys.stdout
 
     main(args.gtf, args.features, args.gene_types, args.transcript_types, args.output,
          args.transcript_ids, args.transcript_names, args.gene_ids, args.gene_names)

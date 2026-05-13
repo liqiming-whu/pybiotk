@@ -8,7 +8,7 @@ import argparse
 import re
 import sys
 import time
-from typing import Sequence, Optional, TextIO
+from typing import Sequence, Optional
 
 from pybiotk.io import GenomeFile, GtfFile
 from pybiotk.utils import logging, ignore
@@ -32,7 +32,7 @@ def main(
     gene_names: Optional[Sequence[str]] = None,
     wrap: bool = True,
     no_sequence: bool = False,
-    output: Optional[TextIO] = None
+    output: Optional[str] = None
 ):
     """Fetch sequences from genome fasta file.
 
@@ -48,14 +48,14 @@ def main(
         transcript_names (Sequence[str], optional): transcript names. Defaults to None.
         gene_ids (Sequence[str], optional): gene ids. Defaults to None.
         gene_names (Sequence[str], optional): gene names. Defaults to None.
-        output (TextIO, optional): output file. Defaults to None.
+        output (str, optional): output file. Defaults to None.
 
     Returns:
         None
     """
     time_start = time.perf_counter()
     logging.info("loading genome fasta file ...")
-    with GenomeFile(fasta) as genome, output or sys.stdout as out:
+    with GenomeFile(fasta) as genome, open(output, "w") if output is not None else sys.stdout as out:
         logging.info("genome fasta file loaded.")
         if gtf is not None:
             logging.info("loading gtf file ...")
@@ -169,8 +169,8 @@ def run():
                         default=None, help="choose gene names to filter gtf. need -g option.")
     parser.add_argument("--wrap", dest="wrap", action="store_true", help="line-wrapped display.")
     parser.add_argument("--no-sequence", dest="no_sequence", action="store_true", help="do not output sequence. only for -g option.")
-    parser.add_argument('-o', '--output', dest='output', type=argparse.FileType('w'),
-                        default=sys.stdout, help="output file name.")
+    parser.add_argument('-o', '--output', dest='output', type=str,
+                        default=None, help="output file name.")
 
     args = parser.parse_args()
     if args.gtf is None and args.location is None:
