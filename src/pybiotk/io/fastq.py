@@ -74,8 +74,10 @@ class FastqPair:
         self.ptr = 0
         unique = set()
         for entry1, entry2 in zip(self.read1, self.read2):
-            if not entry1.name == entry2.name:
-                raise RuntimeError(f"{entry1.name} != {entry2.name}")
+            read1_name = entry1.name.split("/")[0]
+            read2_name = entry2.name.split("/")[0]
+            if not read1_name == read2_name:
+                raise RuntimeError(f"{read1_name} != {read2_name}")
             self.ptr += 1
             if by == "seq":
                 key = np.int64(hash(entry1.sequence + entry2.sequence))
