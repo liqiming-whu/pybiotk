@@ -11,7 +11,7 @@ import pandas as pd
 from pybiotk.utils import ignore, read_table, write_table, logging
 
 
-def main(table_list, outfile, namefile, noheader, column, delimiter=None, exclude=False, contains=False):
+def main(table_list, outfile, namefile=None, noheader=False, column=0, delimiter=None, exclude=False, contains=False):
     df_list = []
     for table in table_list:
         header = None if noheader else 0
