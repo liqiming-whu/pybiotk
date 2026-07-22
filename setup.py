@@ -19,7 +19,7 @@ ext_modules = [
 
 if __name__ == "__main__":
     try:
-        setup(use_scm_version={"version_scheme": "no-guess-dev", "local_scheme": "no-local-version"},
+        setup(use_scm_version=True,
               ext_modules=cythonize(ext_modules, build_dir="build"),
               scripts=glob("rscripts/*.R") + glob("scripts/*sh"),)
     except:

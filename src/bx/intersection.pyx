@@ -18,13 +18,15 @@ preserves all information about the intervals (unlike bitset projection methods)
 #    handle half-open intervals strictly, to maintain sort order, and to
 #    implement the same interface as the original Intersecter.
 
-#cython: cdivision=True
+# cython: cdivision=True
 
 import operator
 
+cdef extern from "math.h":
+    double ceil(double f)
+    double log(double f)
+
 cdef extern from "stdlib.h":
-    int ceil(float f)
-    float log(float f)
     int RAND_MAX
     int rand()
     int strlen(char *)
@@ -56,7 +58,7 @@ cdef inline int imin2(int a, int b):
     if b < a: return b
     return a
 
-cdef float nlog = -1.0 / log(0.5)
+cdef double nlog = -1.0 / log(0.5)
 
 cdef class IntervalNode:
     """
@@ -85,11 +87,13 @@ cdef class IntervalNode:
         return "IntervalNode(%i, %i)" % (self.start, self.end)
 
     def __cinit__(IntervalNode self, int start, int end, object interval):
+        cdef double uniform
         # Python lacks the binomial distribution, so we convert a
         # uniform into a binomial because it naturally scales with
-        # tree size.  Also, python's uniform is perfect since the
-        # upper limit is not inclusive, which gives us undefined here.
-        self.priority = ceil(nlog * log(-1.0/(1.0 * rand()/RAND_MAX - 1)))
+        # tree size. Keep the value in (0, 1) to avoid log(0) and division
+        # by zero at either endpoint of C's inclusive rand() range.
+        uniform = (rand() + 1.0) / (RAND_MAX + 2.0)
+        self.priority = ceil(nlog * log(1.0 / uniform))
         self.start    = start
         self.end      = end
         self.interval = interval
