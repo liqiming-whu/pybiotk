@@ -1,90 +1,140 @@
-# pybiotk: A python toolkit for bioinformatics analysis
+# pybiotk
 
-## Install
+`pybiotk` is a Python toolkit and command-line collection for common
+bioinformatics data-processing tasks, including FASTA/FASTQ, BAM, BED, GTF,
+BigWig, annotation, and interval operations.
 
-### use PyPi(official)
+## Installation
 
-```
+Install the latest release from PyPI:
+
+```bash
 pip install pybiotk
 ```
 
-**An older version may be installed**
+Install from Gitee:
 
-### or
-
-```
+```bash
 git clone https://gitee.com/liqiming_whu/pybiotk.git
 cd pybiotk
 pip install .
 ```
 
-## Modules
+Install from GitHub:
 
-```
-console_scripts =
-    gtf2bed = pybiotk.convert.gtf2bed:run
-    bed2bedgraph = pybiotk.convert.bed2bedgraph:run
-    fq2fasta = pybiotk.convert.fq2fasta:run
-    fa2fastq = pybiotk.convert.fa2fastq:run
-    bam2fastx = pybiotk.convert.bam2fastx:run
-    bampe_order_by_name = pybiotk.convert.bampe_order_by_name:run
-    bam_random = pybiotk.utils.bam_random:run
-    gtf_filter = pybiotk.utils.gtf_filter:run
-    fasta_filter = pybiotk.utils.fasta_filter:run
-    fastq_uniq = pybiotk.utils.fastq_uniq:run
-    fastq_join = pybiotk.utils.fastq_join:run
-    fastx_rename = pybiotk.utils.fastx_rename:run
-    genomefetcher = pybiotk.utils.genomefetcher:run
-    bigwigfetcher = pybiotk.utils.bigwigfetcher:run
-    reverse_fastx = pybiotk.utils.reverse_fastx:run
-    seq_random = pybiotk.utils.seq_random:run
-    merge_row = pybiotk.utils.merge_row:run
-    read_tables = pybiotk.utils.read_tables:run
-    rmats_filter = pybiotk.utils.rmats_filter:run
-    count_normalize = pybiotk.utils.normalize:run
-    reference_count = pybiotk.utils.reference_count:run
-    pyanno = pybiotk.utils.pyanno:run
-    rna_fragment_size = pybiotk.utils.fragment_size:run
-    merge_subseq = pybiotk.utils.merge_subseq:run
-    subseq_analysis = pybiotk.utils.subseq_analysis:run
-    summary_log = pybiotk.utils.summary_log:run
-    ercc_parser = pybiotk.utils.ercc_parser:run
-    infer_experiment = pybiotk.utils.infer_experiment:run
+```bash
+git clone https://github.com/liqiming-whu/pybiotk.git
+cd pybiotk
+pip install .
 ```
 
-## Usage
+The current release is **1.3.5**. See [CHANGELOG.rst](CHANGELOG.rst) for the
+release notes.
 
-```
-usage: pyanno [-h] -i INPUT [-o OUTPUT] -g GTF [-l {transcript,gene}] [--tss_region TSS_REGION [TSS_REGION ...]] [--tss_region_name TSS_REGION_NAME] [--downstream DOWNSTREAM] [--downstream_name DOWNSTREAM_NAME] [--tss] [--tes] [--start_condon] [--stop_condon] [-s]
-              [--rule {1+-,1-+,2++,2--,1++,1--,2+-,2-+,+-,-+,++,--}] [-p] [--ordered_by_name]
+## FASTQ deduplication
 
-options:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        input file, bam or bed. The file type will be inferred from the filename suffix ['*.bam', '*.bed']. (default: None)
-  -o OUTPUT, --output OUTPUT
-                        output file name. [stdout] (default: -)
-  -g GTF, --gtf GTF     gtf file download from Genecode, or a sorted gtf file. (default: None)
-  -l {transcript,gene}, --level {transcript,gene}
-                        annotation level, transcript or gene. (default: transcript)
-  --tss_region TSS_REGION [TSS_REGION ...]
-                        choose region from tss. (default: [-3000, 0])
-  --tss_region_name TSS_REGION_NAME
-                        tss region name. (default: Upstream)
-  --downstream DOWNSTREAM
-                        downstream length from tes. (default: 3000)
-  --downstream_name DOWNSTREAM_NAME
-                        downstream name. (default: Downstream)
-  --tss                 annotate tss. (default: False)
-  --tes                 annotate tes. (default: False)
-  --start_condon        annotate start condon. (default: False)
-  --stop_condon         annotate stop condon. (default: False)
-  -s, --strand          require same strandedness. (default: False)
-  --rule {1+-,1-+,2++,2--,1++,1--,2+-,2-+,+-,-+,++,--}
-                        how read(s) were stranded during sequencing. only for bam. (default: 1+-,1-+,2++,2--)
-  -p, --pair            annotate fragments instead of reads. (default: False)
-  --ordered_by_name     if input bam is ordered by name, only for pair-end bam. (default: False)
+`fastq_uniq` removes duplicate reads after length filtering. The default
+`digest` mode stores stable 128-bit BLAKE2b digests to reduce memory usage.
+Use `--key-mode exact` when exact, collision-free key comparison is required.
 
+Single-end:
+
+```bash
+fastq_uniq reads.fq.gz -o reads.unique.fq.gz \
+  --key-mode digest --gzip-level 4
 ```
 
+Paired-end:
 
+```bash
+fastq_uniq R1.fq.gz R2.fq.gz \
+  -o R1.unique.fq.gz R2.unique.fq.gz \
+  --key-mode digest --gzip-level 4
+```
+
+Uniqueness can be evaluated by sequence (default), read ID (`--by-id`), or
+full read name (`--by-name`). Paired inputs must have the same number of
+records and matching mate names.
+
+## FASTA/FASTQ renaming
+
+`fastx_rename` uses compact base-36 indexes by default and preserves input
+order. Base 10 and hexadecimal indexes are also available through
+`--index-base`.
+
+Single-end or independently streamed mates:
+
+```bash
+zcat sub1_R1.fq.gz sub2_R1.fq.gz | \
+  fastx_rename -o R1.fq.gz --mode index --gzip-level 4
+
+zcat sub1_R2.fq.gz sub2_R2.fq.gz | \
+  fastx_rename -o R2.fq.gz --mode index --gzip-level 4
+```
+
+For guaranteed matching mate identifiers, use paired-end mode. Input files
+are processed in the order supplied, with one continuous index across lanes:
+
+```bash
+fastx_rename \
+  --read1 sub1_R1.fq.gz sub2_R1.fq.gz \
+  --read2 sub1_R2.fq.gz sub2_R2.fq.gz \
+  --output1 R1.fq.gz --output2 R2.fq.gz \
+  --mode index --index-base 36 --gzip-level 4
+```
+
+Use `--mode preserve` to retain original names and suffix only duplicate
+names. The `index` mode uses names such as `read_1`, without adding `|`.
+
+## Logging API
+
+Library modules can use the centralized standard logging configuration:
+
+```python
+from pybiotk.utils import get_logger
+
+logger = get_logger(__name__)
+logger.info("Processing started")
+```
+
+Command-line applications can enable Rich-formatted stderr output:
+
+```python
+from pybiotk.utils import configure_logging
+
+configure_logging(rich=True, force=True)
+```
+
+The legacy import `from pybiotk.utils import logging` remains supported.
+
+## Commands
+
+Installed console commands include:
+
+- Format conversion: `gtf2bed`, `bed2bedgraph`, `fq2fasta`, `fa2fastq`,
+  `bam2fastx`, `bampe_order_by_name`
+- FASTA/FASTQ processing: `fastq_uniq`, `fastx_rename`, `fastq_join`,
+  `fasta_filter`, `reverse_fastx`, `seq_random`
+- BAM and annotation: `bam_random`, `pyanno`, `infer_experiment`,
+  `rna_fragment_size`, `reference_count`
+- Table and genomic utilities: `read_tables`, `merge_row`, `rmats_filter`,
+  `count_normalize`, `genomefetcher`, `bigwigfetcher`, `summary_log`
+- Transcript and plotting utilities: `merge_transcript`, `metaplot`
+
+Run any command with `--help` for its complete options, for example:
+
+```bash
+fastq_uniq --help
+fastx_rename --help
+pyanno --help
+```
+
+## Building from source
+
+Build an sdist and platform wheel in an isolated environment:
+
+```bash
+pyproject-build
+```
+
+Release versions are derived from Git tags through `setuptools_scm`.
