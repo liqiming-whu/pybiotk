@@ -219,6 +219,28 @@ infer_experiment aligned.bam -g genes.gtf \
 
 ## Additional useful CLI tools
 
+Convert one or more BED files into combined bedGraph coverage:
+
+```bash
+bed2bedgraph input.bed > coverage.bedgraph
+bed2bedgraph lane1.bed.gz lane2.bed.gz --header > coverage.bedgraph
+```
+
+The built-in command accepts unsorted BED input and uses an endpoint sweep
+rather than expanding intervals base by base. For very large BED files that
+are grouped in chromosome order, a compiled bedtools alternative is:
+
+```bash
+bedtools genomecov -i input.bed -bg -g chrom.sizes
+```
+
+Generate `chrom.sizes` from the same reference FASTA used for alignment. The
+script reuses an existing `.fai` index or creates one with `samtools faidx`:
+
+```bash
+scripts/get_chrom_length.sh reference.fa chrom.sizes
+```
+
 Count mapped reads, or paired-end fragments, by reference:
 
 ```bash

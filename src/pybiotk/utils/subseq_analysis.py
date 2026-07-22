@@ -7,8 +7,9 @@ import pysam
 
 
 def main(originfa, path, outdir, more_x="C"):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"overlap file not found: {path}")
+    os.makedirs(outdir, exist_ok=True)
     reads_dict = defaultdict(list)
     a = []
     b = []
@@ -110,7 +111,7 @@ def run():
     parser.add_argument("-r", dest="reads_overlap", type=str, required=True, help="overlaped reads file, create by bowtie and shell scripts.")
     parser.add_argument("--more_x", dest="more_x", type=str, default="C", choices=("A", "T", "G", "C"), help="more_x analysis.")
     args = parser.parse_args()
-    main(args.originfa, args.reads_overlap, args.outdir, args.reads_overlap)
+    main(args.originfa, args.reads_overlap, args.outdir, args.more_x)
 
 
 if __name__ == "__main__":
