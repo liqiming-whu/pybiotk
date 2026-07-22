@@ -6,7 +6,10 @@ from typing import Literal, Union, TextIO, Optional
 import pysam
 
 from pybiotk.io import OpenFqGzip, Bam, BamPE, BamType, check_bam_type
-from pybiotk.utils import logging
+from pybiotk.utils import configure_logging, get_logger
+
+
+logger = get_logger(__name__)
 
 
 def write_recode(fileobj: Union[TextIO, OpenFqGzip], record: pysam.libcfaidx.FastxRecord, outfmt: Literal['fastq', 'fasta']):
@@ -17,7 +20,7 @@ def write_recode(fileobj: Union[TextIO, OpenFqGzip], record: pysam.libcfaidx.Fas
 
 
 def main(filename: str, prefix: str, bamtype: Optional[BamType] = None, outfmt: Literal['fastq', 'fasta'] = "fasta", ordered_by_name: bool = False):
-    logging.info(f"start convert {filename} to {outfmt} ...")
+    logger.info(f"start convert {filename} to {outfmt} ...")
     start = time.perf_counter()
     if bamtype is None:
         bamtype = check_bam_type(filename)
@@ -28,7 +31,7 @@ def main(filename: str, prefix: str, bamtype: Optional[BamType] = None, outfmt: 
         else:
             out = OpenFqGzip(prefix + ".fastq.gz")
         with Bam(filename) as bam:
-            logging.info(f"writing reads to {out.name} ...")
+            logger.info(f"writing reads to {out.name} ...")
             for record in bam.to_fastx_record():
                 write_recode(out, record, outfmt)
         out.close()
@@ -46,14 +49,14 @@ def main(filename: str, prefix: str, bamtype: Optional[BamType] = None, outfmt: 
 
         with BamPE(filename) as bampe:
             bampe.ordered_by_name = ordered_by_name
-            logging.info(f"writing property paired reads to {out_r1.name} {out_r2.name} ...")
+            logger.info(f"writing property paired reads to {out_r1.name} {out_r2.name} ...")
             for record1, record2 in bampe.to_fastx_record_pair():
                 write_recode(out_r1, record1, outfmt)
                 write_recode(out_r2, record2, outfmt)
-            logging.info(f"writing unpaired reads to {unpaired_r1.name} ...")
+            logger.info(f"writing unpaired reads to {unpaired_r1.name} ...")
             for record in bampe.to_fastx_record_unpaired(terminal="read1"):
                 write_recode(unpaired_r1, record, outfmt)
-            logging.info(f"writing unpaired reads to {unpaired_r2.name} ...")
+            logger.info(f"writing unpaired reads to {unpaired_r2.name} ...")
             for record in bampe.to_fastx_record_unpaired(terminal="read2"):
                 write_recode(unpaired_r2, record, outfmt)
         out_r1.close()
@@ -61,10 +64,11 @@ def main(filename: str, prefix: str, bamtype: Optional[BamType] = None, outfmt: 
         unpaired_r1.close()
         unpaired_r2.close()
         end = time.perf_counter()
-        logging.info(f"task finished in {end-start:.2f}s.")
+        logger.info(f"task finished in {end-start:.2f}s.")
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

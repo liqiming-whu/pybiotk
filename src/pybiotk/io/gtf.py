@@ -3,11 +3,14 @@ import re
 from dataclasses import dataclass, field
 from io import TextIOWrapper
 from typing import List, Sequence, Tuple, Dict, Literal, Iterable, Iterator, Optional, Union, TextIO
+from pybiotk.utils import get_logger
 
 from pybiotk.annodb import Transcript
-from pybiotk.utils import logging
 from pybiotk.io.bed import Bed6, Bed12, Intron, GeneInfo, TransInfo
 from stream.pipe import Pipe, sort, drop_while, filter, kgroupby, groupby, apply, window
+
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -139,7 +142,7 @@ def to_TransInfo(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[TransInfo]:
                 trans_gtf.append(gtf)
         if not trans_gtf:
 
-            logging.warning(f"No transcript feature found for gene: {last_gtf.get_attribute('gene_name')}")
+            logger.warning(f"No transcript feature found for gene: {last_gtf.get_attribute('gene_name')}")
         for gtf in trans_gtf:
             trans_info = TransInfo.init_by_gtf(gtf)
             if gene_gtf :
@@ -165,7 +168,7 @@ def to_Bed12(iterable: Iterable[Tuple[GTF, ...]], name: str = "transcript_id") -
                 else:
                     bed.update(gtf)
         if bed is None:
-            logging.warning(f"No exon found for transcript: {last_gtf.get_attribute(name)}")
+            logger.warning(f"No exon found for transcript: {last_gtf.get_attribute(name)}")
             continue
         if cds_exons:
             bed.thickStart = cds_exons[0].start - 1
@@ -209,7 +212,7 @@ def to_Transcript(iterable: Iterable[Tuple[GTF, ...]]) -> Iterator[Transcript]:
                     else:
                         transcript.update(gtf)
             if transcript is None:
-                logging.warning(f"No exon found for transcript: {gtf.get_attribute('transcript_id')}")
+                logger.warning(f"No exon found for transcript: {gtf.get_attribute('transcript_id')}")
                 continue
             if cds_exons:
                 cds_start = cds_exons[0].start - 1

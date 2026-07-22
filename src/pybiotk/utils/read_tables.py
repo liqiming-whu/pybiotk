@@ -8,7 +8,11 @@ import os
 import sys
 
 import pandas as pd
-from pybiotk.utils import ignore, read_table, write_table, logging
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import ignore, read_table, write_table
+
+
+logger = get_logger(__name__)
 
 
 def main(table_list, outfile, namefile=None, noheader=False, column=0, delimiter=None, exclude=False, contains=False):
@@ -20,7 +24,7 @@ def main(table_list, outfile, namefile=None, noheader=False, column=0, delimiter
             try:
                 names = set(j for i in namefile for j in i.split())
             except Exception as e:
-                logging.warning("Failed to load namefile: "+str(e))
+                logger.warning("Failed to load namefile: "+str(e))
                 names = False
             if names:
                 if exclude:
@@ -52,6 +56,7 @@ def main(table_list, outfile, namefile=None, noheader=False, column=0, delimiter
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

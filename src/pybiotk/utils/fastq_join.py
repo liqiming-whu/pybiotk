@@ -9,9 +9,13 @@ import sys
 from typing import Literal
 
 from pybiotk.io import FastqPair, OpenFqGzip
-from pybiotk.utils import logging, reverse_seq
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import reverse_seq
 from pybiotk.utils.reverse_fastx import reverse_fastx
 from stream import mkdir
+
+
+logger = get_logger(__name__)
 
 
 def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
@@ -21,12 +25,12 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
     outdir = os.path.dirname(outprefix)
     if outdir:
         mkdir(outdir)
-    logging.info("start decompressing fastq ...")
+    logger.info("start decompressing fastq ...")
     try:
         subprocess.check_call(f"pigz -p {threads} -d -c {fq1} > {fq1_uncom}", shell=True)
         subprocess.check_call(f"pigz -p {threads} -d -c {fq2} > {fq2_uncom}", shell=True)
     except subprocess.CalledProcessError:
-        logging.warning("An error occurred while executing pigz, use gzip instead.")
+        logger.warning("An error occurred while executing pigz, use gzip instead.")
         subprocess.check_call(f"gzip -d -c {fq1} > {fq1_uncom}", shell=True)
         subprocess.check_call(f"gzip -d -c {fq2} > {fq2_uncom}", shell=True)
 
@@ -34,43 +38,43 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
     un2_uncom = outprefix + ".unmerge_R2.fq"
     join_uncom = outprefix + ".merge.fq"
 
-    logging.info("start join fastq ...")
+    logger.info("start join fastq ...")
     try:
         subprocess.check_call(f"fastq-join {fq1_uncom} {fq2_uncom} -o {un1_uncom} -o {un2_uncom} -o {join_uncom}",
                               shell=True, stdout=sys.stderr, stderr=sys.stderr)
     except subprocess.CalledProcessError:
-        logging.error("An error occurred while executing fastq-join, fastq-join v1.3.1 may not be installed.")
+        logger.error("An error occurred while executing fastq-join, fastq-join v1.3.1 may not be installed.")
         raise
     if os.path.exists(join_uncom):
-        logging.info("join completed, remove decompressed fastq")
+        logger.info("join completed, remove decompressed fastq")
         os.remove(fq1_uncom)
         os.remove(fq2_uncom)
 
-    logging.info("start compressing fastq ...")
+    logger.info("start compressing fastq ...")
     try:
         subprocess.check_call(f"pigz -f -p {threads} {un1_uncom}", shell=True)
         subprocess.check_call(f"pigz -f -p {threads} {un2_uncom}", shell=True)
         subprocess.check_call(f"pigz -f -p {threads} {join_uncom}", shell=True)
     except subprocess.CalledProcessError:
-        logging.warning("An error occurred while executing pigz, use gzip instead.")
+        logger.warning("An error occurred while executing pigz, use gzip instead.")
         subprocess.check_call(f"gzip -f {un1_uncom}", shell=True)
         subprocess.check_call(f"gzip -f {un2_uncom}", shell=True)
         subprocess.check_call(f"gzip -f {join_uncom}", shell=True)
-    logging.info("compressing completed.")
+    logger.info("compressing completed.")
 
     un1 = un1_uncom + ".gz"
     un2 = un2_uncom + ".gz"
     join = join_uncom + ".gz"
 
     if save_as == "read2":
-        logging.info("start to reverse sequence ...")
+        logger.info("start to reverse sequence ...")
         rev_join = join_uncom + ".rev.gz"
         reverse_fastx(join, rev_join)
         os.remove(join)
         os.rename(rev_join, join)
 
     if collapse:
-        logging.info("start collapsing merged and unmerged fastq ...")
+        logger.info("start collapsing merged and unmerged fastq ...")
         un_collapse = outprefix + ".unmerge.fq.gz"
         with OpenFqGzip(un_collapse) as fq, FastqPair(un1, un2) as fp:
             for entry1, entry2 in fp:
@@ -95,10 +99,10 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
         try:
             subprocess.check_call(f"pigz -p {threads} -d -c {join} {un_collapse} | pigz -p {threads} > {merge_collapse}", shell=True)
         except subprocess.CalledProcessError:
-            logging.warning("An error occurred while executing pigz, use gzip instead.")
+            logger.warning("An error occurred while executing pigz, use gzip instead.")
             subprocess.check_call(f"zcat {join} {un_collapse} | gzip > {merge_collapse}", shell=True)
         if os.path.exists(merge_collapse):
-            logging.info("collapsing completed, remove temp fastq files.")
+            logger.info("collapsing completed, remove temp fastq files.")
             os.remove(un1)
             os.remove(un2)
             os.remove(join)
@@ -106,6 +110,7 @@ def fastq_join(fq1: str, fq2: str, outprefix: str, threads: int = 1,
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

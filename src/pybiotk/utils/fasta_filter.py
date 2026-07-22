@@ -4,20 +4,25 @@ import time
 from typing import Sequence
 
 from pybiotk.io import FastaFile
-from pybiotk.utils import logging, ignore
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import ignore
+
+
+logger = get_logger(__name__)
 
 
 def main(filename, chromList: Sequence[str], wrap: bool = True, wrap_len: int = 60):
-    logging.info("reading fasta ....")
+    logger.info("reading fasta ....")
     start = time.perf_counter()
     with FastaFile(filename) as fa:
         fa.stdout(referenceList=chromList, wrap=wrap, wrap_len=wrap_len)
     end = time.perf_counter()
-    logging.info(f"task finished in {end-start:.2f}s.")
+    logger.info(f"task finished in {end-start:.2f}s.")
 
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

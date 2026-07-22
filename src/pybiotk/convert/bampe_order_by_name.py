@@ -2,7 +2,10 @@
 import argparse
 
 from pybiotk.io import BamPE, BamType, BamTypeError, check_bam_type
-from pybiotk.utils import logging
+from pybiotk.utils import configure_logging, get_logger
+
+
+logger = get_logger(__name__)
 
 
 def main(filename: str, output: str, ordered_by_name: bool = False):
@@ -15,10 +18,11 @@ def main(filename: str, output: str, ordered_by_name: bool = False):
         bam.ordered_by_name = ordered_by_name
         bam.to_bam_ordered_by_name(output)
 
-    logging.info(f"output bam have been saved in {output}.")
+    logger.info(f"output bam have been saved in {output}.")
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import importlib
 import importlib.resources
-import logging
 import os
 import re
 import signal
@@ -12,15 +11,11 @@ from functools import wraps
 from io import TextIOWrapper
 from types import ModuleType
 from typing import List, Dict, Sequence, Tuple, Literal, Iterator, Iterable, Optional, Callable, Union, TextIO
+from pybiotk.utils import get_logger
 
 import pandas as pd
 
-from rich.logging import RichHandler
-from rich.console import Console
-
-Handler = RichHandler(console=Console(stderr=True, width=120),
-                      show_time=True, omit_repeated_times=False, show_level=True, markup=True, log_time_format='[%x %a %X]')
-logging.basicConfig(level="INFO", format="%(message)s", handlers=[Handler])
+logger = get_logger(__name__)
 
 
 def reverse_seq(seq: str) -> str:
@@ -269,7 +264,7 @@ def default_mm10_chrom_length_dict() -> Dict[str, int]:
 
 
 def bedtools_sort(path: str):
-    logging.info(f"start to sort {path}...")
+    logger.info(f"start to sort {path}...")
     tmp_path = path + ".tmp"
     os.rename(path, tmp_path)
     cmd = f"bedtools sort -i {tmp_path} > {path}"

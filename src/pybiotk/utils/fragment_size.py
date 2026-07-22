@@ -7,7 +7,11 @@ from collections import Counter
 
 from pybiotk.intervals import merge_intervals
 from pybiotk.io import Bam, BamPE, BamType, check_bam_type
-from pybiotk.utils import logging, blocks_len, intervals_is_overlap, ignore
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import blocks_len, intervals_is_overlap, ignore
+
+
+logger = get_logger(__name__)
 
 
 def main(filename: str, output: str, ordered_by_name: bool = False):
@@ -16,7 +20,7 @@ def main(filename: str, output: str, ordered_by_name: bool = False):
     length = []
     sys.stdout.write("read_name\treference_name\tblocks\tlength\n")
     if bamtype is BamType.SE:
-        logging.info("SingleEnd mode ...")
+        logger.info("SingleEnd mode ...")
         with Bam(filename) as bam:
             for read in bam.iter_mapped():
                 blocks = read.get_blocks()
@@ -24,7 +28,7 @@ def main(filename: str, output: str, ordered_by_name: bool = False):
                 length.append(read_len)
                 sys.stdout.write(f"{read.query_name}\t{read.reference_name}\t{blocks}\t{read_len}\n")
     elif bamtype is BamType.PE:
-        logging.info("PairEnd mode ...")
+        logger.info("PairEnd mode ...")
         with BamPE(filename) as bampe:
             bampe.ordered_by_name = ordered_by_name
             for read1, read2 in bampe.iter_pair(properly_paired=False):
@@ -33,7 +37,7 @@ def main(filename: str, output: str, ordered_by_name: bool = False):
                         read1_blocks = read1.get_blocks()
                         read2_blocks = read2.get_blocks()
                         if not intervals_is_overlap(read1_blocks, read2_blocks):
-                            logging.warning(f"{read1.query_name} read1 and read2 not overlap, use read1_len + read2_len")
+                            logger.warning(f"{read1.query_name} read1 and read2 not overlap, use read1_len + read2_len")
                         merge_blocks = merge_intervals(read1_blocks+read2_blocks)
                         fragment_len = blocks_len(merge_blocks)
                         length.append(fragment_len)
@@ -66,11 +70,12 @@ def main(filename: str, output: str, ordered_by_name: bool = False):
             f.write(f"{length}\t{count}\n")
 
     end = time.perf_counter()
-    logging.info(f"task finished in {end-start:.2f}s.")
+    logger.info(f"task finished in {end-start:.2f}s.")
 
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

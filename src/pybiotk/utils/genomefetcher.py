@@ -11,7 +11,11 @@ import time
 from typing import Sequence, Optional
 
 from pybiotk.io import GenomeFile, GtfFile
-from pybiotk.utils import logging, ignore
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import ignore
+
+
+logger = get_logger(__name__)
 
 
 class LocationFormatError(Exception):
@@ -54,13 +58,13 @@ def main(
         None
     """
     time_start = time.perf_counter()
-    logging.info("loading genome fasta file ...")
+    logger.info("loading genome fasta file ...")
     with GenomeFile(fasta) as genome, open(output, "w") if output is not None else sys.stdout as out:
-        logging.info("genome fasta file loaded.")
+        logger.info("genome fasta file loaded.")
         if gtf is not None:
-            logging.info("loading gtf file ...")
+            logger.info("loading gtf file ...")
             with GtfFile(gtf) as gtf:
-                logging.info("gtf file loaded.")
+                logger.info("gtf file loaded.")
                 for transcript in gtf.to_transcript(
                     gene_types=gene_types,
                     transcript_types=transcript_types,
@@ -103,7 +107,7 @@ def main(
                         raise ValueError(f"unknown regions: {regions}")
                     if not blocks:
                         if transcript_ids is not None or transcript_names is not None or gene_ids is not None or gene_names is not None:
-                            logging.warning(f"no {desc} found for {transcript.id}_{transcript.gene_name}_{transcript.chrom}:{transcript.start}-{transcript.end}({transcript.strand})")
+                            logger.warning(f"no {desc} found for {transcript.id}_{transcript.gene_name}_{transcript.chrom}:{transcript.start}-{transcript.end}({transcript.strand})")
                         continue
                     if separate and len(blocks) > 1:
                         if transcript.strand == "-":
@@ -123,7 +127,7 @@ def main(
                         else:
                             sequence = genome.fetch_blocks(transcript.chrom, blocks, transcript.strand)
                             if wrap:
-                                sequence = "\n".join([sequence[i:i+60] for i in range(0, len(sequence), 60)])                        
+                                sequence = "\n".join([sequence[i:i+60] for i in range(0, len(sequence), 60)])
                             out.write(f">{transcript.id}_{transcript.gene_name}_{transcript.chrom}:{intervals_desc}({transcript.strand})_{desc}\n{sequence}\n")
         elif location is not None:
             location_pattern = re.compile(r"(.+):(\d+)-(\d+)\(([+-])\)")
@@ -140,11 +144,12 @@ def main(
             for reference, sequence in genome:
                 out.write(f">{reference}\n{sequence}\n")
     time_end = time.perf_counter()
-    logging.info(f"task finished in {time_end-time_start:.2f} seconds.")
+    logger.info(f"task finished in {time_end-time_start:.2f} seconds.")
 
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -176,7 +181,7 @@ def run():
     if args.gtf is None and args.location is None:
         parser.error("please set -l or -g option.")
     if args.gtf is not None and args.location is not None:
-        logging.warning("both -l and -g are set, -l will be ignored.")
+        logger.warning("both -l and -g are set, -l will be ignored.")
     main(**vars(args))
 
 

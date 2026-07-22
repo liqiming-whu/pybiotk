@@ -10,8 +10,12 @@ from pybiotk.intervals import GRangeTree, merge_intervals
 from pybiotk.io import (
     GtfFile, Openbed, BamType, Bam, BamPE, check_bam_type
 )
-from pybiotk.utils import logging, infer_fragment_strand, intervals_is_overlap
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import infer_fragment_strand, intervals_is_overlap
 from stream import groupby
+
+
+logger = get_logger(__name__)
 
 
 def load_grangetree(
@@ -23,7 +27,7 @@ def load_grangetree(
 ) -> GRangeTree:
 
     start = time.perf_counter()
-    logging.info(f"start to load {level} grangetree ...")
+    logger.info(f"start to load {level} grangetree ...")
     grangetree = GRangeTree(strand)
     with GtfFile(filename) as gtf:
         i = 0
@@ -48,7 +52,7 @@ def load_grangetree(
                     sys.stderr.write(f"\rload {i:6} {level}s.")
         sys.stderr.write(f"\rload {i:6} {level}s.\n")
     end = time.perf_counter()
-    logging.info(f"grangetree load completed in {end-start}s.")
+    logger.info(f"grangetree load completed in {end-start}s.")
     return grangetree
 
 
@@ -179,19 +183,20 @@ def main(
     with ostream as annofile:
         if filetype == ".bam":
             annofile.write("seqname\tchrom\tstart\tend\tblocks\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneStrand\tgeneName\tid\tgeneType\n")
-            logging.info("start annotating, use bam mode ...")
+            logger.info("start annotating, use bam mode ...")
             annobam(filename, annofile, grangetree, annofragments, tss_region, tss_region_name, downstream, downstream_name, rule, ordered_by_name, tss, tes, start_condon, stop_condon)
         elif filetype.startswith(".bed"):
             annofile.write("seqname\tchrom\tstart\tend\tstrand\tannotation\tgeneStart\tgeneEnd\tgeneStrand\tgeneName\tid\tgeneType\n")
-            logging.info("start annotating, use bed mode ...")
+            logger.info("start annotating, use bed mode ...")
             annobed(filename, annofile, grangetree, tss_region, tss_region_name, downstream, downstream_name, tss, tes, start_condon, stop_condon)
         else:
             raise RuntimeError(f"Unable to infer file type as bam or bed from filename: {filename}.")
     end = time.perf_counter()
-    logging.info(f"task completed in {end-start:.2f}s, annofile saved in {outfilename}")
+    logger.info(f"task completed in {end-start:.2f}s, annofile saved in {outfilename}")
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

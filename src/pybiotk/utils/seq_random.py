@@ -5,7 +5,11 @@ import sys
 import time
 
 from pybiotk.io import GenomeFile
-from pybiotk.utils import logging, ignore
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import ignore
+
+
+logger = get_logger(__name__)
 
 
 def parse_args():
@@ -32,44 +36,45 @@ def main():
     regenerate = False
     if not os.path.exists(faindex):
         regenerate = True
-        logging.info("Fasta index file is not exist, generating ...")
+        logger.info("Fasta index file is not exist, generating ...")
     else:
-        logging.info(f"Fasta index file {faindex} found.")
+        logger.info(f"Fasta index file {faindex} found.")
     index_start = time.perf_counter()
     genome = GenomeFile(args.genome)
     index_end = time.perf_counter()
     if regenerate:
-        logging.info(f"File {faindex} generated in {index_end-index_start:.2f}s.")
+        logger.info(f"File {faindex} generated in {index_end-index_start:.2f}s.")
     genome.random_on_chroms = args.random_on
 
     if args.load:
         load_start = time.perf_counter()
-        logging.info("Load genome into dict ...")
+        logger.info("Load genome into dict ...")
         genome.load_into_dict()
         load_end = time.perf_counter()
-        logging.info(f"Load completed in {load_end-load_start:.2f}s.")
+        logger.info(f"Load completed in {load_end-load_start:.2f}s.")
 
     fastafile = args.prefix + ".fa"
     bed_file = args.prefix + ".bed"
     size = args.size
-    logging.info("Generating random sequence ...")
+    logger.info("Generating random sequence ...")
     start = time.perf_counter()
     with open(fastafile, "w") as fa, open(bed_file, "w", encoding="utf-8") as bed:
         for i in range(size):
             region, seq = genome.random(args.length, args.random_on)
             fa.write(f">{region}\n{seq}\n")
-            bed.write(f"{region.chrom}\t{region.start}\t{region.end}\t{i+1}\t.\t{region.strand}\n")            
+            bed.write(f"{region.chrom}\t{region.start}\t{region.end}\t{i+1}\t.\t{region.strand}\n")
             width = len(str(size))
             sys.stderr.write(f"\r{i+1:{width}}/{size}\t\t\t\t{(i+1)*100/size:.2f}%")
     sys.stderr.write("\n")
     genome.close()
     end = time.perf_counter()
-    logging.info(f"{size} random reads generated in {end-start:.2f}s.")
-    logging.info(f"Datasets saved in {fastafile}, {bed_file}.")
+    logger.info(f"{size} random reads generated in {end-start:.2f}s.")
+    logger.info(f"Datasets saved in {fastafile}, {bed_file}.")
 
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     main()
 
 

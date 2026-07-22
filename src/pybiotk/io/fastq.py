@@ -2,6 +2,7 @@
 import gzip
 import sys
 from collections import defaultdict
+from itertools import zip_longest
 from typing import Iterator, Literal, Optional, Tuple
 
 import numpy as np
@@ -23,16 +24,18 @@ class FastxFile(pysam.FastxFile):
                 fq.write_fastx_record(entry)
 
     def uniq(self, by: Literal["id", "name", "seq"] = "seq") -> Iterator[pysam.libcfaidx.FastxRecord]:
+        if by not in {"id", "name", "seq"}:
+            raise ValueError(f"unsupported uniqueness key: {by}")
         self.ptr = 0
         unique = set()
         for entry in self:
             self.ptr += 1
             if by == "seq":
-                key = np.int64(hash(entry.sequence))
+                key = entry.sequence
             elif by == "id":
-                key = np.int64(hash(entry.name))
+                key = entry.name
             else:
-                key = np.int64(hash(entry.name + entry.comment))
+                key = (entry.name, entry.comment)
             if key not in unique:
                 unique.add(key)
                 yield entry
@@ -67,24 +70,29 @@ class FastqPair:
         self.ptr: Optional[int] = None
 
     def __iter__(self) -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
-        for entry1, entry2 in zip(self.read1, self.read2):
+        sentinel = object()
+        for entry1, entry2 in zip_longest(self.read1, self.read2, fillvalue=sentinel):
+            if entry1 is sentinel or entry2 is sentinel:
+                raise RuntimeError("paired FASTQ files contain different numbers of reads")
+            read1_name = entry1.name[:-2] if entry1.name.endswith("/1") else entry1.name
+            read2_name = entry2.name[:-2] if entry2.name.endswith("/2") else entry2.name
+            if read1_name != read2_name:
+                raise RuntimeError(f"unmatched read names: {entry1.name} != {entry2.name}")
             yield entry1, entry2
 
     def uniq(self, by: Literal["id", "name", "seq"] = "seq") -> Iterator[Tuple[pysam.libcfaidx.FastxRecord, ...]]:
+        if by not in {"id", "name", "seq"}:
+            raise ValueError(f"unsupported uniqueness key: {by}")
         self.ptr = 0
         unique = set()
-        for entry1, entry2 in zip(self.read1, self.read2):
-            read1_name = entry1.name.split("/")[0]
-            read2_name = entry2.name.split("/")[0]
-            if not read1_name == read2_name:
-                raise RuntimeError(f"{read1_name} != {read2_name}")
+        for entry1, entry2 in self:
             self.ptr += 1
             if by == "seq":
-                key = np.int64(hash(entry1.sequence + entry2.sequence))
+                key = (entry1.sequence, entry2.sequence)
             elif by == "id":
-                key = np.int64(hash(entry1.name + entry2.name))
+                key = (entry1.name, entry2.name)
             else:
-                key = np.int64(hash(entry1.name + entry1.comment + entry2.name + entry2.comment))
+                key = (entry1.name, entry1.comment, entry2.name, entry2.comment)
             if key not in unique:
                 unique.add(key)
                 yield entry1, entry2
@@ -101,7 +109,7 @@ class FastqPair:
 
 
 class OpenFqGzip:
-    def __init__(self, filename, mode="wb", compresslevel=9, encoding=None, errors=None, newline=None):
+    def __init__(self, filename, mode="wb", compresslevel=4, encoding=None, errors=None, newline=None):
         self.filename = filename
         self.mode = mode
         self.compresslevel = compresslevel

@@ -21,7 +21,7 @@ experiment is:
      read mapped to '-' strand indicates parental gene on '-' strand
   ii) +-,-+
      read mapped to '+' strand indicates parental gene on '-' strand
-     read mapped to '-' strand indicates parental gene on '+' strand		
+     read mapped to '-' strand indicates parental gene on '+' strand
 
  NOTE:
    You don't need to know the RNA sequencing protocol before mapping your reads to the reference
@@ -36,7 +36,10 @@ import collections
 
 from pybiotk.io import GtfFile, Bam
 from pybiotk.bx.intersection import IntervalTree
-from pybiotk.utils import logging
+from pybiotk.utils import configure_logging, get_logger
+
+
+logger = get_logger(__name__)
 
 
 def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_strandness = None, outbamfile = os.devnull):
@@ -54,7 +57,7 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
     s_strandness = collections.defaultdict(int)
     # load reference gene model
     gene_ranges = {}
-    logging.info("Reading reference " + gtf_file + ' ...')
+    logger.info("Reading reference " + gtf_file + ' ...')
     try:
         for bed in GtfFile(gtf_file).to_bed12():
             chrom = bed.chrom
@@ -75,10 +78,10 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
                 gene_ranges[chrom] = IntervalTree()
             gene_ranges[chrom].add(start, end, strand)
     assert gene_ranges
-    logging.info("Done!")
+    logger.info("Done!")
 
     # read SAM/BAM file
-    logging.info("Loading SAM/BAM file ... ")
+    logger.info("Loading SAM/BAM file ... ")
     for aligned_read in sam:
         if aligned_read.is_qcfail:              # skip low quanlity
             continue
@@ -109,7 +112,7 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
                     continue
                 strand_from_gene = ':'.join(tmp)
                 strandness = read_id + map_strand + strand_from_gene
-                p_strandness[strandness] += 1        
+                p_strandness[strandness] += 1
                 count += 1
         else:
             if aligned_read.is_reverse:
@@ -136,11 +139,11 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
                 outsam.write(aligned_read)
 
     outsam.close()
-    logging.info("Finished")
+    logger.info("Finished")
     if filter_strandness is None:
-        logging.info(f"Total {count} usable reads were sampled")
+        logger.info(f"Total {count} usable reads were sampled")
     else:
-        logging.info("filter mode, all reads processed")
+        logger.info("filter mode, all reads processed")
 
     protocol = "unknown"
     strandness = None
@@ -180,6 +183,7 @@ def configure_experiment(samfile, gtf_file, sample_size, q_cut = 30, filter_stra
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
        description=__doc__,
        formatter_class=argparse.ArgumentDefaultsHelpFormatter)

@@ -18,9 +18,12 @@ from typing import List, Literal, Dict, Optional
 from stream import count
 from pybiotk.io import Openbed
 from pybiotk.annodb import MergedTranscript
-from pybiotk.utils import logging
+from pybiotk.utils import configure_logging, get_logger
 from pybiotk.meta.task import scale_regions_task, reference_point_task
 from pybiotk.meta.merge_transcript import load_gene
+
+
+logger = get_logger(__name__)
 
 
 def bed2merge_transcript(bedpath: str) -> Dict[str, List[MergedTranscript]]:
@@ -104,7 +107,7 @@ def point_metaplot(gene: Dict[str, List[MergedTranscript]],
         if numlines == 3:
             color_list = ["#3b5076", "#eb9277", "#db5342"]
         if len(color_list) < numlines:
-            logging.warning("\nThe given list of colors is too small, "
+            logger.warning("\nThe given list of colors is too small, "
                      "at least {} colors are needed\n".format(numlines))
             color_list = None
         if color_list is None:
@@ -145,7 +148,7 @@ def point_metaplot(gene: Dict[str, List[MergedTranscript]],
         if numlines == 3:
             color_list = ["#3b5076", "#eb9277", "#db5342"]
         if len(color_list) < numlines:
-            logging.warning("\nThe given list of colors is too small, "
+            logger.warning("\nThe given list of colors is too small, "
                             "at least {} colors are needed\n".format(numlines))
             color_list = None
         if color_list is None:
@@ -279,7 +282,7 @@ def body_metaplot(gene: Dict[str, List[MergedTranscript]],
         if numlines == 3:
             color_list = ["#3b5076", "#eb9277", "#db5342"]
         if len(color_list) < numlines:
-            logging.warning("\nThe given list of colors is too small, "
+            logger.warning("\nThe given list of colors is too small, "
                      "at least {} colors are needed\n".format(numlines))
             color_list = None
         if color_list is None:
@@ -368,6 +371,7 @@ def parse_args():
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = parse_args()
     args = parser.parse_args()
     start = time.perf_counter()
@@ -380,12 +384,12 @@ def run():
             gene = load_gene(args.load_pickle)
         outfig = args.output
         outnp = os.path.splitext(outfig)[0] + ".np"
-        logging.info("choose scale_regions mode.")
-        logging.info("start to calculte np matrix...")
+        logger.info("choose scale_regions mode.")
+        logger.info("start to calculte np matrix...")
         scale_regions_task(outnp, gene, args.fwd, args.rev, args.upStream, args.downStream, args.length, args.bins)
-        logging.info("start to plot gene body...")
+        logger.info("start to plot gene body...")
         body_metaplot(gene, outnp, outfig, args.fwd, args.group, args.labels, args.upStream, args.downStream, args.length, args.bins, args.ylab, args.sem, args.smooth, args.smooth_k)
-        logging.info(f"figure saved in {outfig}.")
+        logger.info(f"figure saved in {outfig}.")
     elif args.subparser_name == "reference-point":
         if args.reference is None and args.load_pickle is None:
             args = parser.parse_args(['-h'])
@@ -395,15 +399,15 @@ def run():
             gene = load_gene(args.load_pickle)
         outfig = args.output
         outnp = os.path.splitext(outfig)[0] + ".np"
-        logging.info("choose reference-point mode.")
-        logging.info("start to calculte np matrix...")
+        logger.info("choose reference-point mode.")
+        logger.info("start to calculte np matrix...")
         reference_point_task(outnp, gene, args.fwd, args.rev, args.loci, args.method, args.upStream, args.downStream, args.bins)
-        logging.info(f"start to plot {args.loci} {args.method} ...")
+        logger.info(f"start to plot {args.loci} {args.method} ...")
         point_metaplot(gene, outnp, outfig, args.fwd, args.group, args.labels, args.loci, args.method, args.upStream, args.downStream, args.bins, args.ylab, args.sem, args.smooth, args.smooth_k)
     else:
         args = parser.parse_args(["-h"])
     end = time.perf_counter()
-    logging.info(f"task finished in {end-start:.2f}s.")
+    logger.info(f"task finished in {end-start:.2f}s.")
 
 
 if __name__ == '__main__':

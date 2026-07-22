@@ -11,7 +11,11 @@ import time
 from typing import Sequence, Optional, Literal
 
 from pybiotk.io import Openbwn, Openbed
-from pybiotk.utils import logging, ignore
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import ignore
+
+
+logger = get_logger(__name__)
 
 
 class LocationFormatError(Exception):
@@ -39,7 +43,7 @@ def main(
     """
     time_start = time.perf_counter()
     with Openbwn(bwfiles) as bw, open(output, "w") if output is not None else sys.stdout as out:
-        logging.info("read bigwig file ...")
+        logger.info("read bigwig file ...")
         if bedfile is not None:
             with Openbed(bedfile) as bed:
                 for i in bed:
@@ -63,11 +67,12 @@ def main(
                 res_str = "\t".join([str(x) for x in res])
                 out.write(f"{chrom}\t{start}\t{end}\t{strand}\t{res_str}\n")
     time_end = time.perf_counter()
-    logging.info(f"task finished in {time_end-time_start:.2f}s.")
+    logger.info(f"task finished in {time_end-time_start:.2f}s.")
 
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -82,7 +87,7 @@ def run():
     if args.bedfile is None and args.location is None:
         parser.error("please set -l or -b option.")
     if args.bedfile is not None and args.location is not None:
-        logging.warning("both -l and -b are set, -l will be ignored.")
+        logger.warning("both -l and -b are set, -l will be ignored.")
     main(**vars(args))
 
 

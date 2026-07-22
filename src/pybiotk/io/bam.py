@@ -16,8 +16,11 @@ from typing import (
 )
 
 import pysam
+from pybiotk.utils import get_logger
 
-from pybiotk.utils import logging
+
+
+logger = get_logger(__name__)
 
 
 class BamType(Enum):
@@ -26,12 +29,12 @@ class BamType(Enum):
 
 
 def check_bam_type(filename: str) -> BamType:
-    logging.info(f"checking bam type: {filename} ...")
+    logger.info(f"checking bam type: {filename} ...")
     with pysam.AlignmentFile(filename) as bam:
         try:
             read = next(bam)
         except StopIteration:
-            logging.warning(f"empty bam file: {filename}")
+            logger.warning(f"empty bam file: {filename}")
             return None
         if read.is_read1 or read.is_read2:
             bamtype = BamType.PE
@@ -43,7 +46,7 @@ def check_bam_type(filename: str) -> BamType:
 
 def count_bam_size(filename: str, read_callback: Union[str, Callable[[pysam.AlignedSegment], bool]] = "all") -> int:
     """
-    read_callback (string or function) 
+    read_callback (string or function)
     select a call-back to ignore reads when counting. It can be either a string with the following values:
         all: skip reads in which any of the following flags are set: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
         nofilter: uses every single read
@@ -152,7 +155,7 @@ class BamPE(Bam):
 
     def to_dict(self):
         self.ptr = 0
-        logging.warning("saving bam to dict, make sure you have enough memory...")
+        logger.warning("saving bam to dict, make sure you have enough memory...")
         start = time.perf_counter()
         for read in self.iter(secondary=False, supplementary=False):
             self.ptr += 1
@@ -166,11 +169,11 @@ class BamPE(Bam):
             else:
                 raise BamTypeError(f"{self.filename.decode('utf-8')} seems like a single end bam.")
         end = time.perf_counter()
-        logging.info(f"{len(self.query_names)} reads have been saved in {end-start:.2f}s.")
+        logger.info(f"{len(self.query_names)} reads have been saved in {end-start:.2f}s.")
 
     def iter_pair(self, properly_paired=False, onlymapped=True, secondary=False, supplementary=False) -> Iterator[Tuple[pysam.AlignedSegment, ...]]:
         if self.ordered_by_name:
-            logging.info(f"{self.filename} is ordered by queryname, use io iter mode ...")
+            logger.info(f"{self.filename} is ordered by queryname, use io iter mode ...")
             d = deque(maxlen=2)
             for read in self.iter(secondary=secondary, supplementary=supplementary, onlymapped=onlymapped):
                 d.append(read)
@@ -208,7 +211,7 @@ class BamPE(Bam):
                     else:
                         raise BamTypeError(f"{d[-1]} in {self.filename} is neither read1 nor read2.")
         else:
-            logging.info(f"{self.filename} is not ordered by queryname, use dict iter mode ...")
+            logger.info(f"{self.filename} is not ordered by queryname, use dict iter mode ...")
             if not self.query_names:
                 self.to_dict()
             for query_name in list(self.query_names):

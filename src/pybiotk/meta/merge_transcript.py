@@ -4,7 +4,11 @@ import time
 from typing import Optional, Dict, List, Sequence
 from pybiotk.io import GtfFile
 from pybiotk.annodb import MergedTranscript, merge_transcripts_groupby_strand
-from pybiotk.utils import load_chrom_length_dict, default_hg38_chrom_length_dict, default_mm10_chrom_length_dict, logging
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import load_chrom_length_dict, default_hg38_chrom_length_dict, default_mm10_chrom_length_dict
+
+
+logger = get_logger(__name__)
 
 
 def merge_transcripts(gtfpath: str,
@@ -26,7 +30,7 @@ def merge_transcripts(gtfpath: str,
     else:
         chrom_length_dict = None
     start = time.perf_counter()
-    logging.info("start to merge transcripts...")
+    logger.info("start to merge transcripts...")
     with GtfFile(gtfpath) as gtf:
         merged_transcripts = merge_transcripts_groupby_strand(
             gtf,
@@ -37,8 +41,8 @@ def merge_transcripts(gtfpath: str,
             remove_strand_overlap=remove_strand_overlap
             )
     end = time.perf_counter()
-    logging.info(f"saved {len(merged_transcripts['+']) + len(merged_transcripts['-'])} merged transcripts.")
-    logging.info(f"task finished in {end-start:.2f}s.")
+    logger.info(f"saved {len(merged_transcripts['+']) + len(merged_transcripts['-'])} merged transcripts.")
+    logger.info(f"task finished in {end-start:.2f}s.")
     if dump is not None:
         with open(dump, "wb") as f:
             pickle.dump(merged_transcripts, f)
@@ -52,13 +56,14 @@ def load_gene(picklefile):
 
 
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-g", dest="gtf", type=str, required=True, help="sorted gtf file.")
     parser.add_argument("-b", dest="bed", type=str, default=None, help="output merged bed file.")
     parser.add_argument("-p", dest="pickle", type=str, default=None, help="output pickle dump file.")
-    parser.add_argument("--escape_gene_types", dest="escape_gene_types", nargs="+", type=str, 
+    parser.add_argument("--escape_gene_types", dest="escape_gene_types", nargs="+", type=str,
                         default=[], help="escape gene_types.")
     parser.add_argument("--escape_gene_name_startswith", dest="escape_gene_name_startswith", nargs="+",
                         type=str, default=[], help="escape gene_name startswith.")

@@ -8,7 +8,11 @@ import numpy as np
 import pysam
 
 from pybiotk.io import count_bam_size
-from pybiotk.utils import logging, ignore
+from pybiotk.utils import configure_logging, get_logger
+from pybiotk.utils import ignore
+
+
+logger = get_logger(__name__)
 
 
 def main(filename: str = "-", output: str = "-", bam: bool = False, bamsize: Optional[int] = None, count: int = 10000):
@@ -16,7 +20,7 @@ def main(filename: str = "-", output: str = "-", bam: bool = False, bamsize: Opt
     alignment = []
     header = None
     if bamsize is None:
-        logging.info("bamsize is unknown, it will take some time and memory to calculate ...")
+        logger.info("bamsize is unknown, it will take some time and memory to calculate ...")
         if filename == "-":
             with pysam.AlignmentFile(filename) as alignmentfile:
                 header = alignmentfile.header
@@ -41,6 +45,7 @@ def main(filename: str = "-", output: str = "-", bam: bool = False, bamsize: Opt
 
 @ignore
 def run():
+    configure_logging(rich=True, force=True)
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -58,7 +63,7 @@ def run():
     try:
         main(args.filename, args.file, args.bam, args.bamsize, args.count)
     except ValueError:
-        logging.error("An error occurs, input BAM file must have a header, use '-h' option when using samtools view.")
+        logger.error("An error occurs, input BAM file must have a header, use '-h' option when using samtools view.")
         raise
 
 
