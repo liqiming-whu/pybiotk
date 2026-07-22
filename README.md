@@ -86,6 +86,154 @@ fastx_rename \
 Use `--mode preserve` to retain original names and suffix only duplicate
 names. The `index` mode uses names such as `read_1`, without adding `|`.
 
+## Genomic annotation with `pyanno`
+
+`pyanno` annotates BAM alignments or BED intervals against a GTF gene model.
+The input type is inferred from the `.bam` or `.bed*` filename suffix. Output
+is a tab-separated table containing the input coordinates, annotation class,
+gene coordinates, gene name, gene or transcript ID, and gene type.
+
+Annotate a BAM at transcript level:
+
+```bash
+pyanno -i aligned.bam -g genes.gtf -o aligned.annotation.tsv
+```
+
+Annotate paired-end fragments from a name-sorted BAM with the common
+first-strand RNA-seq rule:
+
+```bash
+pyanno -i aligned.name_sorted.bam -g genes.gtf \
+  -o fragments.annotation.tsv \
+  --level gene --pair --ordered_by_name --strand \
+  --rule '1+-,1-+,2++,2--'
+```
+
+Annotate stranded BED intervals and customize the regulatory regions:
+
+```bash
+pyanno -i regions.bed6 -g genes.gtf -o regions.annotation.tsv \
+  --strand --tss_region -3000 0 --downstream 3000 \
+  --tss --tes --start_condon --stop_condon
+```
+
+Important options:
+
+- `--level transcript|gene` selects the annotation level.
+- `--strand` requires compatible feature and read/interval strands.
+- `--rule` describes how mapped BAM reads encode the originating RNA strand.
+- `--pair` annotates paired-end fragments rather than individual alignments.
+- `--ordered_by_name` enables streaming pair iteration for a name-sorted BAM.
+- `--tss_region START END` and `--downstream LENGTH` control regulatory
+  annotation windows.
+
+## GTF conversion with `gtf2bed`
+
+`gtf2bed` converts a GTF file into BED12 transcripts, BED6 features, introns,
+or gene/transcript information tables. It can also filter records by gene
+type, transcript type, IDs, or names.
+
+Create transcript BED12 using transcript IDs as names:
+
+```bash
+gtf2bed genes.gtf --outfmt bed12 --name transcript_id \
+  -o transcripts.bed12
+```
+
+Create a gene-level BED6 file using gene names:
+
+```bash
+gtf2bed genes.gtf --outfmt bed6 --feature gene --name gene_name \
+  -o genes.bed6
+```
+
+Extract introns from protein-coding transcripts:
+
+```bash
+gtf2bed genes.gtf --outfmt intron --name transcript_id \
+  --transcript_types protein_coding -o introns.bed6
+```
+
+The supported output formats are `bed12`, `bed6`, `intron`, `gene_info`, and
+`trans_info`. GTF input and converted output can also be streamed:
+
+```bash
+zcat genes.gtf.gz | gtf2bed --outfmt bed12 > transcripts.bed12
+```
+
+## BAM to FASTA/FASTQ with `bam2fastx`
+
+`bam2fastx` detects single-end or paired-end BAM input and reconstructs FASTA
+or compressed FASTQ records:
+
+```bash
+bam2fastx aligned.bam -o recovered --outfmt fastq
+```
+
+For paired-end input, it writes paired and unpaired outputs separately, such
+as `recovered.R1.fq.gz`, `recovered.R2.fq.gz`, and the corresponding
+`unpaired` files. Use name-sorted input for streaming paired reads:
+
+```bash
+bam2fastx aligned.name_sorted.bam -o recovered --bamtype PE \
+  --outfmt fastq --ordered_by_name
+```
+
+## Sequence extraction with `genomefetcher`
+
+Extract one stranded genomic interval (quote the location to protect shell
+parentheses):
+
+```bash
+genomefetcher -f genome.fa -l 'chr1:100000-101000(+)' -o region.fa
+```
+
+Extract spliced transcript exons from a GTF:
+
+```bash
+genomefetcher -f genome.fa -g genes.gtf --regions exons \
+  --transcript_ids ENST00000000000 -o transcript.fa
+```
+
+Other region modes include `all`, `introns`, `first_exon`, `last_exon`,
+`first_intron`, `last_intron`, `5utr`, `3utr`, and `cds`. Add `--separate` to
+write multi-block regions separately, or `--no-sequence` to output selected
+coordinates without sequences.
+
+## RNA-seq library inference with `infer_experiment`
+
+Estimate whether a mapped RNA-seq library is single-end or paired-end and
+which strand rule best explains its alignments:
+
+```bash
+infer_experiment aligned.bam -g genes.gtf --mapq 30
+```
+
+The reported strand rules can be passed directly to tools such as `pyanno`.
+`infer_experiment` can also filter alignments by a selected rule:
+
+```bash
+infer_experiment aligned.bam -g genes.gtf \
+  --filter '1+-,1-+,2++,2--' --outbam stranded.bam
+```
+
+## Additional useful CLI tools
+
+Count mapped reads, or paired-end fragments, by reference:
+
+```bash
+reference_count aligned.bam -o reference_counts.tsv
+reference_count aligned.name_sorted.bam -o fragment_counts.tsv \
+  --pair --ordered_by_name
+```
+
+Calculate mapped fragment lengths and save a length-frequency table:
+
+```bash
+rna_fragment_size aligned.name_sorted.bam \
+  --ordered_by_name -s fragment_sizes.tsv > fragments.tsv
+```
+
 ## Logging API
 
 Library modules can use the centralized standard logging configuration:
