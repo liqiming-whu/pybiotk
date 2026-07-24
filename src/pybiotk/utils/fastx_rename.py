@@ -106,7 +106,8 @@ def fastx_rename_pair(read1_files: Sequence[str], read2_files: Sequence[str], ou
 
     start = time.perf_counter()
     pair_count = 0
-    name_counts = defaultdict(int) if mode == "preserve" else None
+    used_names = set()
+    next_suffix = defaultdict(lambda: 2)
     with _output_stream(output1, outfmt, compresslevel) as out1, \
             _output_stream(output2, outfmt, compresslevel) as out2:
         for read1, read2 in zip(read1_files, read2_files):
@@ -122,11 +123,17 @@ def fastx_rename_pair(read1_files: Sequence[str], read2_files: Sequence[str], ou
                         base2, suffix2 = _mate_suffix(fq2.name)
                         if base1 != base2:
                             raise RuntimeError(f"unmatched read names: {fq1.name} != {fq2.name}")
-                        name_counts[base1] += 1
-                        count = name_counts[base1]
-                        if count > 1:
-                            fq1.name = f"{base1}_{count}{suffix1}"
-                            fq2.name = f"{base2}_{count}{suffix2}"
+                        output_base = base1
+                        if output_base in used_names:
+                            suffix = next_suffix[base1]
+                            output_base = f"{base1}_{suffix}"
+                            while output_base in used_names:
+                                suffix += 1
+                                output_base = f"{base1}_{suffix}"
+                            next_suffix[base1] = suffix + 1
+                        fq1.name = output_base + suffix1
+                        fq2.name = output_base + suffix2
+                        used_names.add(output_base)
                     _write_record(out1, fq1, outfmt)
                     _write_record(out2, fq2, outfmt)
     logger.info(f"Processed {pair_count} read pairs in {time.perf_counter() - start:.2f} seconds.")

@@ -5,7 +5,6 @@ from collections import defaultdict
 from itertools import zip_longest
 from typing import Iterator, Literal, Optional, Tuple
 
-import numpy as np
 import pysam
 
 
@@ -42,15 +41,21 @@ class FastxFile(pysam.FastxFile):
 
     def rename(self) -> Iterator[pysam.libcfaidx.FastxRecord]:
         self.ptr = 0
-        name_dict = defaultdict(int)
+        used_names = set()
+        next_suffix = defaultdict(lambda: 2)
         for entry in self:
             self.ptr += 1
-            key = np.int64(hash(entry.name))
-            count = name_dict[key]
-            count += 1
-            if count > 1:
-                entry.name += f"_{count}"
-            name_dict[key] = count
+            base_name = entry.name
+            output_name = base_name
+            if output_name in used_names:
+                suffix = next_suffix[base_name]
+                output_name = f"{base_name}_{suffix}"
+                while output_name in used_names:
+                    suffix += 1
+                    output_name = f"{base_name}_{suffix}"
+                next_suffix[base_name] = suffix + 1
+            entry.name = output_name
+            used_names.add(output_name)
             yield entry
 
     def iter_len(self) -> Iterator[int]:

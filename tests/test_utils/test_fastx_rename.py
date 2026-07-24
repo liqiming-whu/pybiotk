@@ -40,6 +40,21 @@ def test_single_end_preserve_and_index_modes(tmp_path):
     assert read_fastq_names(index_fq) == ["r_1", "r_2"]
 
 
+def test_single_end_preserve_avoids_generated_suffix_collisions(tmp_path):
+    input_fq = tmp_path / "input.fq"
+    output_fq = tmp_path / "output.fq.gz"
+    write_fastq(input_fq, [
+        ("readA", "AAAA"),
+        ("readA", "CCCC"),
+        ("readA_2", "GGGG"),
+        ("readA", "TTTT"),
+    ])
+
+    fastx_rename(str(input_fq), str(output_fq), mode="preserve")
+
+    assert read_fastq_names(output_fq) == ["readA", "readA_2", "readA_2_2", "readA_3"]
+
+
 def test_pair_index_mode_keeps_global_index_across_files(tmp_path):
     r1a, r2a = tmp_path / "r1a.fq", tmp_path / "r2a.fq"
     r1b, r2b = tmp_path / "r1b.fq", tmp_path / "r2b.fq"
@@ -66,6 +81,19 @@ def test_pair_preserve_mode_renames_both_mates_consistently(tmp_path):
 
     assert read_fastq_names(out1) == ["same/1", "same_2/1"]
     assert read_fastq_names(out2) == ["same/2", "same_2/2"]
+
+
+def test_pair_preserve_avoids_generated_suffix_collisions(tmp_path):
+    r1, r2 = tmp_path / "r1.fq", tmp_path / "r2.fq"
+    out1, out2 = tmp_path / "out1.fq.gz", tmp_path / "out2.fq.gz"
+    names = ["readA", "readA", "readA_2", "readA"]
+    write_fastq(r1, [(name + "/1", "ACGT") for name in names])
+    write_fastq(r2, [(name + "/2", "TGCA") for name in names])
+
+    fastx_rename_pair([str(r1)], [str(r2)], str(out1), str(out2), mode="preserve")
+
+    assert read_fastq_names(out1) == ["readA/1", "readA_2/1", "readA_2_2/1", "readA_3/1"]
+    assert read_fastq_names(out2) == ["readA/2", "readA_2/2", "readA_2_2/2", "readA_3/2"]
 
 
 def test_pair_mode_rejects_mismatched_file_lists(tmp_path):
