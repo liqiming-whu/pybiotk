@@ -18,26 +18,42 @@ def read_fastq_names(path):
         return [line[1:].strip() for index, line in enumerate(fq) if index % 4 == 0]
 
 
-def test_index_format_supports_compact_base36():
+def test_index_format_bases():
     assert _format_index(35, 36) == "z"
     assert _format_index(36, 36) == "10"
     assert _format_index(255, 16) == "ff"
+    assert _format_index(9, 10) == "9"
+    assert _format_index(10, 10) == "10"
 
 
-def test_single_end_preserve_and_index_modes(tmp_path):
+def test_single_end_default_uses_original_name(tmp_path):
     input_fq = tmp_path / "input.fq"
-    default_fq = tmp_path / "default.fq.gz"
-    preserve_fq = tmp_path / "preserve.fq.gz"
-    index_fq = tmp_path / "index.fq.gz"
+    output_fq = tmp_path / "output.fq.gz"
     write_fastq(input_fq, [("same", "ACGT"), ("same", "TGCA")])
 
-    fastx_rename(str(input_fq), str(default_fq))
-    fastx_rename(str(input_fq), str(preserve_fq), mode="preserve")
-    fastx_rename(str(input_fq), str(index_fq), mode="index", prefix="r", index_base=16)
+    fastx_rename(str(input_fq), str(output_fq))
 
-    assert read_fastq_names(default_fq) == ["read_1", "read_2"]
-    assert read_fastq_names(preserve_fq) == ["same", "same_2"]
-    assert read_fastq_names(index_fq) == ["r_1", "r_2"]
+    assert read_fastq_names(output_fq) == ["same_1", "same_2"]
+
+
+def test_single_end_custom_prefix(tmp_path):
+    input_fq = tmp_path / "input.fq"
+    output_fq = tmp_path / "output.fq.gz"
+    write_fastq(input_fq, [("same", "ACGT"), ("same", "TGCA")])
+
+    fastx_rename(str(input_fq), str(output_fq), prefix="r", index_base=16)
+
+    assert read_fastq_names(output_fq) == ["r_1", "r_2"]
+
+
+def test_single_end_preserve_mode(tmp_path):
+    input_fq = tmp_path / "input.fq"
+    output_fq = tmp_path / "output.fq.gz"
+    write_fastq(input_fq, [("same", "ACGT"), ("same", "TGCA")])
+
+    fastx_rename(str(input_fq), str(output_fq), mode="preserve")
+
+    assert read_fastq_names(output_fq) == ["same", "same_2"]
 
 
 def test_single_end_preserve_avoids_generated_suffix_collisions(tmp_path):
@@ -53,6 +69,18 @@ def test_single_end_preserve_avoids_generated_suffix_collisions(tmp_path):
     fastx_rename(str(input_fq), str(output_fq), mode="preserve")
 
     assert read_fastq_names(output_fq) == ["readA", "readA_2", "readA_2_2", "readA_3"]
+
+
+def test_pair_index_default_uses_original_name(tmp_path):
+    r1, r2 = tmp_path / "r1.fq", tmp_path / "r2.fq"
+    out1, out2 = tmp_path / "out1.fq.gz", tmp_path / "out2.fq.gz"
+    write_fastq(r1, [("orig/1", "ACGT"), ("other/1", "AAAA")])
+    write_fastq(r2, [("orig/2", "TGCA"), ("other/2", "TTTT")])
+
+    fastx_rename_pair([str(r1)], [str(r2)], str(out1), str(out2))
+
+    assert read_fastq_names(out1) == ["orig_1", "other_2"]
+    assert read_fastq_names(out2) == ["orig_1", "other_2"]
 
 
 def test_pair_index_mode_keeps_global_index_across_files(tmp_path):

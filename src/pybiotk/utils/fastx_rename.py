@@ -5,13 +5,25 @@
 preserving record order. Paired-end index mode reads both mates together and
 assigns the same name to each pair using constant renaming memory. ``preserve``
 keeps original names and adds a numeric suffix to repeated names.
+
+.. warning::
+
+   When ``index_base`` is set to 16 or 36, the generated read names contain
+   hex-like or base36-like segments (e.g. ``read_1e00d8``).  Tools that sort
+   read names with *natural* ordering — most notably ``samtools sort -n`` —
+   parse embedded digits numerically, producing a different order than ASCII
+   lexicographic (Python-``str`` / ``samtools sort -N``).  Mismatched sort
+   order can break downstream steps that rely on contiguous ``groupby``
+   semantics (e.g. chimeric-read splitting).  Prefer the default decimal
+   encoding (``index_base=10``); if compact names are required, pair them
+   with ``samtools sort -N`` instead of ``-n``.
 """
 import argparse
 import sys
 import time
 from collections import defaultdict
 from contextlib import nullcontext
-from typing import Literal, Sequence, Tuple
+from typing import Literal, Optional, Sequence, Tuple
 
 from pybiotk.io import FastqPair, FastxFile, OpenFqGzip
 from pybiotk.utils import configure_logging, get_logger
@@ -36,14 +48,14 @@ def _format_index(index: int, base: int) -> str:
     return "".join(reversed(digits)) or "0"
 
 
-def _validate_options(outfmt: str, mode: str, compresslevel: int, prefix: str) -> None:
+def _validate_options(outfmt: str, mode: str, compresslevel: int, prefix: Optional[str]) -> None:
     if outfmt not in {"fastq", "fasta"}:
         raise ValueError(f"unsupported output format: {outfmt}")
     if mode not in {"index", "preserve"}:
         raise ValueError(f"unsupported rename mode: {mode}")
     if not 0 <= compresslevel <= 9:
         raise ValueError("compresslevel must be between 0 and 9")
-    if not prefix or any(character.isspace() for character in prefix):
+    if prefix is not None and (not prefix or any(character.isspace() for character in prefix)):
         raise ValueError("prefix must be non-empty and contain no whitespace")
 
 
@@ -69,7 +81,7 @@ def _mate_suffix(name: str) -> Tuple[str, str]:
 
 
 def fastx_rename(input_fq: str, output: str, outfmt: OutputFormat = "fastq",
-                 mode: RenameMode = "index", prefix: str = "read", index_base: int = 36,
+                 mode: RenameMode = "index", prefix: Optional[str] = None, index_base: int = 10,
                  compresslevel: int = 4) -> None:
     _validate_options(outfmt, mode, compresslevel, prefix)
     _format_index(1, index_base)
@@ -84,14 +96,15 @@ def fastx_rename(input_fq: str, output: str, outfmt: OutputFormat = "fastq",
             records = fqi
         for input_reads, fq in enumerate(records, start=1):
             if mode == "index":
-                fq.name = f"{prefix}_{_format_index(input_reads, index_base)}"
+                base = prefix if prefix else fq.name
+                fq.name = f"{base}_{_format_index(input_reads, index_base)}"
             _write_record(fqo, fq, outfmt)
     logger.info(f"Processed {input_reads} reads in {time.perf_counter() - start:.2f} seconds.")
 
 
 def fastx_rename_pair(read1_files: Sequence[str], read2_files: Sequence[str], output1: str,
                       output2: str, outfmt: OutputFormat = "fastq",
-                      mode: RenameMode = "index", prefix: str = "read", index_base: int = 36,
+                      mode: RenameMode = "index", prefix: Optional[str] = None, index_base: int = 10,
                       compresslevel: int = 4) -> None:
     _validate_options(outfmt, mode, compresslevel, prefix)
     _format_index(1, index_base)
@@ -115,7 +128,11 @@ def fastx_rename_pair(read1_files: Sequence[str], read2_files: Sequence[str], ou
                 for fq1, fq2 in pairs:
                     pair_count += 1
                     if mode == "index":
-                        name = f"{prefix}_{_format_index(pair_count, index_base)}"
+                        if prefix:
+                            base_name = prefix
+                        else:
+                            base_name = fq1.name[:-2] if fq1.name.endswith(("/1", "/2")) else fq1.name
+                        name = f"{base_name}_{_format_index(pair_count, index_base)}"
                         fq1.name = name
                         fq2.name = name
                     else:
@@ -155,8 +172,10 @@ def run():
                         help="output format.")
     parser.add_argument("--mode", choices=("index", "preserve"),
                         default="index", help="rename mode.")
-    parser.add_argument("--prefix", default="read", help="name prefix used by index mode.")
-    parser.add_argument("--index-base", type=int, choices=(10, 16, 36), default=36,
+    parser.add_argument("--prefix", default=None, help="name prefix used by index mode. "
+                        "Defaults to the original FASTQ record name (mate suffixes /1 /2 are "
+                        "stripped in paired-end mode).")
+    parser.add_argument("--index-base", type=int, choices=(10, 16, 36), default=10,
                         help="numeric base used for compact index names.")
     parser.add_argument("--gzip-level", dest="compresslevel", type=int, choices=range(10), default=4,
                         help="gzip compression level for FASTQ output.")
