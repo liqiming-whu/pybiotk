@@ -6,17 +6,10 @@ preserving record order. Paired-end index mode reads both mates together and
 assigns the same name to each pair using constant renaming memory. ``preserve``
 keeps original names and adds a numeric suffix to repeated names.
 
-.. warning::
-
-   When ``index_base`` is set to 16 or 36, the generated read names contain
-   hex-like or base36-like segments (e.g. ``read_1e00d8``).  Tools that sort
-   read names with *natural* ordering — most notably ``samtools sort -n`` —
-   parse embedded digits numerically, producing a different order than ASCII
-   lexicographic (Python-``str`` / ``samtools sort -N``).  Mismatched sort
-   order can break downstream steps that rely on contiguous ``groupby``
-   semantics (e.g. chimeric-read splitting).  Prefer the default decimal
-   encoding (``index_base=10``); if compact names are required, pair them
-   with ``samtools sort -N`` instead of ``-n``.
+The default index names use a short ``read`` prefix and decimal numbers.
+Base-16 and base-36 indexes remain available for compact identifiers.
+Downstream tools that require lexicographical query-name ordering should use
+the corresponding sort mode, such as ``samtools sort -N``.
 """
 import argparse
 import sys
@@ -81,8 +74,8 @@ def _mate_suffix(name: str) -> Tuple[str, str]:
 
 
 def fastx_rename(input_fq: str, output: str, outfmt: OutputFormat = "fastq",
-                 mode: RenameMode = "index", prefix: Optional[str] = None, index_base: int = 10,
-                 compresslevel: int = 4) -> None:
+                 mode: RenameMode = "index", prefix: str = "read", index_base: int = 10,
+                 compresslevel: int = 4, use_original_name: bool = False) -> None:
     _validate_options(outfmt, mode, compresslevel, prefix)
     _format_index(1, index_base)
     input_str = "stdin" if input_fq == "-" else input_fq
@@ -96,7 +89,7 @@ def fastx_rename(input_fq: str, output: str, outfmt: OutputFormat = "fastq",
             records = fqi
         for input_reads, fq in enumerate(records, start=1):
             if mode == "index":
-                base = prefix if prefix else fq.name
+                base = fq.name if use_original_name else prefix
                 fq.name = f"{base}_{_format_index(input_reads, index_base)}"
             _write_record(fqo, fq, outfmt)
     logger.info(f"Processed {input_reads} reads in {time.perf_counter() - start:.2f} seconds.")
@@ -104,8 +97,8 @@ def fastx_rename(input_fq: str, output: str, outfmt: OutputFormat = "fastq",
 
 def fastx_rename_pair(read1_files: Sequence[str], read2_files: Sequence[str], output1: str,
                       output2: str, outfmt: OutputFormat = "fastq",
-                      mode: RenameMode = "index", prefix: Optional[str] = None, index_base: int = 10,
-                      compresslevel: int = 4) -> None:
+                      mode: RenameMode = "index", prefix: str = "read", index_base: int = 10,
+                      compresslevel: int = 4, use_original_name: bool = False) -> None:
     _validate_options(outfmt, mode, compresslevel, prefix)
     _format_index(1, index_base)
     if isinstance(read1_files, str):
@@ -128,10 +121,10 @@ def fastx_rename_pair(read1_files: Sequence[str], read2_files: Sequence[str], ou
                 for fq1, fq2 in pairs:
                     pair_count += 1
                     if mode == "index":
-                        if prefix:
-                            base_name = prefix
-                        else:
+                        if use_original_name:
                             base_name = fq1.name[:-2] if fq1.name.endswith(("/1", "/2")) else fq1.name
+                        else:
+                            base_name = prefix
                         name = f"{base_name}_{_format_index(pair_count, index_base)}"
                         fq1.name = name
                         fq2.name = name
@@ -172,9 +165,12 @@ def run():
                         help="output format.")
     parser.add_argument("--mode", choices=("index", "preserve"),
                         default="index", help="rename mode.")
-    parser.add_argument("--prefix", default=None, help="name prefix used by index mode. "
-                        "Defaults to the original FASTQ record name (mate suffixes /1 /2 are "
-                        "stripped in paired-end mode).")
+    name_group = parser.add_mutually_exclusive_group()
+    name_group.add_argument("--prefix", default="read",
+                            help="name prefix used by index mode.")
+    name_group.add_argument("--use-original-name", action="store_true",
+                            help="use each original FASTQ record name as the index prefix; "
+                            "mate suffixes /1 and /2 are stripped in paired-end mode.")
     parser.add_argument("--index-base", type=int, choices=(10, 16, 36), default=10,
                         help="numeric base used for compact index names.")
     parser.add_argument("--gzip-level", dest="compresslevel", type=int, choices=range(10), default=4,
@@ -189,7 +185,8 @@ def run():
             if args.output1 is None or args.output2 is None:
                 parser.error("paired-end mode requires --output1 and --output2")
             fastx_rename_pair(args.read1, args.read2, args.output1, args.output2, args.outfmt,
-                              args.mode, args.prefix, args.index_base, args.compresslevel)
+                              args.mode, args.prefix, args.index_base, args.compresslevel,
+                              args.use_original_name)
         else:
             if args.input is None and not sys.stdin.isatty():
                 args.input = "-"
@@ -198,7 +195,7 @@ def run():
             if args.output1 is not None or args.output2 is not None:
                 parser.error("--output1 and --output2 are only valid in paired-end mode")
             fastx_rename(args.input, args.output, args.outfmt, args.mode, args.prefix,
-                         args.index_base, args.compresslevel)
+                         args.index_base, args.compresslevel, args.use_original_name)
     except ValueError as exc:
         parser.error(str(exc))
 

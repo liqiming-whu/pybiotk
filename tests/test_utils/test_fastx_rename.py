@@ -26,14 +26,24 @@ def test_index_format_bases():
     assert _format_index(10, 10) == "10"
 
 
-def test_single_end_default_uses_original_name(tmp_path):
+def test_single_end_default_uses_short_decimal_names(tmp_path):
     input_fq = tmp_path / "input.fq"
     output_fq = tmp_path / "output.fq.gz"
     write_fastq(input_fq, [("same", "ACGT"), ("same", "TGCA")])
 
     fastx_rename(str(input_fq), str(output_fq))
 
-    assert read_fastq_names(output_fq) == ["same_1", "same_2"]
+    assert read_fastq_names(output_fq) == ["read_1", "read_2"]
+
+
+def test_single_end_can_use_original_name(tmp_path):
+    input_fq = tmp_path / "input.fq"
+    output_fq = tmp_path / "output.fq.gz"
+    write_fastq(input_fq, [("first", "ACGT"), ("second", "TGCA")])
+
+    fastx_rename(str(input_fq), str(output_fq), use_original_name=True)
+
+    assert read_fastq_names(output_fq) == ["first_1", "second_2"]
 
 
 def test_single_end_custom_prefix(tmp_path):
@@ -71,13 +81,26 @@ def test_single_end_preserve_avoids_generated_suffix_collisions(tmp_path):
     assert read_fastq_names(output_fq) == ["readA", "readA_2", "readA_2_2", "readA_3"]
 
 
-def test_pair_index_default_uses_original_name(tmp_path):
+def test_pair_index_default_uses_short_decimal_names(tmp_path):
     r1, r2 = tmp_path / "r1.fq", tmp_path / "r2.fq"
     out1, out2 = tmp_path / "out1.fq.gz", tmp_path / "out2.fq.gz"
     write_fastq(r1, [("orig/1", "ACGT"), ("other/1", "AAAA")])
     write_fastq(r2, [("orig/2", "TGCA"), ("other/2", "TTTT")])
 
     fastx_rename_pair([str(r1)], [str(r2)], str(out1), str(out2))
+
+    assert read_fastq_names(out1) == ["read_1", "read_2"]
+    assert read_fastq_names(out2) == ["read_1", "read_2"]
+
+
+def test_pair_index_can_use_original_name_without_mate_suffix(tmp_path):
+    r1, r2 = tmp_path / "r1.fq", tmp_path / "r2.fq"
+    out1, out2 = tmp_path / "out1.fq.gz", tmp_path / "out2.fq.gz"
+    write_fastq(r1, [("orig/1", "ACGT"), ("other/1", "AAAA")])
+    write_fastq(r2, [("orig/2", "TGCA"), ("other/2", "TTTT")])
+
+    fastx_rename_pair([str(r1)], [str(r2)], str(out1), str(out2),
+                      use_original_name=True)
 
     assert read_fastq_names(out1) == ["orig_1", "other_2"]
     assert read_fastq_names(out2) == ["orig_1", "other_2"]

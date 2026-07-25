@@ -58,9 +58,10 @@ records and matching mate names.
 
 ## FASTA/FASTQ renaming
 
-`fastx_rename` uses compact base-36 indexes by default and preserves input
-order. Base 10 and hexadecimal indexes are also available through
-`--index-base`.
+`fastx_rename` uses short decimal names such as `read_1` by default and
+preserves input order. Base 16 and base 36 indexes are also available through
+`--index-base`. Use `--use-original-name` to use each original FASTQ record
+name as the prefix instead of `read`.
 
 Single-end or independently streamed mates:
 
@@ -81,6 +82,16 @@ fastx_rename \
   --read2 sub1_R2.fq.gz sub2_R2.fq.gz \
   --output1 R1.fq.gz --output2 R2.fq.gz \
   --mode index --index-base 36 --gzip-level 4
+```
+
+To retain each original record name as the index prefix:
+
+```bash
+fastx_rename \
+  --read1 sub1_R1.fq.gz sub2_R1.fq.gz \
+  --read2 sub1_R2.fq.gz sub2_R2.fq.gz \
+  --output1 R1.fq.gz --output2 R2.fq.gz \
+  --mode index --use-original-name
 ```
 
 Use `--mode preserve` to retain original names and suffix only duplicate
