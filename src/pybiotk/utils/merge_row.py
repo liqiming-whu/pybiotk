@@ -51,7 +51,7 @@ def df_merge_row(df, by=None, columns=None, method=("distinct",), sep=",", count
             data["count"] = len(x[columns[0]])
         return pd.Series(data)
 
-    merge_df = df.groupby(by).apply(generate_content).reset_index()
+    merge_df = df.groupby(by)[columns].apply(generate_content).reset_index()
     return merge_df
 
 
