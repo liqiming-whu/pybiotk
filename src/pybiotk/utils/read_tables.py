@@ -74,7 +74,7 @@ def run():
                         help="input tables.")
     parser.add_argument('-o', dest='output', type=str,
                         default="-", help="output file name [stdout]")
-    parser.add_argument('-n', dest="namefile", type=str, default=(None if sys.stdin.isatty() else "-"),
+    parser.add_argument('-n', dest="namefile", type=str, default=None,
                         help="whose name is listed in FILE|stdin")
     parser.add_argument('-H', "--noheader", dest="noheader", action="store_true", help="if noheader")
     parser.add_argument('-c', dest="column", type=int, default=0, help="name column")

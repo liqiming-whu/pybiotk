@@ -3,7 +3,7 @@ from io import StringIO
 import pandas as pd
 import pytest
 
-from pybiotk.utils.read_tables import main
+from pybiotk.utils.read_tables import main, run
 
 
 def write_table(path, rows):
@@ -92,3 +92,29 @@ def test_invalid_column_has_clear_error(tmp_path):
 
     with pytest.raises(ValueError, match="column index 2 is out of range"):
         main([str(input_table)], str(output), str(names), column=2)
+
+
+def test_non_tty_stdin_does_not_enable_name_filtering(tmp_path, monkeypatch):
+    input_table = tmp_path / "input.tsv"
+    output = tmp_path / "output.tsv"
+    write_table(input_table, [("one", "1"), ("two", "2")])
+    monkeypatch.setattr("sys.stdin", StringIO("one\n"))
+    monkeypatch.setattr("sys.argv", ["read_tables", str(input_table), "-o", str(output)])
+
+    run()
+
+    assert read_output(output)["value"].tolist() == ["1", "2"]
+
+
+def test_explicit_stdin_name_filter_is_preserved(tmp_path, monkeypatch):
+    input_table = tmp_path / "input.tsv"
+    output = tmp_path / "output.tsv"
+    write_table(input_table, [("one", "1"), ("two", "2")])
+    monkeypatch.setattr("sys.stdin", StringIO("one\n"))
+    monkeypatch.setattr(
+        "sys.argv", ["read_tables", str(input_table), "-o", str(output), "-n", "-"]
+    )
+
+    run()
+
+    assert read_output(output)["value"].tolist() == ["1"]
