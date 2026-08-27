@@ -290,7 +290,14 @@ The legacy import `from pybiotk.utils import logging` remains supported.
 
 ## Commands
 
-Installed console commands include:
+List every command installed with pybiotk and its short description:
+
+```bash
+pybiotk
+```
+
+The list is read from the installed package metadata, so it automatically
+includes newly registered tools. Installed console commands include:
 
 - Format conversion: `gtf2bed`, `bed2bedgraph`, `fq2fasta`, `fa2fastq`,
   `bam2fastx`, `bampe_order_by_name`
@@ -310,12 +317,12 @@ fastx_rename --help
 pyanno --help
 ```
 
-## Building from source
+## Building a source distribution
 
-Build an sdist and platform wheel in an isolated environment:
+Build the release source archive in an isolated environment:
 
 ```bash
-pyproject-build
+pyproject-build --sdist
 ```
 
 Release versions are derived from Git tags through `setuptools_scm`.

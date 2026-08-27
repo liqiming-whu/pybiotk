@@ -2,6 +2,44 @@
 Changelog
 =========
 
+Version 1.3.6 (2026-08-27)
+==========================
+
+Command-line interface
+----------------------
+
+- Added the top-level ``pybiotk`` command, which lists every console tool
+  registered by the installed package together with a short description.
+- Added automatic console-entry discovery so the list stays synchronized with
+  installed package metadata.
+- Expanded command documentation and added tests that require every registered
+  tool to have a description.
+
+Performance and utilities
+-------------------------
+
+- Reimplemented ``bed2bedgraph`` with an interval-endpoint sweep instead of
+  per-base expansion, with support for unsorted, compressed, and multi-file
+  BED input.
+- Corrected half-open bedGraph coordinates and documented the equivalent
+  ``bedtools genomecov`` workflow and chromosome-size generation.
+- Improved the bundled FASTA, FASTQ, GTF, chromosome-size, subsequence, and
+  duplicate-removal scripts with safer temporary files, input validation,
+  gzip support, and portable shell behavior.
+- Streamed SAM output in ``merge_subseq.sh`` and fixed the
+  ``subseq_analysis`` command-line argument forwarding error.
+
+FASTX and table processing
+--------------------------
+
+- Made compact indexed names the default in ``fastx_rename`` while preserving
+  matching paired-end identifiers and input order.
+- Fixed preserve-mode collisions for repeated read names and strengthened
+  paired-end name and record-count validation.
+- Fixed ``read_tables`` name filtering, reusable direct API behavior, and
+  non-interactive standard-input handling.
+- Removed a pandas ``groupby.apply`` deprecation warning from ``merge_row``.
+
 Version 1.3.5 (2026-07-22)
 ==========================
 
