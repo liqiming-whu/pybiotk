@@ -14,6 +14,7 @@ from typing import List, Dict, Sequence, Tuple, Literal, Iterator, Iterable, Opt
 from pybiotk.utils import get_logger
 
 import pandas as pd
+import pysam
 
 logger = get_logger(__name__)
 
@@ -82,6 +83,27 @@ def cigar_tuples2blocks(start: int, cigartuples: Sequence[Tuple[int, int]], shif
             merged_blocks.append((tmp_start, blocks[i][1]))
             tmp_start = None
     return merged_blocks
+
+
+def merge_contiguous_intervals(intervals: Iterable[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    """Merge overlapping or touching intervals in start-sorted input."""
+    merged = []
+    previous_start = None
+    for start, end in intervals:
+        if start > end:
+            raise ValueError("interval start must not exceed end")
+        if previous_start is not None and start < previous_start:
+            raise ValueError("intervals must be sorted by start")
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+        previous_start = start
+    return merged
+
+
+def get_blocks_from_read(read: pysam.AlignedSegment) -> List[Tuple[int, int]]:
+    return cigar_tuples2blocks(read.reference_start, read.cigartuples)
 
 
 def merge_blocks(blocks1: List[Tuple[int,int]], blocks2: List[Tuple[int,int]]) -> Tuple[bool, List[Tuple[int,int]]]:

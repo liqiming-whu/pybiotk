@@ -1,18 +1,13 @@
-from configparser import ConfigParser
 from pathlib import Path
+import tomllib
 
 from pybiotk import cli
 
 
 def configured_tools():
-    config = ConfigParser()
-    config.read(Path(__file__).parents[1] / "setup.cfg")
-    entries = config["options.entry_points"]["console_scripts"].splitlines()
-    return {
-        entry.split("=", 1)[0].strip()
-        for entry in entries
-        if entry.strip() and not entry.lstrip().startswith("#")
-    }
+    with (Path(__file__).parents[1] / "pyproject.toml").open("rb") as handle:
+        project = tomllib.load(handle)["project"]
+    return set(project["scripts"])
 
 
 def test_descriptions_cover_all_registered_tools():

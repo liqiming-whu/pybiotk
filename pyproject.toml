@@ -1,10 +1,119 @@
 [build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
 requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel", "Cython"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pybiotk"
+dynamic = ["version"]
+description = "pybiotk: A python toolkit for bioinformatics analysis."
+readme = "README.md"
+authors = [
+    {name = "liqiming_whu", email = "liqiming@whu.edu.cn"},
+]
+license = "MIT"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+]
+dependencies = [
+    "openpyxl",
+    "pandas",
+    "pysam",
+    "pyBigWig",
+    "matplotlib",
+    "scipy",
+    "rich",
+]
+
+[project.urls]
+Homepage = "https://github.com/liqiming-whu/pybiotk"
+Documentation = "https://github.com/liqiming-whu/pybiotk"
+
+[project.scripts]
+pybiotk = "pybiotk.cli:run"
+gtf2bed = "pybiotk.convert.gtf2bed:run"
+bed2bedgraph = "pybiotk.convert.bed2bedgraph:run"
+fq2fasta = "pybiotk.convert.fq2fasta:run"
+fa2fastq = "pybiotk.convert.fa2fastq:run"
+bam2fastx = "pybiotk.convert.bam2fastx:run"
+bampe_order_by_name = "pybiotk.convert.bampe_order_by_name:run"
+bam_random = "pybiotk.utils.bam_random:run"
+gtf_filter = "pybiotk.utils.gtf_filter:run"
+fasta_filter = "pybiotk.utils.fasta_filter:run"
+fastq_uniq = "pybiotk.utils.fastq_uniq:run"
+fastq_join = "pybiotk.utils.fastq_join:run"
+fastx_rename = "pybiotk.utils.fastx_rename:run"
+genomefetcher = "pybiotk.utils.genomefetcher:run"
+bigwigfetcher = "pybiotk.utils.bigwigfetcher:run"
+reverse_fastx = "pybiotk.utils.reverse_fastx:run"
+seq_random = "pybiotk.utils.seq_random:run"
+merge_row = "pybiotk.utils.merge_row:run"
+read_tables = "pybiotk.utils.read_tables:run"
+rmats_filter = "pybiotk.utils.rmats_filter:run"
+count_normalize = "pybiotk.utils.normalize:run"
+reference_count = "pybiotk.utils.reference_count:run"
+pyanno = "pybiotk.utils.pyanno:run"
+rna_fragment_size = "pybiotk.utils.fragment_size:run"
+merge_subseq = "pybiotk.utils.merge_subseq:run"
+subseq_analysis = "pybiotk.utils.subseq_analysis:run"
+summary_log = "pybiotk.utils.summary_log:run"
+ercc_parser = "pybiotk.utils.ercc_parser:run"
+infer_experiment = "pybiotk.utils.infer_experiment:run"
+merge_transcript = "pybiotk.meta.merge_transcript:run"
+metaplot = "pybiotk.meta.metaplot:run"
+
+[dependency-groups]
+dev = [
+    "setuptools",
+    "wheel",
+    "Cython",
+    "setuptools_scm",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["bx", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "--cov=pybiotk",
+    "--cov-report=term-missing",
+    "--verbose",
+]
+norecursedirs = [
+    "build",
+    "dist",
+    ".tox",
+    ".venv",
+    "scripts",
+    "rscripts",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/pybiotk"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+include = ["src/**/*.py", "tests/**/*.py", "setup.py"]
+extend-exclude = ["build", "dist", ".venv", "docs"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = ["E402", "E711", "E731", "E741", "F401", "F403", "F405"]
+
 [tool.setuptools_scm]
-# For smarter version schemes and other configuration options,
-# check out https://github.com/pypa/setuptools_scm
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"

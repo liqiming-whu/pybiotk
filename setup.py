@@ -1,6 +1,6 @@
 """
     Setup file for pybiotk.
-    Use setup.cfg to configure your project.
+    Project metadata and tooling are configured in pyproject.toml.
 
     This file was generated with PyScaffold 4.2.3.
     PyScaffold helps you to put up the scaffold of your new Python project.
@@ -19,8 +19,7 @@ ext_modules = [
 
 if __name__ == "__main__":
     try:
-        setup(use_scm_version=True,
-              ext_modules=cythonize(ext_modules, build_dir="build"),
+        setup(ext_modules=cythonize(ext_modules, build_dir="build"),
               scripts=glob("rscripts/*.R") + glob("scripts/*sh"),)
     except:
         print(
