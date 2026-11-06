@@ -2,6 +2,14 @@
 Changelog
 =========
 
+Version 1.3.7 (2026-11-06)
+==========================
+
+- Publish the current source, including ``get_blocks_from_read`` and
+  ``merge_contiguous_intervals``, for downstream ChimeFinder installations.
+- Centralize package metadata and development configuration in ``pyproject.toml``.
+- Validate the source with 71 passing tests and Ruff checks.
+
 Version 1.3.6 (2026-08-27)
 ==========================
 

@@ -28,7 +28,7 @@ cd pybiotk
 pip install .
 ```
 
-The current release is **1.3.6**. See [CHANGELOG.rst](CHANGELOG.rst) for the
+The current release is **1.3.7**. See [CHANGELOG.rst](CHANGELOG.rst) for the
 release notes.
 
 ## FASTQ deduplication
