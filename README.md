@@ -1,8 +1,6 @@
 # pybiotk
 
-`pybiotk` is a Python toolkit and command-line collection for common
-bioinformatics data-processing tasks, including FASTA/FASTQ, BAM, BED, GTF,
-BigWig, annotation, and interval operations.
+`pybiotk` is a Python toolkit and command-line collection for common bioinformatics data-processing tasks, including FASTA/FASTQ, BAM, BED, GTF, BigWig, annotation, and interval operations.
 
 ## Installation
 
@@ -28,14 +26,11 @@ cd pybiotk
 pip install .
 ```
 
-The current release is **1.3.7**. See [CHANGELOG.rst](CHANGELOG.rst) for the
-release notes.
+The current release is **1.3.7**. See [CHANGELOG.rst](CHANGELOG.rst) for the release notes.
 
 ## FASTQ deduplication
 
-`fastq_uniq` removes duplicate reads after length filtering. The default
-`digest` mode stores stable 128-bit BLAKE2b digests to reduce memory usage.
-Use `--key-mode exact` when exact, collision-free key comparison is required.
+`fastq_uniq` removes duplicate reads after length filtering. The default `digest` mode stores stable 128-bit BLAKE2b digests to reduce memory usage. Use `--key-mode exact` when exact, collision-free key comparison is required.
 
 Single-end:
 
@@ -52,16 +47,11 @@ fastq_uniq R1.fq.gz R2.fq.gz \
   --key-mode digest --gzip-level 4
 ```
 
-Uniqueness can be evaluated by sequence (default), read ID (`--by-id`), or
-full read name (`--by-name`). Paired inputs must have the same number of
-records and matching mate names.
+Uniqueness can be evaluated by sequence (default), read ID (`--by-id`), or full read name (`--by-name`). Paired inputs must have the same number of records and matching mate names.
 
 ## FASTA/FASTQ renaming
 
-`fastx_rename` uses short decimal names such as `read_1` by default and
-preserves input order. Base 16 and base 36 indexes are also available through
-`--index-base`. Use `--use-original-name` to use each original FASTQ record
-name as the prefix instead of `read`.
+`fastx_rename` uses short decimal names such as `read_1` by default and preserves input order. Base 16 and base 36 indexes are also available through `--index-base`. Use `--use-original-name` to use each original FASTQ record name as the prefix instead of `read`.
 
 Single-end or independently streamed mates:
 
@@ -73,8 +63,7 @@ zcat sub1_R2.fq.gz sub2_R2.fq.gz | \
   fastx_rename -o R2.fq.gz --mode index --gzip-level 4
 ```
 
-For guaranteed matching mate identifiers, use paired-end mode. Input files
-are processed in the order supplied, with one continuous index across lanes:
+For guaranteed matching mate identifiers, use paired-end mode. Input files are processed in the order supplied, with one continuous index across lanes:
 
 ```bash
 fastx_rename \
@@ -94,15 +83,11 @@ fastx_rename \
   --mode index --use-original-name
 ```
 
-Use `--mode preserve` to retain original names and suffix only duplicate
-names. The `index` mode uses names such as `read_1`, without adding `|`.
+Use `--mode preserve` to retain original names and suffix only duplicate names. The `index` mode uses names such as `read_1`, without adding `|`.
 
 ## Genomic annotation with `pyanno`
 
-`pyanno` annotates BAM alignments or BED intervals against a GTF gene model.
-The input type is inferred from the `.bam` or `.bed*` filename suffix. Output
-is a tab-separated table containing the input coordinates, annotation class,
-gene coordinates, gene name, gene or transcript ID, and gene type.
+`pyanno` annotates BAM alignments or BED intervals against a GTF gene model. The input type is inferred from the `.bam` or `.bed*` filename suffix. Output is a tab-separated table containing the input coordinates, annotation class, gene coordinates, gene name, gene or transcript ID, and gene type.
 
 Annotate a BAM at transcript level:
 
@@ -110,8 +95,7 @@ Annotate a BAM at transcript level:
 pyanno -i aligned.bam -g genes.gtf -o aligned.annotation.tsv
 ```
 
-Annotate paired-end fragments from a name-sorted BAM with the common
-first-strand RNA-seq rule:
+Annotate paired-end fragments from a name-sorted BAM with the common first-strand RNA-seq rule:
 
 ```bash
 pyanno -i aligned.name_sorted.bam -g genes.gtf \
@@ -135,14 +119,11 @@ Important options:
 - `--rule` describes how mapped BAM reads encode the originating RNA strand.
 - `--pair` annotates paired-end fragments rather than individual alignments.
 - `--ordered_by_name` enables streaming pair iteration for a name-sorted BAM.
-- `--tss_region START END` and `--downstream LENGTH` control regulatory
-  annotation windows.
+- `--tss_region START END` and `--downstream LENGTH` control regulatory annotation windows.
 
 ## GTF conversion with `gtf2bed`
 
-`gtf2bed` converts a GTF file into BED12 transcripts, BED6 features, introns,
-or gene/transcript information tables. It can also filter records by gene
-type, transcript type, IDs, or names.
+`gtf2bed` converts a GTF file into BED12 transcripts, BED6 features, introns, or gene/transcript information tables. It can also filter records by gene type, transcript type, IDs, or names.
 
 Create transcript BED12 using transcript IDs as names:
 
@@ -165,8 +146,7 @@ gtf2bed genes.gtf --outfmt intron --name transcript_id \
   --transcript_types protein_coding -o introns.bed6
 ```
 
-The supported output formats are `bed12`, `bed6`, `intron`, `gene_info`, and
-`trans_info`. GTF input and converted output can also be streamed:
+The supported output formats are `bed12`, `bed6`, `intron`, `gene_info`, and `trans_info`. GTF input and converted output can also be streamed:
 
 ```bash
 zcat genes.gtf.gz | gtf2bed --outfmt bed12 > transcripts.bed12
@@ -174,16 +154,13 @@ zcat genes.gtf.gz | gtf2bed --outfmt bed12 > transcripts.bed12
 
 ## BAM to FASTA/FASTQ with `bam2fastx`
 
-`bam2fastx` detects single-end or paired-end BAM input and reconstructs FASTA
-or compressed FASTQ records:
+`bam2fastx` detects single-end or paired-end BAM input and reconstructs FASTA or compressed FASTQ records:
 
 ```bash
 bam2fastx aligned.bam -o recovered --outfmt fastq
 ```
 
-For paired-end input, it writes paired and unpaired outputs separately, such
-as `recovered.R1.fq.gz`, `recovered.R2.fq.gz`, and the corresponding
-`unpaired` files. Use name-sorted input for streaming paired reads:
+For paired-end input, it writes paired and unpaired outputs separately, such as `recovered.R1.fq.gz`, `recovered.R2.fq.gz`, and the corresponding `unpaired` files. Use name-sorted input for streaming paired reads:
 
 ```bash
 bam2fastx aligned.name_sorted.bam -o recovered --bamtype PE \
@@ -192,8 +169,7 @@ bam2fastx aligned.name_sorted.bam -o recovered --bamtype PE \
 
 ## Sequence extraction with `genomefetcher`
 
-Extract one stranded genomic interval (quote the location to protect shell
-parentheses):
+Extract one stranded genomic interval (quote the location to protect shell parentheses):
 
 ```bash
 genomefetcher -f genome.fa -l 'chr1:100000-101000(+)' -o region.fa
@@ -206,22 +182,17 @@ genomefetcher -f genome.fa -g genes.gtf --regions exons \
   --transcript_ids ENST00000000000 -o transcript.fa
 ```
 
-Other region modes include `all`, `introns`, `first_exon`, `last_exon`,
-`first_intron`, `last_intron`, `5utr`, `3utr`, and `cds`. Add `--separate` to
-write multi-block regions separately, or `--no-sequence` to output selected
-coordinates without sequences.
+Other region modes include `all`, `introns`, `first_exon`, `last_exon`, `first_intron`, `last_intron`, `5utr`, `3utr`, and `cds`. Add `--separate` to write multi-block regions separately, or `--no-sequence` to output selected coordinates without sequences.
 
 ## RNA-seq library inference with `infer_experiment`
 
-Estimate whether a mapped RNA-seq library is single-end or paired-end and
-which strand rule best explains its alignments:
+Estimate whether a mapped RNA-seq library is single-end or paired-end and which strand rule best explains its alignments:
 
 ```bash
 infer_experiment aligned.bam -g genes.gtf --mapq 30
 ```
 
-The reported strand rules can be passed directly to tools such as `pyanno`.
-`infer_experiment` can also filter alignments by a selected rule:
+The reported strand rules can be passed directly to tools such as `pyanno`. `infer_experiment` can also filter alignments by a selected rule:
 
 ```bash
 infer_experiment aligned.bam -g genes.gtf \
@@ -237,16 +208,13 @@ bed2bedgraph input.bed > coverage.bedgraph
 bed2bedgraph lane1.bed.gz lane2.bed.gz --header > coverage.bedgraph
 ```
 
-The built-in command accepts unsorted BED input and uses an endpoint sweep
-rather than expanding intervals base by base. For very large BED files that
-are grouped in chromosome order, a compiled bedtools alternative is:
+The built-in command accepts unsorted BED input and uses an endpoint sweep rather than expanding intervals base by base. For very large BED files that are grouped in chromosome order, a compiled bedtools alternative is:
 
 ```bash
 bedtools genomecov -i input.bed -bg -g chrom.sizes
 ```
 
-Generate `chrom.sizes` from the same reference FASTA used for alignment. The
-script reuses an existing `.fai` index or creates one with `samtools faidx`:
+Generate `chrom.sizes` from the same reference FASTA used for alignment. The script reuses an existing `.fai` index or creates one with `samtools faidx`:
 
 ```bash
 scripts/get_chrom_length.sh reference.fa chrom.sizes
@@ -296,17 +264,12 @@ List every command installed with pybiotk and its short description:
 pybiotk
 ```
 
-The list is read from the installed package metadata, so it automatically
-includes newly registered tools. Installed console commands include:
+The list is read from the installed package metadata, so it automatically includes newly registered tools. Installed console commands include:
 
-- Format conversion: `gtf2bed`, `bed2bedgraph`, `fq2fasta`, `fa2fastq`,
-  `bam2fastx`, `bampe_order_by_name`
-- FASTA/FASTQ processing: `fastq_uniq`, `fastx_rename`, `fastq_join`,
-  `fasta_filter`, `reverse_fastx`, `seq_random`
-- BAM and annotation: `bam_random`, `pyanno`, `infer_experiment`,
-  `rna_fragment_size`, `reference_count`
-- Table and genomic utilities: `read_tables`, `merge_row`, `rmats_filter`,
-  `count_normalize`, `genomefetcher`, `bigwigfetcher`, `summary_log`
+- Format conversion: `gtf2bed`, `bed2bedgraph`, `fq2fasta`, `fa2fastq`, `bam2fastx`, `bampe_order_by_name`
+- FASTA/FASTQ processing: `fastq_uniq`, `fastx_rename`, `fastq_join`, `fasta_filter`, `reverse_fastx`, `seq_random`
+- BAM and annotation: `bam_random`, `pyanno`, `infer_experiment`, `rna_fragment_size`, `reference_count`
+- Table and genomic utilities: `read_tables`, `merge_row`, `rmats_filter`, `count_normalize`, `genomefetcher`, `bigwigfetcher`, `summary_log`
 - Transcript and plotting utilities: `merge_transcript`, `metaplot`
 
 Run any command with `--help` for its complete options, for example:
