@@ -317,6 +317,16 @@ fastx_rename --help
 pyanno --help
 ```
 
+## Development checks
+
+From the repository root, run the same checks as CI:
+
+```bash
+uv sync --dev
+uv run ruff check .
+uv run pytest
+```
+
 ## Building a source distribution
 
 Build the release source archive in an isolated environment:
